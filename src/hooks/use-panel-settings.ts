@@ -47,7 +47,7 @@ export function usePanelSettings() {
       setSaving(true);
       await supabase.rpc("save_settings", {
         _key: keyData.key,
-        _settings: next as unknown as Record<string, unknown>,
+        _settings: next as never,
       });
       setSaving(false);
     },
