@@ -37,11 +37,11 @@ export default function LoginPage() {
     setSubmitting(true);
     const result = await redeem(value);
     setSubmitting(false);
-    if (result.ok) {
+    if (result.ok === true) {
       navigate("/painel", { replace: true });
-    } else {
-      setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
+      return;
     }
+    setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
   };
 
   return (
