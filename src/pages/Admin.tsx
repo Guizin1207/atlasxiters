@@ -10,6 +10,7 @@ import { DeviceStatsCard } from "@/components/admin/DeviceStatsCard";
 import { MaintenanceCard } from "@/components/admin/MaintenanceCard";
 import { KeyGeneratorCard } from "@/components/admin/KeyGeneratorCard";
 import { KeysListCard } from "@/components/admin/KeysListCard";
+import { MessagesCard } from "@/components/admin/MessagesCard";
 
 export default function AdminPage() {
   const { password, loading, signIn, signOut } = useAdmin();
@@ -56,6 +57,8 @@ export default function AdminPage() {
         </div>
 
         <KeysListCard />
+
+        <MessagesCard />
       </div>
     </main>
   );
