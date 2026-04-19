@@ -1,9 +1,8 @@
-import { Bell, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ShieldCheck } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 
 /**
  * Cabeçalho fixo do painel.
- * O sino é placeholder — Fase 3 conecta ao Realtime.
  */
 export function PanelHeader() {
   return (
@@ -18,19 +17,7 @@ export function PanelHeader() {
         </div>
       </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="Notificações"
-        className="w-10 h-10 rounded-2xl glass relative hover:bg-white/10"
-      >
-        <Bell className="w-4 h-4" />
-        {/* badge de não-lidas (placeholder até Fase 3) */}
-        <span
-          aria-hidden
-          className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-white/20"
-        />
-      </Button>
+      <NotificationBell />
     </header>
   );
 }
