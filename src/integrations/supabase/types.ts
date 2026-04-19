@@ -56,6 +56,38 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          target_key_id: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          target_key_id?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          target_key_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_messages_target_key_id_fkey"
+            columns: ["target_key_id"]
+            isOneToOne: false
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_config: {
         Row: {
           key: string
@@ -96,6 +128,39 @@ export type Database = {
             columns: ["key_id"]
             isOneToOne: true
             referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reads: {
+        Row: {
+          key_id: string
+          message_id: string
+          read_at: string
+        }
+        Insert: {
+          key_id: string
+          message_id: string
+          read_at?: string
+        }
+        Update: {
+          key_id?: string
+          message_id?: string
+          read_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reads_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "admin_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -145,6 +210,10 @@ export type Database = {
         Args: { _id: string; _password: string }
         Returns: boolean
       }
+      admin_delete_message: {
+        Args: { _id: string; _password: string }
+        Returns: boolean
+      }
       admin_device_stats: { Args: { _password: string }; Returns: Json }
       admin_extend_key: {
         Args: { _days: number; _id: string; _password: string }
@@ -190,6 +259,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      admin_list_messages: { Args: { _password: string }; Returns: Json }
       admin_reset_device: {
         Args: { _id: string; _password: string }
         Returns: {
@@ -233,6 +303,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_send_message: {
+        Args: {
+          _body: string
+          _password: string
+          _target_key_id?: string
+          _title: string
+        }
+        Returns: Json
       }
       admin_set_expiration: {
         Args: { _expires_at: string; _id: string; _password: string }
@@ -282,9 +361,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      count_unread_messages: { Args: { _key: string }; Returns: number }
       get_maintenance: { Args: never; Returns: Json }
       get_settings: { Args: { _key: string }; Returns: Json }
       is_master_key: { Args: { _key: string }; Returns: boolean }
+      list_my_messages: { Args: { _key: string }; Returns: Json }
+      mark_messages_read: {
+        Args: { _ids: string[]; _key: string }
+        Returns: number
+      }
       redeem_key: {
         Args: { _device: string; _device_id: string; _key: string }
         Returns: Json
