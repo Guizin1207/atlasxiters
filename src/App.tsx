@@ -4,8 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { KeyProvider } from "@/lib/key-context";
+import { AdminProvider } from "@/lib/admin-context";
 import LoginPage from "./pages/Login";
 import PainelPage from "./pages/Painel";
+import AdminPage from "./pages/Admin";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -17,13 +19,16 @@ const App = () => (
       <Sonner position="bottom-center" theme="dark" richColors closeButton />
       <BrowserRouter>
         <KeyProvider>
-          <Routes>
-            <Route path="/" element={<Navigate to="/painel" replace />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/painel" element={<PainelPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AdminProvider>
+            <Routes>
+              <Route path="/" element={<Navigate to="/painel" replace />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/painel" element={<PainelPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AdminProvider>
         </KeyProvider>
       </BrowserRouter>
     </TooltipProvider>
@@ -31,3 +36,4 @@ const App = () => (
 );
 
 export default App;
+
