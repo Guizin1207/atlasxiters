@@ -59,6 +59,48 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_ai_audit: {
+        Row: {
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          proposal: Json
+        }
+        Insert: {
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          proposal: Json
+        }
+        Update: {
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          proposal?: Json
+        }
+        Relationships: []
+      }
+      admin_ai_conversation: {
+        Row: {
+          messages: Json
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          messages?: Json
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          messages?: Json
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_messages: {
         Row: {
           body: string
@@ -168,6 +210,42 @@ export type Database = {
           },
         ]
       }
+      panel_functions: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          min_plan: string
+          name: string
+          sort_order: number
+          tag: string
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id: string
+          min_plan?: string
+          name: string
+          sort_order?: number
+          tag: string
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          min_plan?: string
+          name?: string
+          sort_order?: number
+          tag?: string
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
       upgrade_requests: {
         Row: {
           created_at: string
@@ -217,6 +295,7 @@ export type Database = {
       _gen_key: { Args: never; Returns: string }
       _plan_days: { Args: { _plan: string }; Returns: number }
       _require_admin: { Args: { _password: string }; Returns: undefined }
+      _valid_access_key: { Args: { _key: string }; Returns: boolean }
       admin_activate_key: {
         Args: { _id: string; _password: string }
         Returns: {
@@ -239,6 +318,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_apply_panel_proposal: {
+        Args: { _password: string; _proposal: Json }
+        Returns: Json
       }
       admin_create_keys: {
         Args: {
@@ -282,6 +365,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_get_ai_messages: { Args: { _password: string }; Returns: Json }
       admin_list_keys: {
         Args: { _password: string }
         Returns: {
@@ -306,6 +390,7 @@ export type Database = {
         }
       }
       admin_list_messages: { Args: { _password: string }; Returns: Json }
+      admin_list_panel_functions: { Args: { _password: string }; Returns: Json }
       admin_list_upgrade_requests: {
         Args: { _password: string }
         Returns: Json
@@ -382,6 +467,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_save_ai_messages: {
+        Args: { _messages: Json; _password: string }
+        Returns: boolean
       }
       admin_send_message: {
         Args: {
@@ -499,6 +588,7 @@ export type Database = {
       is_master_key: { Args: { _key: string }; Returns: boolean }
       list_my_messages: { Args: { _key: string }; Returns: Json }
       list_my_upgrade_requests: { Args: { _key: string }; Returns: Json }
+      list_panel_functions: { Args: { _key: string }; Returns: Json }
       mark_messages_read: {
         Args: { _ids: string[]; _key: string }
         Returns: number
