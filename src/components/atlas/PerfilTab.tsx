@@ -1,9 +1,10 @@
-import { LogOut, Copy, Check, Crown, MessageCircle } from "lucide-react";
+import { LogOut, Copy, Check, Crown, MessageCircle, ArrowLeft } from "lucide-react";
 import { SUPPORT_URL, SUPPORT_LABEL } from "@/lib/atlas-config";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
+import { useNavigate } from "react-router-dom";
 import { PlanosTab } from "@/components/atlas/PlanosTab";
 import { useTicker } from "@/hooks/use-ticker";
 import {
@@ -18,7 +19,8 @@ import { cn } from "@/lib/utils";
  * Aba "Perfil" — chave (mascarada/copiável), dispositivo, contador regressivo ao vivo.
  */
 export function PerfilTab() {
-  const { keyData, signOut, device } = useKey();
+  const { keyData, signOut, device, adminPreview, closeAdminPanel } = useKey();
+  const navigate = useNavigate();
   useTicker(1000); // re-render a cada segundo p/ contador
 
   const [copied, setCopied] = useState(false);
@@ -59,20 +61,26 @@ export function PerfilTab() {
           )}
         </div>
 
-        <button
-          onClick={copyKey}
-          className="w-full text-left flex items-center justify-between gap-3 bg-white/5 hover:bg-white/10 rounded-xl px-4 py-3 transition-colors"
-          aria-label="Copiar chave"
-        >
-          <span className="font-mono text-sm tracking-wider truncate">
-            {maskKey(keyData.key)}
-          </span>
-          {copied ? (
-            <Check className="w-4 h-4 text-status-active shrink-0" />
-          ) : (
-            <Copy className="w-4 h-4 text-muted-foreground shrink-0" />
-          )}
-        </button>
+        {adminPreview ? (
+          <div className="rounded-xl bg-white/5 px-4 py-3 text-sm font-semibold">
+            Visualização administrativa
+          </div>
+        ) : (
+          <button
+            onClick={copyKey}
+            className="w-full text-left flex items-center justify-between gap-3 bg-white/5 hover:bg-white/10 rounded-xl px-4 py-3 transition-colors"
+            aria-label="Copiar chave"
+          >
+            <span className="font-mono text-sm tracking-wider truncate">
+              {maskKey(keyData.key)}
+            </span>
+            {copied ? (
+              <Check className="w-4 h-4 text-status-active shrink-0" />
+            ) : (
+              <Copy className="w-4 h-4 text-muted-foreground shrink-0" />
+            )}
+          </button>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <Stat label="Você está usando" value={device} icon={<DeviceIcon className="w-3.5 h-3.5" />} />
@@ -110,31 +118,40 @@ export function PerfilTab() {
       </div>
 
       {/* Planos / upgrade */}
-      <div className="space-y-3">
-        <p className="vip-eyebrow">Assinatura & planos</p>
-        <PlanosTab embedded />
-      </div>
+      {!adminPreview && (
+        <div className="space-y-3">
+          <p className="vip-eyebrow">Assinatura & planos</p>
+          <PlanosTab embedded />
+        </div>
+      )}
 
-      <a
-        href={SUPPORT_URL}
-        target="_blank"
-        rel="noreferrer"
-        className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
-      >
-        <MessageCircle className="w-4 h-4" />
-        {SUPPORT_LABEL}
-      </a>
+      {!adminPreview && (
+        <a
+          href={SUPPORT_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
+        >
+          <MessageCircle className="w-4 h-4" />
+          {SUPPORT_LABEL}
+        </a>
+      )}
 
       <Button
         variant="ghost"
         onClick={() => {
+          if (adminPreview) {
+            closeAdminPanel();
+            navigate("/admin", { replace: true });
+            return;
+          }
           signOut();
           toast.message("Sessão encerrada");
         }}
         className="w-full h-12 rounded-2xl bg-white/5 hover:bg-white/10 text-foreground border border-white/10"
       >
-        <LogOut className="w-4 h-4 mr-2" />
-        Sair
+        {adminPreview ? <ArrowLeft className="w-4 h-4 mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
+        {adminPreview ? "Voltar ao admin" : "Sair"}
       </Button>
     </section>
   );

@@ -44,7 +44,10 @@ type Ctx = {
   loading: boolean;
   device: string;
   deviceId: string;
+  adminPreview: boolean;
   redeem: (key: string) => Promise<{ ok: true } | { ok: false; error: RedeemError }>;
+  openAdminPanel: (password: string) => Promise<boolean>;
+  closeAdminPanel: () => void;
   signOut: () => void;
   refresh: () => Promise<void>;
 };
@@ -52,6 +55,8 @@ type Ctx = {
 const STORAGE_KEY = "atlas_vip_key";
 const DEVICE_ID_KEY = "atlas_vip_device_id";
 export const AUTH_ERROR_KEY = "atlas_vip_auth_error";
+const ADMIN_PREVIEW_KEY = "atlas_admin_panel_preview";
+const ADMIN_PASSWORD_KEY = "atlas_vip_admin_pwd";
 
 const KeyContext = createContext<Ctx | null>(null);
 
@@ -95,6 +100,9 @@ function parseError(msg: string | undefined): RedeemError {
 export function KeyProvider({ children }: { children: React.ReactNode }) {
   const [keyData, setKeyData] = useState<KeyData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adminPreview, setAdminPreview] = useState(
+    () => sessionStorage.getItem(ADMIN_PREVIEW_KEY) === "true"
+  );
   const deviceRef = useRef<string>(detectDevice());
   const deviceIdRef = useRef<string>(getOrCreateDeviceId());
 
@@ -105,6 +113,20 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refresh = useCallback(async () => {
+    const previewPassword = sessionStorage.getItem(ADMIN_PASSWORD_KEY);
+    if (sessionStorage.getItem(ADMIN_PREVIEW_KEY) === "true" && previewPassword) {
+      const { data, error } = await supabase.rpc("admin_open_panel", {
+        _password: previewPassword,
+      });
+      if (!error && data) {
+        setKeyData(data as unknown as KeyData);
+        setAdminPreview(true);
+        setLoading(false);
+        return;
+      }
+      sessionStorage.removeItem(ADMIN_PREVIEW_KEY);
+      setAdminPreview(false);
+    }
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) {
       setKeyData(null);
@@ -159,7 +181,26 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const openAdminPanel = useCallback<Ctx["openAdminPanel"]>(async (password) => {
+    const { data, error } = await supabase.rpc("admin_open_panel", {
+      _password: password,
+    });
+    if (error || !data) return false;
+    sessionStorage.setItem(ADMIN_PREVIEW_KEY, "true");
+    setAdminPreview(true);
+    setKeyData(data as unknown as KeyData);
+    return true;
+  }, []);
+
+  const closeAdminPanel = useCallback(() => {
+    sessionStorage.removeItem(ADMIN_PREVIEW_KEY);
+    setAdminPreview(false);
+    setKeyData(null);
+  }, []);
+
   const signOut = useCallback(() => {
+    sessionStorage.removeItem(ADMIN_PREVIEW_KEY);
+    setAdminPreview(false);
     persist(null);
   }, []);
 
@@ -169,11 +210,14 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       loading,
       device: deviceRef.current,
       deviceId: deviceIdRef.current,
+      adminPreview,
       redeem,
+      openAdminPanel,
+      closeAdminPanel,
       signOut,
       refresh,
     }),
-    [keyData, loading, redeem, signOut, refresh]
+    [keyData, loading, adminPreview, redeem, openAdminPanel, closeAdminPanel, signOut, refresh]
   );
 
   return <KeyContext.Provider value={value}>{children}</KeyContext.Provider>;
