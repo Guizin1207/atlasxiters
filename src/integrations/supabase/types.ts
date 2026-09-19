@@ -369,6 +369,29 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_set_device: {
+        Args: { _device: string; _id: string; _password: string }
+        Returns: {
+          activated_at: string | null
+          created_at: string
+          device: string | null
+          device_id: string | null
+          duration_days: number
+          expires_at: string | null
+          id: string
+          is_master: boolean
+          key: string
+          note: string | null
+          plan: string
+          revoked: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "access_keys"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_expiration: {
         Args: { _expires_at: string; _id: string; _password: string }
         Returns: {
