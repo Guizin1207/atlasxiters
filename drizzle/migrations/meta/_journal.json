@@ -15,6 +15,13 @@
       "when": 1789849599590,
       "tag": "0001_admin_set_device",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789851115533,
+      "tag": "0002_enforce_selected_device_on_next_login",
+      "breakpoints": true
     }
   ]
 }

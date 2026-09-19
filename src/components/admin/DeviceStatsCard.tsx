@@ -56,11 +56,11 @@ export function DeviceStatsCard() {
   }, [password]);
 
   return (
-    <section className="glass-strong rounded-3xl p-6">
-      <div className="flex items-center justify-between mb-5">
+    <section className="glass-strong rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="vip-eyebrow mb-1">Visão geral</p>
-          <h2 className="text-xl font-bold flex items-center gap-2">
+          <p className="vip-eyebrow mb-0.5">Visão geral</p>
+          <h2 className="text-base font-bold flex items-center gap-2">
             <Users className="w-4 h-4" />
             Dispositivos por sistema
           </h2>
@@ -75,17 +75,17 @@ export function DeviceStatsCard() {
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {ITEMS.map(({ key, label, icon: Icon, color }) => (
             <div
               key={key}
-              className="rounded-2xl bg-white/[0.03] border border-white/5 px-3 py-4 text-center"
+              className="rounded-lg bg-white/[0.03] border border-white/5 px-1.5 py-2 text-center"
             >
-              <Icon className={`w-5 h-5 mx-auto mb-2 ${color}`} />
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">
+              <Icon className={`w-4 h-4 mx-auto mb-1 ${color}`} />
+              <p className="text-[9px] text-muted-foreground uppercase">
                 {label}
               </p>
-              <p className="text-2xl font-bold tabular-nums mt-1">
+              <p className="text-base font-bold tabular-nums">
                 {stats[key]}
               </p>
             </div>

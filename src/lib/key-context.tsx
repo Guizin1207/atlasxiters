@@ -51,16 +51,23 @@ type Ctx = {
 
 const STORAGE_KEY = "atlas_vip_key";
 const DEVICE_ID_KEY = "atlas_vip_device_id";
+export const AUTH_ERROR_KEY = "atlas_vip_auth_error";
 
 const KeyContext = createContext<Ctx | null>(null);
 
 function detectDevice(): string {
   if (typeof navigator === "undefined") return "Desconhecido";
-  const ua = navigator.userAgent;
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const touchPoints = navigator.maxTouchPoints || 0;
   if (/android/i.test(ua)) return "Android";
-  if (/iphone|ipad|ipod/i.test(ua)) return "iOS";
+  // iPads recentes podem se apresentar como Mac quando o navegador está em modo desktop.
+  if (/iphone|ipad|ipod/i.test(ua) || (/mac/i.test(platform) && touchPoints > 1))
+    return "iOS";
+  if (/windows phone/i.test(ua)) return "Windows";
+  if (/cros/i.test(ua)) return "Linux";
+  if (/windows/i.test(ua) || /win/i.test(platform)) return "Windows";
   if (/macintosh|mac os x/i.test(ua)) return "Mac";
-  if (/windows/i.test(ua)) return "Windows";
   if (/linux/i.test(ua)) return "Linux";
   return "Desconhecido";
 }
@@ -110,6 +117,8 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
         _device_id: deviceIdRef.current,
       });
       if (error) {
+        const reason = parseError(error.message);
+        if (reason === "expired_key") sessionStorage.setItem(AUTH_ERROR_KEY, reason);
         // chave inválida/expirada/device errado → limpa
         localStorage.removeItem(STORAGE_KEY);
         setKeyData(null);
@@ -137,7 +146,12 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
         _device: deviceRef.current,
         _device_id: deviceIdRef.current,
       });
-      if (error) return { ok: false, error: parseError(error.message) };
+      if (error) {
+        const reason = parseError(error.message);
+        if (reason === "expired_key") sessionStorage.setItem(AUTH_ERROR_KEY, reason);
+        return { ok: false, error: reason };
+      }
+      sessionStorage.removeItem(AUTH_ERROR_KEY);
       persist(data as unknown as KeyData);
       return { ok: true };
     } catch {

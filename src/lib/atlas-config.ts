@@ -3,7 +3,7 @@
  */
 export const SUPPORT_WHATSAPP = "5538998816357";
 export const SUPPORT_URL = `https://wa.me/${SUPPORT_WHATSAPP}`;
-export const SUPPORT_LABEL = "Falar no WhatsApp";
+export const SUPPORT_LABEL = "WhatsApp +55 38 99881-6357";
 
 export type PlanId = "basic" | "pro" | "master";
 

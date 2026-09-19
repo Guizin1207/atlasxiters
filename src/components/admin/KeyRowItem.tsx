@@ -259,23 +259,26 @@ export function KeyRowItem({
 
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs">
-              Liberar em outro sistema
+              Próximo acesso em
             </DropdownMenuLabel>
-            {(["Android", "iOS", "Windows", "Mac", "Linux"] as const).map((d) => (
-              <DropdownMenuItem
-                key={d}
-                onClick={() =>
-                  call(
-                    "admin_set_device",
-                    { _id: data.id, _device: d },
-                    `Chave liberada para ${d}`
-                  )
-                }
-              >
-                <Smartphone className="w-4 h-4 mr-2" />
-                {d}
-              </DropdownMenuItem>
-            ))}
+            <div className="grid grid-cols-2 gap-1 p-1">
+              {(["Android", "iOS", "Windows", "Mac", "Linux"] as const).map((d) => (
+                <DropdownMenuItem
+                  key={d}
+                  className="h-8 px-2 text-xs"
+                  onClick={() =>
+                    call(
+                      "admin_set_device",
+                      { _id: data.id, _device: d },
+                      `Chave liberada para ${d}`
+                    )
+                  }
+                >
+                  <Smartphone className="w-3.5 h-3.5 mr-1.5" />
+                  {d}
+                </DropdownMenuItem>
+              ))}
+            </div>
 
             <DropdownMenuSeparator />
 
