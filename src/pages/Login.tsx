@@ -4,7 +4,8 @@
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, KeyRound, ShieldCheck } from "lucide-react";
+import { Loader2, KeyRound, ShieldCheck, MessageCircle } from "lucide-react";
+import { SUPPORT_URL, SUPPORT_LABEL } from "@/lib/atlas-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
@@ -127,9 +128,20 @@ export default function LoginPage() {
           </p>
         </form>
 
-        <p className="text-center text-xs text-muted-foreground/60 mt-8">
-          Não tem uma chave? Fale com o suporte para adquirir acesso.
-        </p>
+        <div className="mt-8 text-center space-y-3">
+          <p className="text-xs text-muted-foreground/60">
+            Não tem uma chave? Fale com o suporte para adquirir acesso.
+          </p>
+          <a
+            href={SUPPORT_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            {SUPPORT_LABEL}
+          </a>
+        </div>
       </div>
     </main>
   );
