@@ -1,10 +1,10 @@
 /**
- * Página /admin — login por senha mestra + dashboard.
+ * Página /admin — dashboard protegido.
+ * Sem login próprio: sem senha mestra, redireciona para a tela de login única.
  */
-import { useState } from "react";
-import { Loader2, Lock, ShieldAlert, LogOut } from "lucide-react";
+import { Navigate } from "react-router-dom";
+import { Loader2, ShieldAlert, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAdmin } from "@/lib/admin-context";
 import { DeviceStatsCard } from "@/components/admin/DeviceStatsCard";
 import { MaintenanceCard } from "@/components/admin/MaintenanceCard";
@@ -13,7 +13,7 @@ import { KeysListCard } from "@/components/admin/KeysListCard";
 import { MessagesCard } from "@/components/admin/MessagesCard";
 
 export default function AdminPage() {
-  const { password, loading, signIn, signOut } = useAdmin();
+  const { password, loading, signOut } = useAdmin();
 
   if (loading) {
     return (
@@ -23,7 +23,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!password) return <AdminLogin onSubmit={signIn} />;
+  if (!password) return <Navigate to="/login" replace />;
 
   return (
     <main className="min-h-screen pb-16">
@@ -59,88 +59,6 @@ export default function AdminPage() {
         <KeysListCard />
 
         <MessagesCard />
-      </div>
-    </main>
-  );
-}
-
-/* ---------- Login ---------- */
-function AdminLogin({
-  onSubmit,
-}: {
-  onSubmit: (pwd: string) => Promise<boolean>;
-}) {
-  const [value, setValue] = useState("");
-  const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  return (
-    <main className="min-h-screen flex items-center justify-center px-6">
-      <div className="w-full max-w-md animate-fade-in">
-        <header className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl glass-strong mb-6">
-            <Lock className="w-7 h-7" />
-          </div>
-          <p className="vip-eyebrow mb-2">Acesso restrito</p>
-          <h1 className="vip-title text-3xl">Atlas Control</h1>
-          <p className="text-sm text-muted-foreground mt-3 max-w-xs mx-auto">
-            Informe a senha mestra para entrar no painel administrativo.
-          </p>
-        </header>
-
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (busy) return;
-            setBusy(true);
-            setErr(null);
-            const ok = await onSubmit(value);
-            setBusy(false);
-            if (!ok) setErr("Senha incorreta.");
-          }}
-          className="glass-strong rounded-3xl p-6 space-y-5"
-        >
-          <label className="block">
-            <span className="vip-eyebrow block mb-3">Senha mestra</span>
-            <Input
-              type="password"
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                if (err) setErr(null);
-              }}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              disabled={busy}
-              className="h-14 rounded-2xl bg-white/5 border-white/10 focus-visible:ring-white/30 text-base"
-              aria-invalid={!!err}
-            />
-          </label>
-
-          {err && (
-            <p
-              role="alert"
-              className="text-sm text-status-danger bg-status-danger/15 border border-status-danger/30 rounded-xl px-4 py-3"
-            >
-              {err}
-            </p>
-          )}
-
-          <Button
-            type="submit"
-            disabled={busy || !value}
-            className="w-full h-14 rounded-2xl text-base font-bold uppercase tracking-[0.15em] bg-white text-black hover:bg-white/90"
-          >
-            {busy ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Validando…
-              </>
-            ) : (
-              "Entrar"
-            )}
-          </Button>
-        </form>
       </div>
     </main>
   );
