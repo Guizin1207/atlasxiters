@@ -11,6 +11,7 @@ import {
   Copy,
   Check,
   Undo2,
+  Smartphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -255,6 +256,26 @@ export function KeyRowItem({
               <RotateCcw className="w-4 h-4 mr-2" />
               Resetar dispositivo
             </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs">
+              Liberar em outro sistema
+            </DropdownMenuLabel>
+            {(["Android", "iOS", "Windows", "Mac", "Linux"] as const).map((d) => (
+              <DropdownMenuItem
+                key={d}
+                onClick={() =>
+                  call(
+                    "admin_set_device",
+                    { _id: data.id, _device: d },
+                    `Chave liberada para ${d}`
+                  )
+                }
+              >
+                <Smartphone className="w-4 h-4 mr-2" />
+                {d}
+              </DropdownMenuItem>
+            ))}
 
             <DropdownMenuSeparator />
 
