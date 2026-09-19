@@ -1,10 +1,11 @@
-import { LayoutGrid, SlidersHorizontal, UserRound } from "lucide-react";
+import { LayoutGrid, SlidersHorizontal, UserRound, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AtlasTab = "funcoes" | "ajustes" | "perfil";
+export type AtlasTab = "funcoes" | "planos" | "ajustes" | "perfil";
 
 const TABS: { id: AtlasTab; label: string; icon: typeof LayoutGrid }[] = [
   { id: "funcoes", label: "Funções", icon: LayoutGrid },
+  { id: "planos", label: "Planos", icon: Crown },
   { id: "ajustes", label: "Ajustes", icon: SlidersHorizontal },
   { id: "perfil", label: "Perfil", icon: UserRound },
 ];
@@ -20,7 +21,7 @@ export function TabsNav({
     <nav
       role="tablist"
       aria-label="Seções do painel"
-      className="glass-strong rounded-2xl p-1 grid grid-cols-3 gap-1"
+      className="glass-strong rounded-2xl p-1 grid grid-cols-4 gap-1"
     >
       {TABS.map((t) => {
         const active = value === t.id;
@@ -32,15 +33,14 @@ export function TabsNav({
             aria-selected={active}
             onClick={() => onChange(t.id)}
             className={cn(
-              "h-11 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] transition-all",
+              "h-11 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all",
               active
                 ? "bg-white text-black shadow-glow"
                 : "text-muted-foreground hover:text-foreground hover:bg-white/5"
             )}
           >
             <Icon className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t.label}</span>
-            <span className="sm:hidden">{t.label}</span>
+            <span>{t.label}</span>
           </button>
         );
       })}

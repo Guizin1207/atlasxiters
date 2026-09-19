@@ -28,6 +28,7 @@ export type KeyData = {
   is_master: boolean;
   revoked: boolean;
   created_at: string;
+  plan?: string | null;
 };
 
 type RedeemError =
