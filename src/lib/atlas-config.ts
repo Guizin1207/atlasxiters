@@ -12,6 +12,8 @@ export type PlanInfo = {
   name: string;
   days: number | null; // null = vitalício
   tagline: string;
+  price: string;
+  priceNote: string;
   perks: string[];
 };
 
@@ -21,6 +23,8 @@ export const PLANS: PlanInfo[] = [
     name: "Basic",
     days: 30,
     tagline: "30 dias de acesso",
+    price: "R$ 29,90",
+    priceNote: "por mês",
     perks: ["Funções essenciais", "1 dispositivo", "Suporte padrão"],
   },
   {
@@ -28,6 +32,8 @@ export const PLANS: PlanInfo[] = [
     name: "Pro",
     days: 90,
     tagline: "90 dias de acesso",
+    price: "R$ 69,90",
+    priceNote: "a cada 3 meses",
     perks: ["Todas as funções", "1 dispositivo", "Suporte prioritário"],
   },
   {
@@ -35,6 +41,8 @@ export const PLANS: PlanInfo[] = [
     name: "Master",
     days: null,
     tagline: "Acesso vitalício",
+    price: "R$ 199,90",
+    priceNote: "pagamento único",
     perks: ["Todas as funções", "Sem expiração", "Suporte VIP"],
   },
 ];
@@ -48,6 +56,6 @@ export function getPlan(id?: string | null): PlanInfo {
 /** Link do WhatsApp já com a mensagem do pedido de upgrade. */
 export function upgradeWhatsAppUrl(key: string, plan: PlanId) {
   const p = getPlan(plan);
-  const msg = `Olá! Quero fazer upgrade para o plano ${p.name} (${p.tagline}).\nMinha chave: ${key}`;
+  const msg = `Olá! Quero fazer upgrade para o plano ${p.name} — ${p.price} (${p.priceNote}).\nMinha chave: ${key}`;
   return `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 }
