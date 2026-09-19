@@ -8,7 +8,7 @@ import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert } from "lu
 import { SUPPORT_URL, SUPPORT_LABEL } from "@/lib/atlas-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useKey } from "@/lib/key-context";
+import { AUTH_ERROR_KEY, useKey } from "@/lib/key-context";
 import { useAdmin } from "@/lib/admin-context";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -26,7 +26,11 @@ export default function LoginPage() {
   const { keyData, redeem, loading } = useKey();
   const { signIn: adminSignIn } = useAdmin();
   const [value, setValue] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    const reason = sessionStorage.getItem(AUTH_ERROR_KEY);
+    sessionStorage.removeItem(AUTH_ERROR_KEY);
+    return reason ? ERROR_MESSAGES[reason] ?? null : null;
+  });
   const [submitting, setSubmitting] = useState(false);
   const isExpired = error === ERROR_MESSAGES.expired_key;
 
