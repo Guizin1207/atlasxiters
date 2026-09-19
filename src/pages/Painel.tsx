@@ -12,7 +12,6 @@ import { TabsNav, type AtlasTab } from "@/components/atlas/TabsNav";
 import { FuncoesTab } from "@/components/atlas/FuncoesTab";
 import { AjustesTab } from "@/components/atlas/AjustesTab";
 import { PerfilTab } from "@/components/atlas/PerfilTab";
-import { PlanosTab } from "@/components/atlas/PlanosTab";
 import { InjectButton } from "@/components/atlas/InjectButton";
 import { MaintenanceModal } from "@/components/MaintenanceModal";
 import { ExpiredKeyModal } from "@/components/ExpiredKeyModal";
@@ -47,7 +46,6 @@ export default function PainelPage() {
 
         <div className="mt-6 animate-fade-in" key={tab}>
           {tab === "funcoes" && <FuncoesTab />}
-          {tab === "planos" && <PlanosTab />}
           {tab === "ajustes" && <AjustesTab />}
           {tab === "perfil" && <PerfilTab />}
         </div>

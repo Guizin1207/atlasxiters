@@ -30,7 +30,7 @@ const ICONS: Record<PlanId, typeof Zap> = {
   master: Crown,
 };
 
-export function PlanosTab() {
+export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const { keyData } = useKey();
   const [requests, setRequests] = useState<Request[]>([]);
   const [busy, setBusy] = useState<PlanId | null>(null);
@@ -76,10 +76,12 @@ export function PlanosTab() {
 
   return (
     <section aria-label="Planos" className="space-y-5">
-      <div>
-        <p className="vip-eyebrow mb-1">Assinatura</p>
-        <h2 className="text-xl font-bold">Planos</h2>
-      </div>
+      {!embedded && (
+        <div>
+          <p className="vip-eyebrow mb-1">Assinatura</p>
+          <h2 className="text-xl font-bold">Planos</h2>
+        </div>
+      )}
 
       <div className="glass-strong rounded-2xl p-5 flex items-center justify-between">
         <div>
@@ -118,6 +120,13 @@ export function PlanosTab() {
                     <p className="text-xs text-muted-foreground">{p.tagline}</p>
                   </div>
                 </div>
+                <div className="text-right shrink-0">
+                  <p className="font-mono text-base font-bold leading-none">{p.price}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{p.priceNote}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
                 {isCurrent && (
                   <span className="text-[10px] uppercase tracking-[0.2em] bg-white text-black rounded-full px-2 py-1 font-bold">
                     Atual
@@ -144,7 +153,9 @@ export function PlanosTab() {
                   className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
                 >
                   {busy === p.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {isPending ? "Pedido enviado — falar de novo" : `Fazer upgrade`}
+                  {isPending
+                    ? "Pedido enviado — falar de novo"
+                    : `Fazer upgrade • ${p.price}`}
                 </Button>
               )}
 
