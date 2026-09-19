@@ -7,10 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
 import type { KeyData } from "@/lib/key-context";
+import { PLANS, getPlan, type PlanId } from "@/lib/atlas-config";
+import { cn } from "@/lib/utils";
 
 export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
   const { password } = useAdmin();
   const [count, setCount] = useState(1);
+  const [plan, setPlan] = useState<PlanId>("basic");
   const [days, setDays] = useState(30);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,6 +27,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
       _duration_days: days,
       _note: note,
       _password: password,
+      _plan: plan,
     });
     setBusy(false);
     if (error) {
@@ -58,6 +62,32 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
           Gerar chaves
         </h2>
       </div>
+
+      <Field label="Plano">
+        <div className="grid grid-cols-3 gap-2">
+          {PLANS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => {
+                setPlan(p.id);
+                setDays(p.days ?? 36500);
+              }}
+              className={cn(
+                "h-11 rounded-xl text-xs font-semibold uppercase tracking-[0.12em] border transition-colors",
+                plan === p.id
+                  ? "bg-white text-black border-white"
+                  : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">
+          {getPlan(plan).tagline}
+        </p>
+      </Field>
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Quantidade">
@@ -126,7 +156,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
               >
                 <span className="truncate">{k.key}</span>
                 <span className="text-[10px] text-muted-foreground ml-2">
-                  {k.duration_days}d
+                  {getPlan(k.plan).name} · {k.duration_days}d
                 </span>
               </div>
             ))}
