@@ -8,6 +8,7 @@ import { Loader2, KeyRound, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
+import { useAdmin } from "@/lib/admin-context";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_key: "Chave inválida. Verifique e tente novamente.",
@@ -22,6 +23,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, redeem, loading } = useKey();
+  const { signIn: adminSignIn } = useAdmin();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -35,6 +37,13 @@ export default function LoginPage() {
     if (submitting) return;
     setError(null);
     setSubmitting(true);
+    // Senha mestra digitada na tela de login abre o painel admin
+    const isAdmin = await adminSignIn(value.trim());
+    if (isAdmin) {
+      setSubmitting(false);
+      navigate("/admin", { replace: true });
+      return;
+    }
     const result = await redeem(value);
     setSubmitting(false);
     if (result.ok === true) {
