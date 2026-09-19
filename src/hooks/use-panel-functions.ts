@@ -24,6 +24,8 @@ export function usePanelFunctions(source: Source | null) {
   const [loading, setLoading] = useState(true);
   const [offline, setOffline] = useState(false);
 
+  const sourceId = source ? ("password" in source ? `pwd:${source.password}` : `key:${source.key}`) : "";
+
   const load = useCallback(async () => {
     if (!source) return;
     const res =
@@ -39,7 +41,8 @@ export function usePanelFunctions(source: Source | null) {
       setFunctions((res.data as unknown as PanelFunctionRow[]).map(mapPanelFunction));
     }
     setLoading(false);
-  }, [source && "password" in source ? source.password : source?.key]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceId]);
 
   useEffect(() => {
     load();
