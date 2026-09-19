@@ -23,6 +23,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, redeem, loading } = useKey();
+  const { signIn: adminSignIn } = useAdmin();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
