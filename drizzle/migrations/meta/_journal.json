@@ -29,6 +29,13 @@
       "when": 1789852491610,
       "tag": "0003_admin_open_functions_panel",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789853365024,
+      "tag": "0004_admin_ai_dynamic_functions",
+      "breakpoints": true
     }
   ]
 }
