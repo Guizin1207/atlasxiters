@@ -56,11 +56,17 @@ const KeyContext = createContext<Ctx | null>(null);
 
 function detectDevice(): string {
   if (typeof navigator === "undefined") return "Desconhecido";
-  const ua = navigator.userAgent;
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const touchPoints = navigator.maxTouchPoints || 0;
   if (/android/i.test(ua)) return "Android";
-  if (/iphone|ipad|ipod/i.test(ua)) return "iOS";
+  // iPads recentes podem se apresentar como Mac quando o navegador está em modo desktop.
+  if (/iphone|ipad|ipod/i.test(ua) || (/mac/i.test(platform) && touchPoints > 1))
+    return "iOS";
+  if (/windows phone/i.test(ua)) return "Windows";
+  if (/cros/i.test(ua)) return "Linux";
+  if (/windows/i.test(ua) || /win/i.test(platform)) return "Windows";
   if (/macintosh|mac os x/i.test(ua)) return "Mac";
-  if (/windows/i.test(ua)) return "Windows";
   if (/linux/i.test(ua)) return "Linux";
   return "Desconhecido";
 }

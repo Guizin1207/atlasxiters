@@ -1,6 +1,7 @@
 import { Wrench, LogOut, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
+import { SUPPORT_URL } from "@/lib/atlas-config";
 
 /**
  * Modal full-screen quando a manutenção está ativa.
@@ -42,9 +43,9 @@ export function MaintenanceModal({ message }: { message: string }) {
             asChild
             className="h-12 rounded-2xl bg-white text-black hover:bg-white/90"
           >
-            <a href="mailto:suporte@atlasvip.app">
+            <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
               <MessageCircle className="w-4 h-4 mr-2" />
-              Suporte
+              WhatsApp
             </a>
           </Button>
         </div>

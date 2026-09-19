@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, KeyRound, ShieldCheck, MessageCircle } from "lucide-react";
+import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert } from "lucide-react";
 import { SUPPORT_URL, SUPPORT_LABEL } from "@/lib/atlas-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const isExpired = error === ERROR_MESSAGES.expired_key;
 
   useEffect(() => {
     if (!loading && keyData) navigate("/painel", { replace: true });
@@ -100,12 +101,29 @@ export default function LoginPage() {
           </label>
 
           {error && (
-            <p
+            <div
               role="alert"
               className="text-sm text-status-danger bg-status-danger/15 border border-status-danger/30 rounded-xl px-4 py-3"
             >
-              {error}
-            </p>
+              <div className="flex items-start gap-2">
+                {isExpired && <TriangleAlert className="w-4 h-4 mt-0.5 shrink-0" />}
+                <div className="min-w-0">
+                  {isExpired && <strong className="block text-base uppercase">Expirado</strong>}
+                  <span>{isExpired ? "Seu acesso expirou. Procure o suporte para renovar." : error}</span>
+                </div>
+              </div>
+              {isExpired && (
+                <a
+                  href={SUPPORT_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg border border-status-danger/30 font-semibold"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Suporte: +55 38 99881-6357
+                </a>
+              )}
+            </div>
           )}
 
           <Button

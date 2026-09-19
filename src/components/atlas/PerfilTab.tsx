@@ -18,13 +18,13 @@ import { cn } from "@/lib/utils";
  * Aba "Perfil" — chave (mascarada/copiável), dispositivo, contador regressivo ao vivo.
  */
 export function PerfilTab() {
-  const { keyData, signOut } = useKey();
+  const { keyData, signOut, device } = useKey();
   useTicker(1000); // re-render a cada segundo p/ contador
 
   const [copied, setCopied] = useState(false);
   if (!keyData) return null;
 
-  const DeviceIcon = getDeviceIcon(keyData.device);
+  const DeviceIcon = getDeviceIcon(device);
   const remaining = keyData.is_master ? Infinity : msUntil(keyData.expires_at);
   const warn = isFinite(remaining) && remaining < 86_400_000; // <24h
   const expired = isFinite(remaining) && remaining <= 0;
@@ -75,7 +75,7 @@ export function PerfilTab() {
         </button>
 
         <div className="grid grid-cols-2 gap-3">
-          <Stat label="Dispositivo" value={keyData.device ?? "—"} icon={<DeviceIcon className="w-3.5 h-3.5" />} />
+          <Stat label="Você está usando" value={device} icon={<DeviceIcon className="w-3.5 h-3.5" />} />
           <Stat
             label="Duração"
             value={keyData.is_master ? "Vitalícia" : `${keyData.duration_days}d`}

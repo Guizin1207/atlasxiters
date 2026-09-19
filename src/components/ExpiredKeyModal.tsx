@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { TimerOff, LogOut } from "lucide-react";
+import { TimerOff, LogOut, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
+import { SUPPORT_URL } from "@/lib/atlas-config";
 
 /**
  * Mostra quando a chave expira/é revogada.
@@ -16,7 +17,7 @@ export function ExpiredKeyModal() {
     const id = setTimeout(() => {
       signOut();
       navigate("/login", { replace: true });
-    }, 4000);
+    }, 8000);
     return () => clearTimeout(id);
   }, [signOut, navigate]);
 
@@ -37,15 +38,20 @@ export function ExpiredKeyModal() {
           <TimerOff className="w-7 h-7 text-status-danger" />
         </div>
         <div>
-          <p className="vip-eyebrow mb-2">Sessão</p>
-          <h2 id="expired-title" className="vip-title text-2xl">
-            Chave expirada
+          <p className="vip-eyebrow mb-2 text-status-danger">Acesso encerrado</p>
+          <h2 id="expired-title" className="vip-title text-3xl text-status-danger">
+            Expirado
           </h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          Sua chave de acesso não é mais válida. Renove para continuar usando o
-          painel.
+          Sua chave não é mais válida. Procure o suporte para renovar seu acesso.
         </p>
+        <Button asChild className="w-full h-12 rounded-2xl bg-status-danger/15 text-status-danger border border-status-danger/30 hover:bg-status-danger/20">
+          <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            WhatsApp +55 38 99881-6357
+          </a>
+        </Button>
         <Button
           onClick={exit}
           className="w-full h-12 rounded-2xl bg-white text-black hover:bg-white/90"
