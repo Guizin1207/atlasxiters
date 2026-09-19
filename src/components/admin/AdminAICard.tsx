@@ -44,7 +44,6 @@ export function AdminAICard() {
   const { functions } = usePanelFunctions(source);
   const [initialMessages, setInitialMessages] = useState<UIMessage[] | null>(null);
   const [input, setInput] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const snapshot = useMemo(
     () =>
@@ -117,7 +116,6 @@ export function AdminAICard() {
       password={password ?? ""}
       input={input}
       setInput={setInput}
-      textareaRef={textareaRef}
       onClear={async () => {
         await persist([]);
         setInitialMessages([]);
@@ -133,7 +131,6 @@ function AdminAIChat({
   password,
   input,
   setInput,
-  textareaRef,
   onClear,
 }: {
   initialMessages: UIMessage[];
@@ -142,7 +139,6 @@ function AdminAIChat({
   password: string;
   input: string;
   setInput: (value: string) => void;
-  textareaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   onClear: () => Promise<void>;
 }) {
   const { messages, sendMessage, status, stop, error } = useChat({
@@ -151,13 +147,8 @@ function AdminAIChat({
     transport,
     onFinish: ({ messages: all }) => {
       persist(all);
-      textareaRef.current?.focus();
     },
   });
-
-  useEffect(() => {
-    textareaRef.current?.focus();
-  }, [textareaRef]);
 
   const busy = status === "submitted" || status === "streaming";
 
@@ -287,7 +278,6 @@ function AdminAIChat({
           }}
         >
           <PromptInputTextarea
-            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ex: crie uma função de Turbo FPS no plano pro"
