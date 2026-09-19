@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyRound, Loader2, Plus, ClipboardCopy } from "lucide-react";
+import { KeyRound, Loader2, Plus, ClipboardCopy, CalendarDays, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,12 @@ import type { KeyData } from "@/lib/key-context";
 import { PLANS, getPlan, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
 
+type KeyMode = "normal" | "daily" | "demo";
+
 export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
   const { password } = useAdmin();
   const [count, setCount] = useState(1);
+  const [mode, setMode] = useState<KeyMode>("normal");
   const [plan, setPlan] = useState<PlanId>("basic");
   const [days, setDays] = useState(30);
   const [note, setNote] = useState("");
@@ -22,10 +25,14 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
   const generate = async () => {
     if (!password) return;
     setBusy(true);
+    const effectiveDays = mode === "normal" ? days : 1;
+    const effectiveNote = mode === "demo"
+      ? ["DEMO", note.trim()].filter(Boolean).join(" — ")
+      : note;
     const { data, error } = await supabase.rpc("admin_create_keys", {
       _count: count,
-      _duration_days: days,
-      _note: note,
+      _duration_days: effectiveDays,
+      _note: effectiveNote,
       _password: password,
       _plan: plan,
     });
@@ -63,6 +70,23 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
         </h2>
       </div>
 
+      <Field label="Tipo de acesso">
+        <div className="grid grid-cols-3 gap-2">
+          <ModeButton active={mode === "normal"} onClick={() => setMode("normal")} icon={<KeyRound className="w-3.5 h-3.5" />}>
+            Normal
+          </ModeButton>
+          <ModeButton active={mode === "daily"} onClick={() => { setMode("daily"); setDays(1); }} icon={<CalendarDays className="w-3.5 h-3.5" />}>
+            Diária
+          </ModeButton>
+          <ModeButton active={mode === "demo"} onClick={() => { setMode("demo"); setDays(1); }} icon={<FlaskConical className="w-3.5 h-3.5" />}>
+            Demo
+          </ModeButton>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">
+          {mode === "normal" ? "Duração personalizada." : mode === "daily" ? "Acesso de 1 dia após o primeiro uso." : "Teste de 1 dia identificado como DEMO."}
+        </p>
+      </Field>
+
       <Field label="Plano">
         <div className="grid grid-cols-3 gap-2">
           {PLANS.map((p) => (
@@ -71,7 +95,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
               type="button"
               onClick={() => {
                 setPlan(p.id);
-                setDays(p.days ?? 36500);
+                if (mode === "normal") setDays(p.days ?? 36500);
               }}
               className={cn(
                 "h-11 rounded-xl text-xs font-semibold uppercase tracking-[0.12em] border transition-colors",
@@ -105,8 +129,9 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
             type="number"
             min={1}
             value={days}
+            disabled={mode !== "normal"}
             onChange={(e) => setDays(Math.max(1, Number(e.target.value) || 30))}
-            className="rounded-xl bg-white/5 border-white/10 h-11"
+            className="rounded-xl bg-white/5 border-white/10 h-11 disabled:opacity-60"
           />
         </Field>
       </div>
@@ -173,5 +198,22 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="vip-eyebrow block mb-2">{label}</span>
       {children}
     </label>
+  );
+}
+
+function ModeButton({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={onClick}
+      className={cn(
+        "h-12 rounded-xl border text-[10px] font-semibold uppercase flex-col gap-1",
+        active ? "bg-white text-black border-white hover:bg-white/90" : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground"
+      )}
+    >
+      {icon}
+      {children}
+    </Button>
   );
 }

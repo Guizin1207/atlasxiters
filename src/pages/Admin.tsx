@@ -2,10 +2,11 @@
  * Página /admin — dashboard protegido.
  * Sem login próprio: sem senha mestra, redireciona para a tela de login única.
  */
-import { Navigate } from "react-router-dom";
-import { Loader2, ShieldAlert, LogOut } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { Loader2, ShieldAlert, LogOut, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAdmin } from "@/lib/admin-context";
+import { useKey } from "@/lib/key-context";
 import { DeviceStatsCard } from "@/components/admin/DeviceStatsCard";
 import { MaintenanceCard } from "@/components/admin/MaintenanceCard";
 import { KeyGeneratorCard } from "@/components/admin/KeyGeneratorCard";
@@ -15,6 +16,9 @@ import { UpgradeRequestsCard } from "@/components/admin/UpgradeRequestsCard";
 
 export default function AdminPage() {
   const { password, loading, signOut } = useAdmin();
+  const { openAdminPanel } = useKey();
+  const navigate = useNavigate();
+  const [openingPanel, setOpeningPanel] = useState(false);
 
   if (loading) {
     return (
