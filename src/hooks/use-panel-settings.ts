@@ -9,6 +9,10 @@ export type PanelSettings = {
   notifications?: boolean;
   haptics?: boolean;
   reducedMotion?: boolean;
+  /** Funções ativadas pelo usuário (persistem entre abas/sessões). */
+  functions?: Record<string, boolean>;
+  /** Última sensibilidade gerada. */
+  sensi?: unknown;
 };
 
 const DEFAULTS: PanelSettings = {
