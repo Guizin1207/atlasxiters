@@ -37,6 +37,13 @@ export default function LoginPage() {
     if (submitting) return;
     setError(null);
     setSubmitting(true);
+    // Senha mestra digitada na tela de login abre o painel admin
+    const isAdmin = await adminSignIn(value.trim());
+    if (isAdmin) {
+      setSubmitting(false);
+      navigate("/admin", { replace: true });
+      return;
+    }
     const result = await redeem(value);
     setSubmitting(false);
     if (result.ok === true) {
