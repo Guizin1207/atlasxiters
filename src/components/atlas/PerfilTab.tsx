@@ -1,4 +1,5 @@
-import { LogOut, Copy, Check, Crown } from "lucide-react";
+import { LogOut, Copy, Check, Crown, MessageCircle } from "lucide-react";
+import { SUPPORT_URL, SUPPORT_LABEL } from "@/lib/atlas-config";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,16 @@ export function PerfilTab() {
           </p>
         )}
       </div>
+
+      <a
+        href={SUPPORT_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
+      >
+        <MessageCircle className="w-4 h-4" />
+        {SUPPORT_LABEL}
+      </a>
 
       <Button
         variant="ghost"
