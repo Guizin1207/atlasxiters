@@ -26,6 +26,7 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
+          plan: string
           revoked: boolean
         }
         Insert: {
@@ -39,6 +40,7 @@ export type Database = {
           is_master?: boolean
           key: string
           note?: string | null
+          plan?: string
           revoked?: boolean
         }
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           is_master?: boolean
           key?: string
           note?: string | null
+          plan?: string
           revoked?: boolean
         }
         Relationships: []
@@ -165,6 +168,44 @@ export type Database = {
           },
         ]
       }
+      upgrade_requests: {
+        Row: {
+          created_at: string
+          id: string
+          key_id: string
+          message: string | null
+          requested_plan: string
+          resolved_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_id: string
+          message?: string | null
+          requested_plan: string
+          resolved_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_id?: string
+          message?: string | null
+          requested_plan?: string
+          resolved_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upgrade_requests_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -174,6 +215,7 @@ export type Database = {
       _cfg_text: { Args: { _k: string }; Returns: string }
       _check_admin: { Args: { _password: string }; Returns: boolean }
       _gen_key: { Args: never; Returns: string }
+      _plan_days: { Args: { _plan: string }; Returns: number }
       _require_admin: { Args: { _password: string }; Returns: undefined }
       admin_activate_key: {
         Args: { _id: string; _password: string }
@@ -188,6 +230,7 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
+          plan: string
           revoked: boolean
         }
         SetofOptions: {
@@ -203,6 +246,7 @@ export type Database = {
           _duration_days: number
           _note: string
           _password: string
+          _plan?: string
         }
         Returns: Json
       }
@@ -228,6 +272,7 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
+          plan: string
           revoked: boolean
         }
         SetofOptions: {
@@ -250,6 +295,7 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
+          plan: string
           revoked: boolean
         }[]
         SetofOptions: {
@@ -260,6 +306,10 @@ export type Database = {
         }
       }
       admin_list_messages: { Args: { _password: string }; Returns: Json }
+      admin_list_upgrade_requests: {
+        Args: { _password: string }
+        Returns: Json
+      }
       admin_reset_device: {
         Args: { _id: string; _password: string }
         Returns: {
@@ -273,6 +323,7 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
+          plan: string
           revoked: boolean
         }
         SetofOptions: {
@@ -281,6 +332,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_resolve_upgrade_request: {
+        Args: { _approve: boolean; _id: string; _password: string }
+        Returns: Json
       }
       admin_revoke_key: {
         Args: { _id: string; _password: string }
@@ -295,6 +350,7 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
+          plan: string
           revoked: boolean
         }
         SetofOptions: {
@@ -326,6 +382,7 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
+          plan: string
           revoked: boolean
         }
         SetofOptions: {
@@ -338,6 +395,34 @@ export type Database = {
       admin_set_maintenance: {
         Args: { _enabled: boolean; _message: string; _password: string }
         Returns: Json
+      }
+      admin_set_plan: {
+        Args: {
+          _apply_duration?: boolean
+          _id: string
+          _password: string
+          _plan: string
+        }
+        Returns: {
+          activated_at: string | null
+          created_at: string
+          device: string | null
+          device_id: string | null
+          duration_days: number
+          expires_at: string | null
+          id: string
+          is_master: boolean
+          key: string
+          note: string | null
+          plan: string
+          revoked: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "access_keys"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_unrevoke_key: {
         Args: { _id: string; _password: string }
@@ -352,6 +437,7 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
+          plan: string
           revoked: boolean
         }
         SetofOptions: {
@@ -366,12 +452,17 @@ export type Database = {
       get_settings: { Args: { _key: string }; Returns: Json }
       is_master_key: { Args: { _key: string }; Returns: boolean }
       list_my_messages: { Args: { _key: string }; Returns: Json }
+      list_my_upgrade_requests: { Args: { _key: string }; Returns: Json }
       mark_messages_read: {
         Args: { _ids: string[]; _key: string }
         Returns: number
       }
       redeem_key: {
         Args: { _device: string; _device_id: string; _key: string }
+        Returns: Json
+      }
+      request_upgrade: {
+        Args: { _key: string; _message?: string; _plan: string }
         Returns: Json
       }
       save_settings: { Args: { _key: string; _settings: Json }; Returns: Json }
