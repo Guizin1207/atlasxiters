@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
+import { PlanosTab } from "@/components/atlas/PlanosTab";
 import { useTicker } from "@/hooks/use-ticker";
 import {
   formatCountdown,
@@ -106,6 +107,12 @@ export function PerfilTab() {
             })}
           </p>
         )}
+      </div>
+
+      {/* Planos / upgrade */}
+      <div className="space-y-3">
+        <p className="vip-eyebrow">Assinatura & planos</p>
+        <PlanosTab embedded />
       </div>
 
       <a
