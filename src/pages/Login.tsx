@@ -124,7 +124,7 @@ export default function LoginPage() {
                   className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg border border-status-danger/30 font-semibold"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Suporte: +55 38 99881-6357
+                  Falar com o suporte
                 </a>
               )}
             </div>
