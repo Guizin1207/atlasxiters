@@ -8,6 +8,7 @@ import { Loader2, KeyRound, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
+import { useAdmin } from "@/lib/admin-context";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_key: "Chave inválida. Verifique e tente novamente.",
