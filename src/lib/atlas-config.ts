@@ -2,8 +2,9 @@
  * Configurações fixas do Atlas VIP.
  */
 export const SUPPORT_WHATSAPP = "5538998816357";
-export const SUPPORT_URL = `https://wa.me/${SUPPORT_WHATSAPP}`;
-export const SUPPORT_LABEL = "WhatsApp +55 38 99881-6357";
+const SUPPORT_MESSAGE = "Olá! Preciso de ajuda com o Atlas VIP.";
+export const SUPPORT_URL = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(SUPPORT_MESSAGE)}`;
+export const SUPPORT_LABEL = "Falar com o suporte";
 
 export type PlanId = "basic" | "pro" | "master";
 

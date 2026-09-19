@@ -49,7 +49,7 @@ export function ExpiredKeyModal() {
         <Button asChild className="w-full h-12 rounded-2xl bg-status-danger/15 text-status-danger border border-status-danger/30 hover:bg-status-danger/20">
           <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
             <MessageCircle className="w-4 h-4 mr-2" />
-            WhatsApp +55 38 99881-6357
+            Falar com o suporte
           </a>
         </Button>
         <Button
