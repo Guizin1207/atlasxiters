@@ -1,6 +1,6 @@
 /**
  * Aba "Planos" — mostra o plano atual e permite adquirir um plano pago.
- * O pedido fica registrado para o admin e abre o WhatsApp com a mensagem pronta.
+ * O botão de aquisição abre o WhatsApp com a mensagem pronta.
  */
 
 import { Check, Crown, FlaskConical, Sparkles, Zap } from "lucide-react";
@@ -8,13 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
 import { PLANS, getPlan, upgradeWhatsAppUrl, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
-
-type Request = {
-  id: string;
-  requested_plan: string;
-  status: string;
-  created_at: string;
-};
 
 const ICONS: Record<PlanId, typeof Zap> = {
   demo: FlaskConical,
@@ -33,14 +26,6 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const demoTagline = demoHasExpiry ? "Acesso demo com prazo" : "Acesso demo ilimitado";
 
   if (!keyData) return null;
-
-  const nextPlan: PlanId | null =
-    currentPlan === "demo" ? "basic" :
-    currentPlan === "basic" ? "pro" :
-    currentPlan === "pro" ? "master" :
-    null;
-  const nextPlanInfo = nextPlan ? getPlan(nextPlan) : null;
-  const isPending = nextPlan ? pending(nextPlan) : false;
 
   return (
     <section aria-label="Planos" className="space-y-5">
