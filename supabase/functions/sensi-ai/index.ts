@@ -1,6 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createOpenAI } from "npm:@ai-sdk/openai";
-import { Output, streamText } from "npm:ai";
+import { Output, generateText } from "npm:ai";
 import { z } from "npm:zod";
 import {
   createLovableAiGatewayRunIdFetch,
@@ -141,11 +141,10 @@ Responda SOMENTE com JSON válido, sem markdown, neste formato:
 
 Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. Mantenha a diferença entre miras coerente com o aparelho e o estilo. A precisão estimada é apenas um índice heurístico de adequação, nunca uma promessa de desempenho.`;
 
-    const result = streamText({
+    const result = await generateText({
       model: lovable.responses("openai/gpt-6-astra"),
       output: Output.object({ schema: sensiSchema }),
       prompt,
-      abortSignal: req.signal,
       providerOptions: {
         openai: {
           forceReasoning: true,
@@ -157,8 +156,17 @@ Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 
       },
     });
 
-    const parsed = await result.output;
-    const sensi = cleanResult(parsed as Record<string, unknown>, isIOS);
+    const parsed = result.output;
+    const parsedRecord = parsed as Record<string, unknown>;
+    const validation = sensiSchema.safeParse(parsedRecord);
+    if (!validation.success) {
+      console.error("sensi-ai invalid structured output", validation.error.flatten());
+      return new Response(JSON.stringify({ error: "A IA retornou uma configuração incompleta. Tente novamente." }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const sensi = cleanResult(parsedRecord, isIOS);
 
     return new Response(JSON.stringify(sensi), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
