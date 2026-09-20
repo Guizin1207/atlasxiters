@@ -54,7 +54,7 @@ function inferDevice(text: string) {
   return text.match(/(?:iphone|ipad|redmi|poco|samsung|galaxy|motorola|moto|realme|infinix|tecno|xiaomi|oppo|vivo|asus|rog|zenfone|honor|oneplus|nothing|google\s+pixel)[^,.!?]*/i)?.[0]?.trim() || "";
 }
 
-function formatDevice(device: string) {
+function detectDeviceFromBrowser() {\n  if (typeof navigator === "undefined") return "";\n  const ua = navigator.userAgent || "";\n  const platform = /iPhone|iPad|iPod/i.test(ua) ? "iPhone" : "";\n  if (platform) return platform;\n  const android = ua.match(/Android[^;)]*;\\s*(?:[a-z]{2}-[A-Z]{2};\\s*)?([^;)]+?)(?:\\s+Build\\/[^;)]+)?[;)]/i);\n  if (android?.[1]) return android[1].trim();\n  return "";\n}\n\nfunction formatDevice(device: string) {
   return device
     .replace(/\s+/g, " ")
     .replace(/^./, (char) => char.toUpperCase())
@@ -77,7 +77,7 @@ export function SensiTab() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      text: "Me diga seu aparelho + ajuste. Ex.: “iPhone 13, mais capa no rush”.",
+      text: "Seu aparelho será detectado automaticamente. Depois, escolha: Mais capa, Mais controle, Rush ou AWM.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -118,7 +118,7 @@ export function SensiTab() {
         ...current,
         {
           role: "ai",
-          text: "Antes de calibrar, me diga o modelo do aparelho. Ex.: iPhone 13, Galaxy A55, Redmi Note 13 ou Moto G84.",
+          text: "Não consegui identificar o modelo. Digite o aparelho uma vez para calibrar com precisão."
         },
       ]);
       return;
@@ -336,7 +336,7 @@ export function SensiTab() {
               value={input}
               onChange={(event) => setInput(event.target.value)}
               disabled={busy}
-              placeholder="Modelo do aparelho e ajuste desejado…"
+              placeholder={device ? `Ajuste para ${deviceLabel}…` : "Detectando seu aparelho…"}
               className="min-h-14 px-3 pt-3 text-sm"
             />
             <PromptInputFooter className="justify-between px-2 pb-2">
