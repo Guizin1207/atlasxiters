@@ -71,16 +71,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     await load();
 
     const whatsappUrl = upgradeWhatsAppUrl(keyData.key, plan, currentPlan);
-    const whatsappWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-
-    if (!whatsappWindow) {
-      window.location.href = whatsappUrl;
-      return;
-    }
-
-    toast.success("Solicitação enviada", {
-      description: "O pedido foi registrado no administrador e o WhatsApp foi aberto.",
-    });
+    window.location.href = whatsappUrl;
   };
 
   if (!keyData) return null;
