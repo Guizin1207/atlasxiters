@@ -55,28 +55,28 @@ export function InjectButton() {
       description: `Abrindo Free Fire ${v === "max" ? "MAX" : "normal"}…`,
     });
 
-    const url =
-      os === "android"
-        ? `intent://#Intent;package=${ANDROID_PACKAGE[v]};end`
-        : IOS_SCHEME[v];
-
     const started = Date.now();
-    window.location.assign(url);
 
-    // Se o app não abrir em ~2.5s, oferece a loja.
+    if (os === "android") {
+      window.location.href = `intent://#Intent;package=${ANDROID_PACKAGE[v]};scheme=android-app;launchFlags=0x10000000;end`;
+    } else {
+      window.location.href = IOS_SCHEME[v];
+    }
+
+    // Se o app não abrir, oferece a loja no Android.
     setTimeout(() => {
       setBusy(null);
       setOpen(false);
-      if (Date.now() - started < 4000 && !document.hidden && os === "android") {
-        toast.error("Jogo não encontrado", {
-          description: "Instale ou atualize o Free Fire para continuar.",
-          action: {
+      if (!document.hidden) {
+        toast.error("Free Fire não abriu", {
+          description: "Verifique se o jogo está instalado.",
+          action: os === "android" ? {
             label: "Abrir loja",
             onClick: () => window.open(STORE[v], "_blank"),
-          },
+          } : undefined,
         });
       }
-    }, 2500);
+    }, 1800);
   };
 
   return (
