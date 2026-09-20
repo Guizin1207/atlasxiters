@@ -65,7 +65,12 @@ export function UpgradeRequestsCard() {
   };
 
   const pending = items.filter((i) => i.status === "pending");
-  const done = items.filter((i) => i.status !== "pending").slice(0, 10);\n\n  const clearHistory = () => {\n    setItems((current) => current.filter((item) => item.status === "pending"));\n    toast.success("Histórico limpo da tela");\n  };
+  const done = items.filter((i) => i.status !== "pending").slice(0, 10);
+
+  const clearHistory = () => {
+    setItems((current) => current.filter((item) => item.status === "pending"));
+    toast.success("Histórico limpo da tela");
+  };
 
   return (
     <section className="glass-strong rounded-3xl p-6 space-y-5">
@@ -82,9 +87,17 @@ export function UpgradeRequestsCard() {
             )}
           </h2>
         </div>
-        <Button variant="ghost" size="sm" onClick={load} className="rounded-xl">
-          <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
-        </Button>
+        <div className="flex items-center gap-1">
+          {done.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={clearHistory} className="rounded-xl">
+              <Trash2 className="w-4 h-4 mr-1.5" />
+              Limpar histórico
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={load} className="rounded-xl">
+            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+          </Button>
+        </div>
       </div>
 
       {loading && items.length === 0 ? (
