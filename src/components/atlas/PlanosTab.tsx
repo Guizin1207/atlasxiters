@@ -171,16 +171,6 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
             <p className="font-bold">{getPlan(pixPlan).name} — {getPlan(pixPlan).price}</p>
             <p className="text-xs text-muted-foreground mt-1">Copie a chave ou use o QR Code para pagar. Depois envie o comprovante.</p>
           </div>
-          <div className="rounded-xl bg-black/20 border border-white/10 p-3 flex items-center justify-between gap-3">
-            <span className="font-mono text-sm break-all">{pixKey}</span>
-            <button type="button" onClick={copyPixKey} className="shrink-0 h-9 px-3 rounded-lg bg-white text-black text-xs font-bold flex items-center gap-2">
-              <Copy className="w-3.5 h-3.5" /> Copiar
-            </button>
-          </div>
-          <div className="rounded-xl border border-white/10 p-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"><QrCode className="w-4 h-4" /> Minha chave Pix</div>
-            <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar minha chave Pix</button>
-          </div>
           <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
             <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixKey)}&size=260`} alt="QR Code da chave Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
             <p className="text-[11px] text-muted-foreground text-center">Aponte a câmera do banco para este QR Code.</p>
