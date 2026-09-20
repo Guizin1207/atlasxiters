@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const PLANS = {
-  basic: { name: "Atlas VIP Basic", price: 39.99, days: 30 },
+  basic: { name: "Atlas VIP Basic", price: 1, days: 30 },
   pro: { name: "Atlas VIP Pro", price: 85.99, days: 90 },
   master: { name: "Atlas VIP Master", price: 149.99, days: null },
 } as const;
