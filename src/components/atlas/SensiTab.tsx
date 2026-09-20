@@ -21,9 +21,14 @@ import atlasAiLogo from "@/assets/atlas-ai-logo.png";
 
 type Message = { role: "ai" | "user"; text: string };
 
-function isSensiResult(value: unknown): value is SensiResult {
-  if (!value || typeof value !== "object") return false;
-  const result = value as Record<string, unknown>;
+function normalizeSensiResult(value: unknown): SensiResult | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  const numberField = (key: string) => {
+    const n = Number(raw[key]);
+    return Number.isFinite(n) ? Math.round(n) : null;
+  };
+  const response = typeof raw.resposta === "string" ? raw.resposta.trim() : "";
   const fields = [
     "geral",
     "pontoVermelho",
@@ -33,10 +38,19 @@ function isSensiResult(value: unknown): value is SensiResult {
     "olharLivre",
     "dpiRecomendado",
     "precisaoEstimada",
-    "resposta",
   ];
-  return fields.slice(0, -1).every((field) => typeof result[field] === "number") &&
-    typeof result.resposta === "string";
+  if (fields.some((field) => numberField(field) === null) || !response) return null;
+  return {
+    geral: numberField("geral")!,
+    pontoVermelho: numberField("pontoVermelho")!,
+    mira2x: numberField("mira2x")!,
+    mira4x: numberField("mira4x")!,
+    miraAwm: numberField("miraAwm")!,
+    olharLivre: numberField("olharLivre")!,
+    dpiRecomendado: numberField("dpiRecomendado")!,
+    precisaoEstimada: numberField("precisaoEstimada")!,
+    resposta: response.slice(0, 140),
+  };
 }
 
 const SENSI_ITEMS = [
@@ -168,16 +182,16 @@ export function SensiTab() {
         },
       });
 
-      if (error || !isSensiResult(data)) {
+      const normalized = normalizeSensiResult(data);\n      if (error || !normalized) {
         const message = (data as { error?: string } | null)?.error || error?.message || "Resposta inválida da IA.";
         throw new Error(message);
       }
 
-      setResult(data);
+      setResult(normalized!);
 
       setMessages((current) => [
         ...current,
-        { role: "ai", text: `Pronto. ${formatDevice(inferredDevice)} • FF 2026\n${data.resposta}` },
+        { role: "ai", text: `Pronto. ${formatDevice(inferredDevice)} • FF 2026\n${normalized!.resposta}` },
       ]);
     } catch (error) {
       console.error("sensi-ai", error);
