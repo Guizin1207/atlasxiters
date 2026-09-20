@@ -3,7 +3,7 @@ import { Gift, Coins, Flame, CheckCircle2, Clock3, CalendarDays } from "lucide-r
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
-import { supabase } from "@/integrations/supabase/client";
+import { rewardApi } from "@/lib/reward-api";
 
 type RewardState = {
   coins: number;
@@ -34,9 +34,7 @@ export function RecompensaTab() {
 
     // Usa apenas um RPC público. O calendário vem junto com get_daily_reward,
     // evitando erro de schema cache/exposição de uma segunda função.
-    const { data, error } = await (supabase as any).rpc("get_daily_reward", {
-      _key: keyData.key,
-    });
+    const { data, error } = await rewardApi("get", keyData.key);
 
     if (error) {
       toast.error(String(error.message ?? "Não foi possível carregar a recompensa"));
@@ -67,9 +65,7 @@ export function RecompensaTab() {
     if (!keyData?.key || busy || reward?.claimed_today) return;
 
     setBusy(true);
-    const { data, error } = await (supabase as any).rpc("claim_daily_reward", {
-      _key: keyData.key,
-    });
+    const { data, error } = await rewardApi("claim", keyData.key);
 
     if (error || data?.ok === false) {
       const reason = data?.reason;
@@ -92,9 +88,7 @@ export function RecompensaTab() {
     if (!keyData?.key || busy || (reward?.coins ?? 0) < 100) return;
 
     setBusy(true);
-    const { data, error } = await (supabase as any).rpc("redeem_atlas_coins", {
-      _key: keyData.key,
-    });
+    const { data, error } = await rewardApi("redeem", keyData.key);
 
     if (error || data?.ok === false) {
       toast.error(String(error?.message ?? "Não foi possível trocar as moedas."));
