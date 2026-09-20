@@ -12,6 +12,8 @@ import {
   Check,
   Undo2,
   Smartphone,
+  Pencil,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,7 +60,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
-type DialogKind = null | "extend" | "expiration";
+type DialogKind = null | "extend" | "expiration" | "plan";
 
 export function KeyRowItem({
   data,
@@ -75,6 +77,9 @@ export function KeyRowItem({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [extendDays, setExtendDays] = useState(7);
   const [newExpiration, setNewExpiration] = useState<string>("");
+  const [newPlan, setNewPlan] = useState<string>(data.plan ?? "basic");
+  const [newDuration, setNewDuration] = useState<number>(data.duration_days || 30);
+  const [newKey, setNewKey] = useState<string>(data.key);
 
   const status = getKeyStatus(data);
   const DeviceIcon = getDeviceIcon(data.device);
@@ -221,6 +226,20 @@ export function KeyRowItem({
             )}
 
             {!data.is_master && (
+              <DropdownMenuItem
+                onClick={() => {
+                  setNewPlan(data.plan ?? "basic");
+                  setNewDuration(data.plan === "master" ? 36500 : data.duration_days || 30);
+                  setNewKey(data.key);
+                  setDialog("plan");
+                }}
+              >
+                <KeyRound className="w-4 h-4 mr-2" />
+                Alterar plano / chave
+              </DropdownMenuItem>
+            )}
+
+            {!data.is_master && (
               <DropdownMenuItem onClick={() => setDialog("extend")}>
                 <Plus className="w-4 h-4 mr-2" />
                 Estender dias
@@ -322,6 +341,82 @@ export function KeyRowItem({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Dialog: plano e chave */}
+      <Dialog open={dialog === "plan"} onOpenChange={(o) => !o && setDialog(null)}>
+        <DialogContent className="rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Alterar plano e chave</DialogTitle>
+            <DialogDescription>
+              Escolha o plano, reinicie o prazo e, se quiser, troque a numeração da chave.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="vip-eyebrow block">Plano</label>
+              <select
+                value={newPlan}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setNewPlan(value);
+                  if (value === "basic") setNewDuration(30);
+                  if (value === "pro") setNewDuration(90);
+                  if (value === "master") setNewDuration(36500);
+                  if (value === "demo") setNewDuration(0);
+                }}
+                className="w-full h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm"
+              >
+                <option value="demo">Demo</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="master">Master</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="vip-eyebrow block">Prazo em dias</label>
+              <Input
+                type="number"
+                min={0}
+                value={newDuration}
+                disabled={newPlan === "master" || newPlan === "demo"}
+                onChange={(e) => setNewDuration(Math.max(0, Number(e.target.value) || 0))}
+                className="rounded-xl bg-white/5 border-white/10 h-11 disabled:opacity-60"
+              />
+              <p className="text-[11px] text-muted-foreground">Ao salvar, o prazo começa novamente a partir de agora.</p>
+            </div>
+            <div className="space-y-2">
+              <label className="vip-eyebrow block">Nova chave</label>
+              <Input
+                value={newKey}
+                onChange={(e) => setNewKey(e.target.value.toUpperCase())}
+                placeholder="ATLS-XXXX-XXXX-XXXX"
+                className="rounded-xl bg-white/5 border-white/10 h-11 font-mono"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDialog(null)}>Cancelar</Button>
+            <Button
+              className="bg-white text-black hover:bg-white/90"
+              onClick={async () => {
+                const key = newKey.trim().toUpperCase();
+                if (!key) {
+                  toast.error("Informe uma chave");
+                  return;
+                }
+                const ok = await call(
+                  "admin_update_key_access",
+                  { _id: data.id, _plan: newPlan, _duration_days: newDuration, _key: key },
+                  "Plano, prazo e chave atualizados"
+                );
+                if (ok) setDialog(null);
+              }}
+            >
+              Salvar alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog: estender */}
       <Dialog open={dialog === "extend"} onOpenChange={(o) => !o && setDialog(null)}>
