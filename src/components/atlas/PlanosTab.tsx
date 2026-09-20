@@ -30,7 +30,37 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   };
 
   const pixKey = "38998816357";
-  const pixPayload = pixKey;
+  const merchantName = "ATLAS VIP";
+  const merchantCity = "SAO PAULO";
+
+  const crc16 = (value: string) => {
+    let crc = 0xffff;
+    for (let i = 0; i < value.length; i++) {
+      crc ^= value.charCodeAt(i) << 8;
+      for (let bit = 0; bit < 8; bit++) {
+        crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
+      }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, "0");
+  };
+
+  const emv = (id: string, value: string) => id + value.length.toString().padStart(2, "0") + value;
+
+  const makePixPayload = (plan: PlanId) => {
+    const price = getPlan(plan).price.replace("R$ ", "").replace(".", "").replace(",", ".");
+    const merchantAccount = emv("00", "BR.GOV.BCB.PIX") + emv("01", pixKey);
+    const additional = emv("05", "ATLAS");
+    const body =
+      emv("00", "01") +
+      emv("26", merchantAccount + additional) +
+      emv("52", "0000") +
+      emv("53", "986") +
+      emv("54", price) +
+      emv("58", "BR") +
+      emv("59", merchantName) +
+      emv("60", merchantCity);
+    return body + "6304" + crc16(body + "6304");
+  };
 
   const copyPixKey = async () => {
     await navigator.clipboard.writeText(pixKey);
@@ -38,7 +68,8 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   };
 
   const copyPixCode = async () => {
-    await navigator.clipboard.writeText(pixPayload);
+    if (!pixPlan) return;
+    await navigator.clipboard.writeText(makePixPayload(pixPlan));
     toast.success("Pix Copia e Cola copiado");
   };
 
@@ -153,7 +184,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
             <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar chave Pix</button>
           </div>
           <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
-            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixKey)}&size=260`} alt="QR Code da chave Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
+            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixPayload)}&size=260`} alt="QR Code da chave Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
             <p className="text-[11px] text-muted-foreground text-center">Aponte a câmera do banco para este QR Code.</p>
           </div>
           <a href="https://wa.me/5538998816357" target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
