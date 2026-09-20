@@ -7,7 +7,7 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { Message as AiMessage, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import {
   PromptInput,
   PromptInputFooter,
@@ -35,7 +35,7 @@ function isSensiResult(value: unknown): value is SensiResult {
     "precisaoEstimada",
     "resposta",
   ];
-  return fields.every((field) => typeof result[field] === "number") &&
+  return fields.slice(0, -1).every((field) => typeof result[field] === "number") &&
     typeof result.resposta === "string";
 }
 
@@ -240,18 +240,18 @@ export function SensiTab() {
         <Conversation className="h-[clamp(230px,38vh,340px)]">
           <ConversationContent className="gap-4 p-3.5 min-[390px]:p-4">
             {messages.map((message, index) => (
-              <Message key={`${message.role}-${index}`} from={message.role === "ai" ? "assistant" : "user"}>
+              <AiMessage key={`${message.role}-${index}`} from={message.role === "ai" ? "assistant" : "user"}>
                 <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : "px-0 py-0"}>
                   <MessageResponse className="whitespace-pre-line text-[13px] leading-5">{message.text}</MessageResponse>
                 </MessageContent>
-              </Message>
+              </AiMessage>
             ))}
             {busy && (
-              <Message from="assistant">
+              <AiMessage from="assistant">
                 <MessageContent className="px-0 py-0">
                   <Shimmer className="text-xs">Analisando aparelho, tela e estilo…</Shimmer>
                 </MessageContent>
-              </Message>
+              </AiMessage>
             )}
           </ConversationContent>
           <ConversationScrollButton className="bottom-2 h-8 w-8" />
