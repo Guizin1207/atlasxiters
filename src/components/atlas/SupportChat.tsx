@@ -8,6 +8,17 @@ import { useKey } from "@/lib/key-context";
 
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string };
 
+const QUICK_OPTIONS = [
+  ["🔑 Não recebi minha key", "Olá! Fiz minha compra, mas ainda não recebi minha key. Poderiam verificar, por favor?"],
+  ["💰 Enviei o Pix", "Olá! Já realizei o pagamento via Pix e estou enviando o comprovante para aprovação. Poderiam verificar, por favor?"],
+  ["⏳ Quanto demora a aprovação?", "Olá! Gostaria de saber se meu pagamento já foi analisado e quanto tempo demora a aprovação."],
+  ["🎮 Problema com o Free Fire", "Olá! Estou com problema para abrir ou utilizar o Free Fire. Preciso de ajuda."],
+  ["⚙️ Problema na configuração", "Olá! Preciso de ajuda para configurar o aplicativo."],
+  ["🔄 Problema com minha key", "Olá! Estou com um problema na minha key e preciso de ajuda."],
+  ["🛒 Quero comprar um plano", "Olá! Gostaria de informações para comprar um plano."],
+  ["👨‍💻 Falar com o ADM", "Olá ADM! Preciso de atendimento personalizado."],
+] as const;
+
 export function SupportChat() {
   const { keyData } = useKey();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -28,12 +39,12 @@ export function SupportChat() {
     return () => window.clearInterval(timer);
   }, [load]);
 
-  const send = async () => {
-    if (!keyData?.key || !body.trim() || sending) return;
+  const sendMessage = async (message: string) => {
+    if (!keyData?.key || !message.trim() || sending) return;
     setSending(true);
     const { error } = await supabase.rpc("support_send_message", {
       _key: keyData.key,
-      _body: body.trim(),
+      _body: message.trim(),
     });
     setSending(false);
     if (error) {
@@ -43,6 +54,8 @@ export function SupportChat() {
     setBody("");
     load();
   };
+
+  const send = () => sendMessage(body);
 
   return (
     <section className="glass-strong rounded-3xl p-5 space-y-4">
@@ -55,9 +68,27 @@ export function SupportChat() {
           <h2 className="font-bold">Falar com o ADM</h2>
         </div>
       </header>
+
+      <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
+        <p className="text-sm mb-3">👋 Olá! Bem-vindo ao suporte da Atlas Store. Como podemos ajudar?</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {QUICK_OPTIONS.map(([label, message]) => (
+            <Button
+              key={label}
+              variant="outline"
+              disabled={sending}
+              onClick={() => sendMessage(message)}
+              className="justify-start text-left rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-xs h-auto min-h-10 py-2"
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       <div className="h-80 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
         {loading ? <div className="flex justify-center py-10"><Loader2 className="w-4 h-4 animate-spin" /></div> :
-          messages.length === 0 ? <p className="text-xs text-muted-foreground text-center py-10">Nenhuma mensagem ainda. Envie sua dúvida.</p> :
+          messages.length === 0 ? <p className="text-xs text-muted-foreground text-center py-10">Nenhuma mensagem ainda. Escolha uma opção acima ou envie sua dúvida.</p> :
           messages.map((m) => (
             <div key={m.id} className={`flex ${m.sender_type === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "user" ? "bg-white text-black" : "glass"}`}>
@@ -66,6 +97,7 @@ export function SupportChat() {
             </div>
           ))}
       </div>
+
       <div className="flex gap-2">
         <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem…" rows={2} maxLength={1000} className="rounded-2xl bg-white/5 border-white/10 resize-none" />
         <Button onClick={send} disabled={sending || !body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black">
