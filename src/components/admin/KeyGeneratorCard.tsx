@@ -25,7 +25,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
   const generate = async () => {
     if (!password) return;
     setBusy(true);
-    const effectiveDays = mode === "normal" ? days : 1;
+    const effectiveDays = mode === "normal" ? days : mode === "demo" ? 0 : 1;
     const effectiveNote = mode === "demo"
       ? ["DEMO", note.trim()].filter(Boolean).join(" — ")
       : note;
@@ -34,7 +34,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
       _duration_days: effectiveDays,
       _note: effectiveNote,
       _password: password,
-      _plan: plan,
+      _plan: effectivePlan,
     });
     setBusy(false);
     if (error) {
@@ -83,7 +83,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
           </ModeButton>
         </div>
         <p className="text-[11px] text-muted-foreground mt-2">
-          {mode === "normal" ? "Duração personalizada." : mode === "daily" ? "Acesso de 1 dia após o primeiro uso." : "Teste de 1 dia identificado como DEMO."}
+          {mode === "normal" ? "Duração personalizada." : mode === "daily" ? "Acesso de 1 dia após o primeiro uso." : "Acesso demo ilimitado e identificado como DEMO."}
         </p>
       </Field>
 
