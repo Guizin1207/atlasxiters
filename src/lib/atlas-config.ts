@@ -57,6 +57,6 @@ export function getPlan(id?: string | null): PlanInfo {
 /** Link do WhatsApp já com a mensagem do pedido de upgrade. */
 export function upgradeWhatsAppUrl(key: string, plan: PlanId) {
   const p = getPlan(plan);
-  const msg = `Olá! Quero fazer upgrade para o plano ${p.name} — ${p.price} (${p.priceNote}).\\nMinha chave: ${key}`;
+  const msg = `Olá! Quero fazer upgrade para o plano ${p.name} — ${p.price} (${p.priceNote}).\nMinha chave: ${key}`;
   return `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 }
