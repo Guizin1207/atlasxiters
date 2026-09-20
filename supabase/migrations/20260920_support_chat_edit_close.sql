@@ -96,3 +96,55 @@ grant execute on function public.support_edit_message(text,uuid,text) to anon, a
 grant execute on function public.admin_support_edit_message(text,uuid,text) to anon, authenticated;
 grant execute on function public.support_close_chat(text) to anon, authenticated;
 grant execute on function public.admin_support_close_chat(text,uuid) to anon, authenticated;
+
+
+-- Finalizar o chat agora exclui a conversa e todas as mensagens.
+create or replace function public.support_delete_chat(_key text)
+returns public.support_threads
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare rec public.support_threads%rowtype;
+begin
+  select st.* into rec
+  from public.support_threads st
+  join public.access_keys k on k.id = st.key_id
+  where upper(k.key) = upper(trim(_key)) and k.revoked = false
+  order by st.updated_at desc
+  limit 1;
+
+  if rec.id is null then raise exception 'thread_not_found'; end if;
+
+  delete from public.support_messages where thread_id = rec.id;
+  delete from public.support_threads where id = rec.id;
+
+  return rec;
+end;
+$$;
+
+create or replace function public.admin_support_delete_chat(_password text, _thread_id uuid)
+returns public.support_threads
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare rec public.support_threads%rowtype;
+begin
+  perform public._require_admin(_password);
+
+  select * into rec
+  from public.support_threads
+  where id = _thread_id;
+
+  if rec.id is null then raise exception 'thread_not_found'; end if;
+
+  delete from public.support_messages where thread_id = rec.id;
+  delete from public.support_threads where id = rec.id;
+
+  return rec;
+end;
+$$;
+
+grant execute on function public.support_delete_chat(text) to anon, authenticated;
+grant execute on function public.admin_support_delete_chat(text,uuid) to anon, authenticated;
