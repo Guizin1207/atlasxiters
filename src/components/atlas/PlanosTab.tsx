@@ -3,13 +3,12 @@
  * O botão de aquisição abre o WhatsApp com a mensagem pronta.
  */
 
-import { Check, Crown, FlaskConical, Sparkles, Zap } from "lucide-react";
+import { Check, Crown, Copy, FlaskConical, Sparkles, Zap } from "lucide-react";
 import { useKey } from "@/lib/key-context";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { PLANS, getPlan, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const ICONS: Record<PlanId, typeof Zap> = {
   demo: FlaskConical,
@@ -21,24 +20,18 @@ const ICONS: Record<PlanId, typeof Zap> = {
 export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const { keyData } = useKey();
   const [paying, setPaying] = useState<PlanId | null>(null);
+  const [pixPlan, setPixPlan] = useState<PlanId | null>(null);
 
-  const startPayment = async (plan: PlanId) => {
-    if (!keyData || plan === "demo") return;
+  const startPayment = (plan: PlanId) => {
+    if (plan === "demo") return;
     setPaying(plan);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: { key: keyData.key, plan },
-      });
-      if (error) throw error;
-      if (!data?.init_point) throw new Error(data?.error || "Não foi possível iniciar o pagamento.");
-      window.location.href = data.init_point;
-    } catch (error) {
-      toast.error("Pagamento", {
-        description: error instanceof Error ? error.message : "Não foi possível iniciar o pagamento.",
-      });
-    } finally {
-      setPaying(null);
-    }
+    setPixPlan(plan);
+    setPaying(null);
+  };
+
+  const copyPixKey = async () => {
+    await navigator.clipboard.writeText("3898816357");
+    toast.success("Chave Pix copiada");
   };
   const currentPlan: PlanId = keyData?.is_master
     ? "master"
@@ -124,13 +117,32 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   disabled={paying !== null}
                   className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 disabled:opacity-60 disabled:cursor-wait font-bold uppercase tracking-[0.12em] text-xs flex items-center justify-center gap-2 transition-colors"
                 >
-                  {paying === p.id ? "Abrindo pagamento…" : "Adquirir plano"}
+                  {paying === p.id ? "Abrindo Pix…" : "Pagar com Pix"}
                 </button>
               )}
             </div>
           );
         })}
       </div>
+
+      {pixPlan && (
+        <div className="glass-strong rounded-2xl p-5 space-y-4 border border-white/15">
+          <div>
+            <p className="vip-eyebrow mb-1">Pagamento via Pix</p>
+            <p className="font-bold">{getPlan(pixPlan).name} — {getPlan(pixPlan).price}</p>
+            <p className="text-xs text-muted-foreground mt-1">Faça o Pix para a chave abaixo e envie o comprovante ao suporte.</p>
+          </div>
+          <div className="rounded-xl bg-black/20 border border-white/10 p-3 flex items-center justify-between gap-3">
+            <span className="font-mono text-sm break-all">3898816357</span>
+            <button type="button" onClick={copyPixKey} className="shrink-0 h-9 px-3 rounded-lg bg-white text-black text-xs font-bold flex items-center gap-2">
+              <Copy className="w-3.5 h-3.5" /> Copiar
+            </button>
+          </div>
+          <a href="https://wa.me/5538998816357" target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
+            Enviar comprovante
+          </a>
+        </div>
+      )}
     </section>
   );
 }
