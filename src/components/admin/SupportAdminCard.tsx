@@ -67,9 +67,9 @@ export function SupportAdminCard() {
 
   const finishChat = async () => {
     if (!password || !selected) return;
-    const { error } = await supabase.rpc("admin_support_close_chat", { _password: password, _thread_id: selected.id });
+    const { error } = await supabase.rpc("admin_support_delete_chat", { _password: password, _thread_id: selected.id });
     if (error) { toast.error("Não foi possível finalizar o chat."); return; }
-    setClosed(true); toast.success("Chat finalizado."); loadThreads();
+    setClosed(true); setSelected(null); setMessages([]); toast.success("Chat excluído."); loadThreads();
   };
 
   const send = async () => {
