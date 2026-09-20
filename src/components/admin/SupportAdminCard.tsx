@@ -10,13 +10,13 @@ type Thread = { id: string; key_id: string; key: string; updated_at: string };
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string };
 
 const QUICK_ADMIN = [
-  ["Olá! Como posso ajudar?", "Olá! Como posso ajudar?"],
-  ["Pode enviar o comprovante.", "Pode enviar o comprovante."],
-  ["Pode informar sua key.", "Pode informar sua key."],
-  ["Vou verificar para você.", "Vou verificar para você."],
-  ["Pode explicar melhor?", "Pode explicar melhor?"],
-  ["Vou ajudar na configuração.", "Vou ajudar na configuração."],
-  ["Pronto! Resolvido.", "Pronto! Resolvido."],
+  ["👋 Olá! Como posso ajudar?", "👋 Olá! Como posso ajudar?"],
+  ["💳 Pode enviar o comprovante.", "💳 Pode enviar o comprovante."],
+  ["🔑 Pode informar sua key.", "🔑 Pode informar sua key."],
+  ["⏳ Vou verificar para você.", "⏳ Vou verificar para você."],
+  ["📩 Pode explicar melhor?", "📩 Pode explicar melhor?"],
+  ["🛠️ Vou ajudar na configuração.", "🛠️ Vou ajudar na configuração."],
+  ["✅ Pronto! Resolvido.", "✅ Pronto! Resolvido."],
 ] as const;
 
 export function SupportAdminCard() {
