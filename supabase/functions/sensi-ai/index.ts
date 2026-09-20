@@ -1,6 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { createOpenAI } from "npm:@ai-sdk/openai@4.0.71";
-import { generateText } from "npm:ai@7.0.107";
+import { createOpenAI } from "npm:@ai-sdk/openai";
+import { generateText } from "npm:ai";
 import {
   createLovableAiGatewayRunIdFetch,
   getLovableAiGatewayRunId,
