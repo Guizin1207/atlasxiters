@@ -113,8 +113,9 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
         {PLANS.map((p, idx) => {
           const Icon = ICONS[p.id];
           const isCurrent = p.id === currentPlan;
-          const isAvailable = isDemo ? true : idx > currentIdx;
-          const isPending = pending(p.id);
+          const nextPlan = PLANS[idx + 1];
+          const isAvailable = Boolean(nextPlan) && (isDemo ? true : idx >= currentIdx);
+          const isPending = nextPlan ? pending(nextPlan.id) : false;
 
           return (
             <div
@@ -157,21 +158,23 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                 ))}
               </ul>
 
-              {isAvailable && (
-                <Button
-                  onClick={() => request(p.id)}
-                  disabled={busy === p.id}
-                  className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
-                >
-                  {busy === p.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Adquirir plano {p.name} • {p.price}
-                </Button>
-              )}
+              {isAvailable && nextPlan && (
+                <div className="space-y-2">
+                  <Button
+                    onClick={() => request(nextPlan.id)}
+                    disabled={busy === nextPlan.id}
+                    className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
+                  >
+                    {busy === nextPlan.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Adquirir plano {nextPlan.name} • {nextPlan.price}
+                  </Button>
 
-              {isPending && (
-                <p className="text-[11px] text-status-warning">
-                  Pedido em análise pelo administrador.
-                </p>
+                  {isPending && (
+                    <p className="text-[11px] text-status-warning">
+                      Pedido em análise pelo administrador.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           );
