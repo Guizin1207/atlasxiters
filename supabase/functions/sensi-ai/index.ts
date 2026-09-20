@@ -115,10 +115,10 @@ Responda SOMENTE com JSON válido, sem markdown, neste formato:
   "olharLivre": number,
   "dpiRecomendado": number,
   "precisaoEstimada": number,
-  "notas": ["string", "string", "string", "string", "string"]
+  "notas": ["perfil específico do aparelho em uma frase", "ajuste prático 1", "ajuste prático 2", "ajuste prático 3"]
 }
 
-Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. A precisão estimada é apenas uma estimativa de ajuste, não uma garantia de desempenho.`;
+Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. Mantenha a diferença entre miras coerente com o aparelho e o estilo. A precisão estimada é apenas um índice heurístico de adequação, nunca uma promessa de desempenho.`;
 
     const result = await generateText({
       model: lovable.responses("openai/gpt-6-astra"),
