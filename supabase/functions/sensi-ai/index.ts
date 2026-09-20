@@ -18,7 +18,7 @@ const sensiSchema = z.object({
   olharLivre: z.number(),
   dpiRecomendado: z.number(),
   precisaoEstimada: z.number(),
-  notas: z.array(z.string()),
+  resposta: z.string(),
 });
 
 const clamp = (value: unknown, min = 20, max = 200) => {
@@ -36,13 +36,9 @@ const cleanResult = (raw: Record<string, unknown>, isIOS = false) => ({
   olharLivre: clamp(raw.olharLivre),
   dpiRecomendado: isIOS ? 0 : Math.max(320, Math.min(720, Math.round(Number(raw.dpiRecomendado) || 480))),
   precisaoEstimada: Math.max(1, Math.min(99, Math.round(Number(raw.precisaoEstimada) || 85))),
-  notas: Array.isArray(raw.notas)
-    ? raw.notas
-        .filter((item): item is string => typeof item === "string")
-        .map((item) => item.replace(/\s+/g, " ").trim().slice(0, 105))
-        .filter(Boolean)
-        .slice(0, 3)
-    : [],
+  resposta: typeof raw.resposta === "string"
+    ? raw.resposta.replace(/\s+/g, " ").trim().slice(0, 140)
+    : "Configuração ajustada para seu aparelho e pedido.",
 });
 
 Deno.serve(async (req) => {
@@ -121,7 +117,7 @@ REGRAS IMPORTANTES:
 5. Para Android, use DPI apenas como fator secundário e respeite o DPI informado. Não trate DPI como garantia de capa.
 6. Priorize controle de arrasto, estabilidade da mira e resposta em curta/média distância. Não prometa porcentagem real de headshot.
 7. Gere uma configuração de nível PRO, mas realista: evite números redondos demais e ajuste cada mira de forma independente. Pense em controle de arrasto, microajuste, estabilidade no spray, velocidade de troca de alvo, combate curto e médio e precisão com AWM.
-8. As notas devem ser MUITO curtas e diretas. Gere no máximo 3 notas, cada uma com uma única frase de até 100 caracteres. A primeira resume o perfil do aparelho; as outras dão ajustes práticos.
+8. Gere uma única resposta curta para o jogador em "resposta", com no máximo 140 caracteres. Ela deve dizer o que foi ajustado com base no pedido, sem explicações longas.
 9. A configuração deve parecer feita sob medida para o modelo informado, sem prometer que ela garante capa ou vitória.
 10. Responda de forma objetiva e curta. Nunca escreva texto longo, parágrafos ou explicações gerais.
 
@@ -140,7 +136,7 @@ Responda SOMENTE com JSON válido, sem markdown, neste formato:
   "olharLivre": number,
   "dpiRecomendado": number,
   "precisaoEstimada": number,
-  "notas": ["perfil curto do aparelho", "ajuste prático curto", "ajuste prático curto"]
+  "resposta": "Ajuste curto aplicado com base no aparelho e no pedido."
 }
 
 Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. Mantenha a diferença entre miras coerente com o aparelho e o estilo. A precisão estimada é apenas um índice heurístico de adequação, nunca uma promessa de desempenho.`;
