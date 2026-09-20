@@ -9,14 +9,14 @@ import { useKey } from "@/lib/key-context";
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string };
 
 const QUICK_OPTIONS = [
-  ["🔑 Key não recebida", "Não recebi minha key."],
-  ["💰 Enviei o Pix", "Enviei o Pix."],
-  ["⏳ Aprovação", "Quero saber sobre a aprovação."],
-  ["🎮 Free Fire", "Estou com problema no Free Fire."],
-  ["⚙️ Configuração", "Preciso de ajuda na configuração."],
-  ["🔄 Problema na key", "Estou com problema na minha key."],
-  ["🛒 Comprar plano", "Quero comprar um plano."],
-  ["👨‍💻 Falar com ADM", "Quero falar com o ADM."],
+  ["Não recebi minha key.", "Não recebi minha key."],
+  ["Enviei o Pix.", "Enviei o Pix."],
+  ["Quero saber sobre a aprovação.", "Quero saber sobre a aprovação."],
+  ["Estou com problema no Free Fire.", "Estou com problema no Free Fire."],
+  ["Preciso de ajuda na configuração.", "Preciso de ajuda na configuração."],
+  ["Estou com problema na minha key.", "Estou com problema na minha key."],
+  ["Quero comprar um plano.", "Quero comprar um plano."],
+  ["Quero falar com o ADM.", "Quero falar com o ADM."],
 ] as const;
 
 export function SupportChat() {
