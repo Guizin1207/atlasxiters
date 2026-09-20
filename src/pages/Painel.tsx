@@ -15,6 +15,7 @@ import { PerfilTab } from "@/components/atlas/PerfilTab";
 import { InjectButton } from "@/components/atlas/InjectButton";
 import { MaintenanceModal } from "@/components/MaintenanceModal";
 import { ExpiredKeyModal } from "@/components/ExpiredKeyModal";
+import { SupportChat } from "@/components/atlas/SupportChat";
 
 export default function PainelPage() {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ export default function PainelPage() {
           {tab === "funcoes" && <FuncoesTab />}
           {tab === "ajustes" && <AjustesTab />}
           {tab === "perfil" && <PerfilTab />}
+          {tab === "suporte" && <SupportChat />}
         </div>
       </div>
 
