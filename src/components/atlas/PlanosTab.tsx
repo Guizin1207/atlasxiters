@@ -3,8 +3,7 @@
  * O botão de aquisição abre o WhatsApp com a mensagem pronta.
  */
 
-import { Check, Crown, FlaskConical, Sparkles, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Check, Crown, FlaskConical, MessageCircle, Sparkles, Zap } from "lucide-react";
 import { useKey } from "@/lib/key-context";
 import { PLANS, getPlan, upgradeWhatsAppUrl, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
@@ -96,12 +95,15 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
               </ul>
 
               {isAvailable && (
-                <Button
-                  onClick={() => { window.location.href = upgradeWhatsAppUrl(keyData.key, p.id, currentPlan); }}
-                  className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
+                <a
+                  href={upgradeWhatsAppUrl(keyData.key, p.id, currentPlan)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.12em] text-xs flex items-center justify-center gap-2 transition-colors"
                 >
-                  Adquirir plano {p.name} • {p.price}
-                </Button>
+                  <MessageCircle className="w-4 h-4" />
+                  Comprar pelo WhatsApp
+                </a>
               )}
             </div>
           );
