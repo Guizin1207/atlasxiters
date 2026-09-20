@@ -50,6 +50,13 @@
       "when": 1789880337366,
       "tag": "0006_admin_update_key_access",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789887733780,
+      "tag": "0007_support_chat",
+      "breakpoints": true
     }
   ]
 }

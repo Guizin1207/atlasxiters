@@ -246,6 +246,67 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_type: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_type: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_type?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "support_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_threads: {
+        Row: {
+          created_at: string
+          id: string
+          key_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_threads_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: true
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       upgrade_requests: {
         Row: {
           created_at: string
@@ -559,6 +620,47 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_support_list_messages: {
+        Args: { _password: string; _thread_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          sender_type: string
+          thread_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "support_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_support_list_threads: {
+        Args: { _password: string }
+        Returns: {
+          id: string
+          key: string
+          key_id: string
+          updated_at: string
+        }[]
+      }
+      admin_support_send_message: {
+        Args: { _body: string; _password: string; _thread_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          sender_type: string
+          thread_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "support_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_unrevoke_key: {
         Args: { _id: string; _password: string }
         Returns: {
@@ -631,6 +733,38 @@ export type Database = {
         Returns: Json
       }
       save_settings: { Args: { _key: string; _settings: Json }; Returns: Json }
+      support_list_messages: {
+        Args: { _key: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          sender_type: string
+          thread_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "support_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      support_send_message: {
+        Args: { _body: string; _key: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          sender_type: string
+          thread_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "support_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       validate_key: {
         Args: { _device_id: string; _key: string }
         Returns: Json
