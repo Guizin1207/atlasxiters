@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { Rocket, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { Rocket } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,11 +21,6 @@ const IOS_SCHEME: Record<Variant, string> = {
   max: "freefiremax://",
 };
 
-const STORE: Record<Variant, string> = {
-  normal: "https://play.google.com/store/apps/details?id=com.dts.freefireth",
-  max: "https://play.google.com/store/apps/details?id=com.dts.freefiremax",
-};
-
 function platform(): "android" | "ios" | "other" {
   if (typeof navigator === "undefined") return "other";
   const ua = navigator.userAgent;
@@ -35,48 +29,52 @@ function platform(): "android" | "ios" | "other" {
   return "other";
 }
 
+function openGame(v: Variant) {
+  const os = platform();
+  if (os === "android") {
+    window.location.href = `intent://#Intent;package=${ANDROID_PACKAGE[v]};scheme=android-app;launchFlags=0x10000000;end`;
+    return;
+  }
+  if (os === "ios") window.location.href = IOS_SCHEME[v];
+}
+
 /**
- * CTA de injeção: abre o Free Fire (normal ou MAX) no Android/iOS.
+ * CTA visual do Atlas: escolhe a versão, exibe o carregamento e abre o jogo.
+ * Não executa injeção de DLL, manipulação de memória ou bypass de anti-cheat.
  */
 export function InjectButton() {
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState<Variant | null>(null);
+  const [loadingGame, setLoadingGame] = useState<Variant | null>(null);
+  const [progress, setProgress] = useState(0);
 
-  const launch = async (v: Variant) => {
-    const os = platform();
-    if (os === "other") {
-      toast.error("Disponível só no celular", {
-        description: "Abra o Atlas VIP no Android ou iOS para injetar no jogo.",
-      });
-      return;
-    }
-    setBusy(v);
-    toast.success("Injeção aplicada", {
-      description: `Abrindo Free Fire ${v === "max" ? "MAX" : "normal"}…`,
-    });
+  useEffect(() => {
+    if (!loadingGame) return;
 
-    const started = Date.now();
+    setProgress(0);
+    const startedAt = Date.now();
+    const duration = 4200;
 
-    if (os === "android") {
-      window.location.href = `intent://#Intent;package=${ANDROID_PACKAGE[v]};scheme=android-app;launchFlags=0x10000000;end`;
-    } else {
-      window.location.href = IOS_SCHEME[v];
-    }
+    const timer = window.setInterval(() => {
+      const next = Math.min(100, Math.round(((Date.now() - startedAt) / duration) * 100));
+      setProgress(next);
 
-    // Se o app não abrir, oferece a loja no Android.
-    setTimeout(() => {
-      setBusy(null);
-      setOpen(false);
-      if (!document.hidden) {
-        toast.error("Free Fire não abriu", {
-          description: "Verifique se o jogo está instalado.",
-          action: os === "android" ? {
-            label: "Abrir loja",
-            onClick: () => window.open(STORE[v], "_blank"),
-          } : undefined,
-        });
+      if (next >= 100) {
+        window.clearInterval(timer);
+        window.setTimeout(() => {
+          const selected = loadingGame;
+          setLoadingGame(null);
+          setOpen(false);
+          openGame(selected);
+        }, 350);
       }
-    }, 1800);
+    }, 80);
+
+    return () => window.clearInterval(timer);
+  }, [loadingGame]);
+
+  const start = (v: Variant) => {
+    setOpen(false);
+    setLoadingGame(v);
   };
 
   return (
@@ -97,7 +95,7 @@ export function InjectButton() {
           <DialogHeader>
             <DialogTitle>Escolha o jogo</DialogTitle>
             <DialogDescription>
-              As funções ativas serão aplicadas ao abrir o Free Fire.
+              Selecione qual versão do Free Fire deseja iniciar.
             </DialogDescription>
           </DialogHeader>
 
@@ -106,28 +104,53 @@ export function InjectButton() {
               <button
                 key={v}
                 type="button"
-                disabled={busy !== null}
-                onClick={() => launch(v)}
+                onClick={() => start(v)}
                 className={cn(
-                  "h-24 rounded-2xl glass flex flex-col items-center justify-center gap-2 font-bold text-sm hover:bg-white/10 active:scale-[0.98] transition-all",
-                  busy === v && "bg-white text-black"
+                  "h-24 rounded-2xl glass flex flex-col items-center justify-center gap-2 font-bold text-sm hover:bg-white/10 active:scale-[0.98] transition-all"
                 )}
               >
-                {busy === v ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Rocket className="w-5 h-5" />
-                )}
+                <Rocket className="w-5 h-5" />
                 {v === "max" ? "Free Fire MAX" : "Free Fire"}
               </button>
             ))}
           </div>
-
-          <p className="text-[11px] text-muted-foreground text-center">
-            Abertura direta do jogo funciona apenas no Android e iOS.
-          </p>
         </DialogContent>
       </Dialog>
+
+      {loadingGame && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-5 backdrop-blur-md">
+          <div className="w-full max-w-sm rounded-[28px] border border-white/10 bg-[#080808] p-6 shadow-2xl">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04]">
+              <Rocket className="h-9 w-9 text-white" />
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 font-mono text-[12px] leading-7 text-white/70">
+              <p>&gt; Preparando módulos...</p>
+              <p className={progress >= 32 ? "text-white/70" : "text-white/25"}>
+                &gt; Aplicando configurações...
+              </p>
+              <p className={progress >= 68 ? "text-white/70" : "text-white/25"}>
+                &gt; Iniciando {loadingGame === "max" ? "Free Fire MAX" : "Free Fire"}...
+              </p>
+            </div>
+
+            <div className="mt-6 flex items-end justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-white/35">Atlas</p>
+                <p className="mt-1 text-sm font-semibold text-white">Carregando</p>
+              </div>
+              <span className="font-mono text-2xl font-bold text-white">{progress}%</span>
+            </div>
+
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-white transition-[width] duration-100 ease-linear"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
