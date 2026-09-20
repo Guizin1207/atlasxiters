@@ -21,24 +21,26 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const { keyData } = useKey();
   const [paying, setPaying] = useState<PlanId | null>(null);
   const [pixPlan, setPixPlan] = useState<PlanId | null>(null);
-  const startPayment = async (plan: PlanId) => {
-    if (!keyData || plan === "demo") return;
+  const [pixPlan, setPixPlan] = useState<PlanId | null>(null);
+
+  const startPayment = (plan: PlanId) => {
+    if (plan === "demo") return;
     setPaying(plan);
-    try {
-      const { data, error } = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/infinitepay-checkout`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: keyData.key, plan }),
-        }
-      ).then(async (r) => ({ data: await r.json(), error: r.ok ? null : new Error("Checkout indisponível") }));
-      if (error || !data?.url) throw error || new Error(data?.error || "Não foi possível abrir o checkout.");
-      window.location.href = data.url;
-    } catch (error) {
-      toast.error("Pagamento", { description: error instanceof Error ? error.message : "Erro ao abrir o checkout." });
-      setPaying(null);
-    }
+    setPixPlan(plan);
+    setPaying(null);
+  };
+
+  const pixKey = "38998816357";
+  const pixPayload = pixKey;
+
+  const copyPixKey = async () => {
+    await navigator.clipboard.writeText(pixKey);
+    toast.success("Chave Pix copiada");
+  };
+
+  const copyPixCode = async () => {
+    await navigator.clipboard.writeText(pixPayload);
+    toast.success("Pix Copia e Cola copiado");
   };
 
   const currentPlan: PlanId = keyData?.is_master
@@ -125,7 +127,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   disabled={paying !== null}
                   className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 disabled:opacity-60 disabled:cursor-wait font-bold uppercase tracking-[0.12em] text-xs flex items-center justify-center gap-2 transition-colors"
                 >
-                  {paying === p.id ? "Abrindo checkout…" : "Pagar agora"}
+                  {paying === p.id ? "Abrindo Pix…" : "Pagar com Pix"}
                 </button>
               )}
             </div>
@@ -133,6 +135,34 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
         })}
       </div>
 
+
+      {pixPlan && (
+        <div className="glass-strong rounded-2xl p-5 space-y-4 border border-white/15">
+          <div>
+            <p className="vip-eyebrow mb-1">Pagamento via Pix</p>
+            <p className="font-bold">{getPlan(pixPlan).name} — {getPlan(pixPlan).price}</p>
+            <p className="text-xs text-muted-foreground mt-1">Copie a chave ou use o QR Code para pagar. Depois envie o comprovante.</p>
+          </div>
+          <div className="rounded-xl bg-black/20 border border-white/10 p-3 flex items-center justify-between gap-3">
+            <span className="font-mono text-sm break-all">{pixKey}</span>
+            <button type="button" onClick={copyPixKey} className="shrink-0 h-9 px-3 rounded-lg bg-white text-black text-xs font-bold flex items-center gap-2">
+              <Copy className="w-3.5 h-3.5" /> Copiar
+            </button>
+          </div>
+          <div className="rounded-xl border border-white/10 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"><QrCode className="w-4 h-4" /> Pix Copia e Cola</div>
+            <p className="text-[11px] text-muted-foreground break-all">{pixPayload}</p>
+            <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar chave Pix</button>
+          </div>
+          <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
+            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixKey)}&size=260`} alt="QR Code da chave Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
+            <p className="text-[11px] text-muted-foreground text-center">Aponte a câmera do banco para este QR Code.</p>
+          </div>
+          <a href="https://wa.me/5538998816357" target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
+            Enviar comprovante
+          </a>
+        </div>
+      )}
 
     </section>
   );
