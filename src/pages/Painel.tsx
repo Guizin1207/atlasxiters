@@ -20,7 +20,7 @@ import { ExpiredKeyModal } from "@/components/ExpiredKeyModal";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { RecompensaTab } from "@/components/atlas/RecompensaTab";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { rewardApi } from "@/lib/reward-api";
 
 export default function PainelPage() {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export default function PainelPage() {
   useEffect(() => {
     if (!loading && keyData && !keyData.is_master) {
       void (async () => {
-        const { data } = await (supabase as any).rpc("get_daily_reward", { _key: keyData.key });
+        const { data } = await rewardApi("get", keyData.key);
         if (data?.ok && !data.claimed_today) {
           setDailyReward(data);
           setRewardOpen(true);
@@ -50,7 +50,7 @@ export default function PainelPage() {
   const collectDailyReward = async () => {
     if (!keyData?.key || rewardBusy) return;
     setRewardBusy(true);
-    const { data, error } = await (supabase as any).rpc("claim_daily_reward", { _key: keyData.key });
+    const { data, error } = await rewardApi("claim", keyData.key);
     if (error || data?.ok === false) {
       if (data?.reason === "already_claimed") toast.info("Você já recebeu a recompensa de hoje.");
       else toast.error(String(error?.message ?? "Não foi possível receber a recompensa."));
