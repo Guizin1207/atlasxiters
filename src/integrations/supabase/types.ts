@@ -151,6 +151,32 @@ export type Database = {
         }
         Relationships: []
       }
+      key_expiry_notices: {
+        Row: {
+          expires_at: string
+          key_id: string
+          notified_at: string
+        }
+        Insert: {
+          expires_at: string
+          key_id: string
+          notified_at?: string
+        }
+        Update: {
+          expires_at?: string
+          key_id?: string
+          notified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_expiry_notices_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: true
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       key_settings: {
         Row: {
           key_id: string
@@ -863,6 +889,7 @@ export type Database = {
         Args: { _ids: string[]; _key: string }
         Returns: number
       }
+      notify_expired_keys: { Args: never; Returns: number }
       redeem_key: {
         Args: { _device: string; _device_id: string; _key: string }
         Returns: Json
