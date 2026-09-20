@@ -32,13 +32,14 @@ alter table public.app_config   enable row level security;
 alter table public.key_settings enable row level security;
 
 insert into public.app_config (key, value) values
-  ('master_password', to_jsonb('atlas-admin-2026'::text)),
+  -- senha real definida manualmente fora do repositorio
+  ('master_password', to_jsonb('TROCAR-ME'::text)),
   ('maintenance_enabled', to_jsonb(false)),
   ('maintenance_message', to_jsonb('Estamos em manutenção. Volte em instantes.'::text))
 on conflict (key) do nothing;
 
 insert into public.access_keys (key, duration_days, note, is_master)
-values ('ATLAS-MASTER-0001', 36500, 'Chave mestra inicial', true)
+values ('ATLS-TROCAR-ME-0001', 36500, 'Chave mestra inicial', true)
 on conflict (key) do nothing;
 
 create or replace function public._cfg_text(_k text)
