@@ -79,7 +79,7 @@ export function SensiTab() {
       setResult(fallback);
       setAiMode("pronto");
       toast.success("Perfil inteligente gerado", {
-        description: "Configuração gerada pelo motor inteligente do Atlas, ajustada ao seu aparelho e estilo.",
+        description: "Configuração personalizada para o seu aparelho e estilo.",
       });
     } catch (error) {
       console.error("sensi-ai", error);
@@ -87,7 +87,7 @@ export function SensiTab() {
       setResult(fallback);
       setAiMode("pronto");
       toast.success("Perfil inteligente gerado", {
-        description: "Motor inteligente local ativado com ajuste por aparelho, DPI, dedos e estilo.",
+        description: "Configuração calculada pelo motor do Atlas para o seu aparelho.",
       });
     } finally {
       setBusy(false);
@@ -122,11 +122,11 @@ export function SensiTab() {
         <div className="flex items-center gap-3 mb-3">
           <div className="h-10 w-10 rounded-xl bg-white text-black flex items-center justify-center"><Sparkles className="w-5 h-5" /></div>
           <div>
-            <p className="vip-eyebrow mb-1">ATLAS AI • FREE FIRE 2026</p>
-            <h2 className="text-xl font-bold">Análise profissional de sensibilidade</h2>
+            <p className="vip-eyebrow mb-1">ATLAS VIP • FREE FIRE 2026</p>
+            <h2 className="text-xl font-bold">Gerador de Sensi PRO</h2>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">A IA cruza aparelho, plataforma, tela, RAM, idade, DPI, dedos e estilo para montar um perfil completo de mira.</p>
+        <p className="text-sm text-muted-foreground">Configure seu aparelho e estilo para gerar uma sensibilidade personalizada para Free Fire 2026.</p>
         <div className="grid grid-cols-2 gap-2 mt-4">
           {[
             [Smartphone, "Aparelho"],
@@ -228,7 +228,7 @@ export function SensiTab() {
       {result && (
         <div className="glass-strong rounded-2xl p-5 space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
-            <p className="vip-eyebrow">Análise personalizada</p>
+            <p className="vip-eyebrow">SENSIBILIDADE GERADA</p>
             <Button
               variant="ghost"
               size="sm"
@@ -245,7 +245,7 @@ export function SensiTab() {
           </div>
 
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex items-center gap-2 mb-3"><ShieldCheck className="w-4 h-4" /><span className="text-xs font-semibold">Perfil gerado para {device}</span></div>
+            <div className="flex items-center gap-2 mb-3"><ShieldCheck className="w-4 h-4" /><span className="text-xs font-semibold">CONFIGURAÇÃO • {device}</span></div>
             <div className="space-y-2.5">
             <Bar label="Geral" value={result.geral} />
             <Bar label="Ponto vermelho" value={result.pontoVermelho} />
@@ -267,12 +267,12 @@ export function SensiTab() {
             )}
             <div className="rounded-xl bg-white/5 px-3 py-3">
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                Ajuste estimado
+                COMPATIBILIDADE DO PERFIL
               </p>
               <p className="font-mono font-bold text-status-active">
                 {result.precisaoEstimada}%
               </p>
-              <p className="text-[10px] text-muted-foreground mt-1">compatibilidade estimada do perfil</p>
+              <p className="text-[10px] text-muted-foreground mt-1">referência calculada pelo gerador</p>
             </div>
           </div>
 
