@@ -16,6 +16,7 @@ import { InjectButton } from "@/components/atlas/InjectButton";
 import { MaintenanceModal } from "@/components/MaintenanceModal";
 import { ExpiredKeyModal } from "@/components/ExpiredKeyModal";
 import { SupportChat } from "@/components/atlas/SupportChat";
+import { MessageCircle } from "lucide-react";
 
 export default function PainelPage() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export default function PainelPage() {
   const maintenance = useMaintenance();
   const { expired } = useKeyValidity();
   const [tab, setTab] = useState<AtlasTab>("funcoes");
+  const [supportOpen, setSupportOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !keyData) navigate("/login", { replace: true });
@@ -49,11 +51,11 @@ export default function PainelPage() {
           {tab === "funcoes" && <FuncoesTab />}
           {tab === "ajustes" && <AjustesTab />}
           {tab === "perfil" && <PerfilTab />}
-          {tab === "suporte" && <SupportChat />}
+
         </div>
       </div>
 
-      {tab === "funcoes" && <InjectButton />}
+      {tab === "funcoes" && <InjectButton />}\n\n      <button\n        type="button"\n        onClick={() => setSupportOpen(true)}\n        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-2xl ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"\n        aria-label="Abrir suporte"\n      >\n        <MessageCircle className="h-5 w-5" />\n      </button>\n\n      {supportOpen && (\n        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-3 sm:items-center" onClick={() => setSupportOpen(false)}>\n          <div className="w-full max-w-md max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>\n            <div className="mb-2 flex justify-end">\n              <button type="button" onClick={() => setSupportOpen(false)} className="rounded-full bg-black/70 px-3 py-1 text-xs text-white">Fechar</button>\n            </div>\n            <SupportChat />\n          </div>\n        </div>\n      )}
 
       {blockMaintenance && (
         <MaintenanceModal message={maintenance.message} />
