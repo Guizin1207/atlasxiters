@@ -76,7 +76,7 @@ export function SupportAdminCard() {
           <div className="space-y-3">
             <div className="h-72 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
               {!selected ? <p className="text-xs text-muted-foreground text-center py-10">Selecione uma conversa.</p> :
-                messages.map((m) => <div key={m.id} className={`flex ${m.sender_type === "admin" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "admin" ? "bg-white text-black" : "glass"}`}>{m.body}</div></div>)}
+                messages.map((m) => <div key={m.id} className={`flex ${m.sender_type === "admin" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] min-w-0 rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words overflow-hidden ${m.sender_type === "admin" ? "bg-white text-black" : "glass"}`}>{m.body}</div></div>)}
             </div>
             {selected && <>
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
