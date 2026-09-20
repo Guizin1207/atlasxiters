@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { resolveReceiptUrl } from "@/lib/receipts";
 
-export function ReceiptImage({ ref: _unused, refValue, caption }: { ref?: never; refValue: string; caption: string }) {
+export function ReceiptImage({ refValue, caption }: { refValue: string; caption: string }) {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
