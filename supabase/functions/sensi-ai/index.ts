@@ -85,7 +85,9 @@ REGRAS IMPORTANTES:
 4. Para iOS, NÃO use DPI como fator de ajuste. iPhone/iPad não deve receber recomendação de DPI. Concentre a calibração na sensibilidade do jogo, modelo/tamanho da tela, fluidez e estilo. Nesse caso, dpiRecomendado deve ser 0.
 5. Para Android, use DPI apenas como fator secundário e respeite o DPI informado. Não trate DPI como garantia de capa.
 6. Priorize controle de arrasto, estabilidade da mira e resposta em curta/média distância. Não prometa porcentagem real de headshot.
-7. Gere uma configuração prática para começar a jogar e notas curtas explicando por que o aparelho recebeu aquele perfil.
+7. Gere uma configuração de nível PRO, mas realista: evite números redondos demais e ajuste cada mira de forma independente. Pense em controle de arrasto, microajuste, estabilidade no spray, velocidade de troca de alvo, combate curto e médio e precisão com AWM.
+8. Além dos valores, as notas devem explicar de forma específica o perfil criado para este aparelho e dar 2 a 3 instruções práticas de uso. Não diga apenas "teste no treinamento".
+9. A configuração deve parecer feita sob medida para o modelo informado, sem prometer que ela garante capa ou vitória.
 
 Responda SOMENTE com JSON válido, sem markdown, neste formato:
 {
@@ -97,7 +99,7 @@ Responda SOMENTE com JSON válido, sem markdown, neste formato:
   "olharLivre": number,
   "dpiRecomendado": number,
   "precisaoEstimada": number,
-  "notas": ["string", "string", "string"]
+  "notas": ["string", "string", "string", "string", "string"]
 }
 
 Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. A precisão estimada é apenas uma estimativa de ajuste, não uma garantia de desempenho.`;
