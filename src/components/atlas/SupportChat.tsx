@@ -116,16 +116,12 @@ export function SupportChat() {
         {loading ? <div className="flex justify-center py-10"><Loader2 className="w-4 h-4 animate-spin" /></div> :
           messages.length === 0 ? <p className="text-xs text-muted-foreground text-center py-10">Nenhuma mensagem ainda. Envie sua dúvida abaixo.</p> :
           messages.map((m) => {
-            const isReceipt = m.body.startsWith(RECEIPT_PREFIX);
-            const receiptUrl = isReceipt ? m.body.slice(RECEIPT_PREFIX.length) : "";
+            const isReceipt = isReceiptBody(m.body);
             return (
               <div key={m.id} className={`flex ${m.sender_type === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "user" ? "bg-white text-black" : "glass"}`}>
                   {isReceipt ? (
-                    <a href={receiptUrl} target="_blank" rel="noreferrer" className="block">
-                      <img src={receiptUrl} alt="Comprovante" className="max-h-56 w-auto rounded-xl object-contain" />
-                      <span className="mt-1 block text-[10px] opacity-60">Comprovante enviado</span>
-                    </a>
+                    <ReceiptImage refValue={receiptRef(m.body)} caption="Comprovante enviado" />
                   ) : m.body}
                 </div>
               </div>
