@@ -11,70 +11,85 @@ const PLANS = {
   master: { name: "Atlas VIP Master", price: 149.99, days: null },
 } as const;
 
+const PAYMENT_METHODS = [
+  { type: "CREDIT_CARD" },
+  { type: "DEBIT_CARD" },
+  { type: "PIX" },
+  { type: "BOLETO" },
+  { type: "PAGBANK" },
+  { type: "APPLE_PAY" },
+  { type: "GOOGLE_PAY" },
+];
+
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   try {
-    const token = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
-    if (!token) throw new Error("MERCADOPAGO_ACCESS_TOKEN não configurado");
+    const token = Deno.env.get("PAGBANK_ACCESS_TOKEN");
+    if (!token) throw new Error("PAGBANK_ACCESS_TOKEN não configurado");
 
     const { key, plan } = await req.json();
     const selected = PLANS[plan as keyof typeof PLANS];
+
     if (!selected || typeof key !== "string" || !key.trim()) {
       return new Response(JSON.stringify({ error: "Plano ou chave inválidos" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const appUrl = req.headers.get("origin") || "https://atlasxiters.lovable.app";
-    const externalReference = JSON.stringify({ key: key.trim().toUpperCase(), plan });
+    const referenceId = `ATLAS|${key.trim().toUpperCase()}|${plan}`;
 
-    const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
+    const response = await fetch("https://api.pagseguro.com/checkouts", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
+        Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        reference_id: referenceId,
         items: [{
-          id: `atlas-${plan}`,
-          title: selected.name,
+          reference_id: `atlas-${plan}`,
+          name: selected.name,
           quantity: 1,
-          currency_id: "BRL",
-          unit_price: selected.price,
+          unit_amount: Math.round(selected.price * 100),
         }],
-        external_reference: externalReference,
-        payment_methods: {
-          excluded_payment_types: [],
-          excluded_payment_methods: [],
-          installments: 12,
-          default_payment_method_id: null,
-        },
-        back_urls: {
-          success: `${appUrl}/painel?pagamento=sucesso`,
-          pending: `${appUrl}/painel?pagamento=pendente`,
-          failure: `${appUrl}/painel?pagamento=erro`,
-        },
-        auto_return: "approved",
-        payment_methods: {
-          excluded_payment_types: [],
-          excluded_payment_methods: [],
-        },
-        notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
+        customer_modifiable: true,
+        payment_methods: PAYMENT_METHODS,
+        redirect_url: `${appUrl}/painel?pagamento=sucesso`,
+        notification_urls: [`${Deno.env.get("SUPABASE_URL")}/functions/v1/pagbank-webhook`],
+        payment_notification_urls: [`${Deno.env.get("SUPABASE_URL")}/functions/v1/pagbank-webhook`],
       }),
     });
 
     const data = await response.json();
+
     if (!response.ok) {
-      throw new Error(data?.message || "Mercado Pago recusou a criação do pagamento");
+      throw new Error(data?.error_messages?.[0]?.description || data?.message || "PagBank recusou a criação do checkout");
     }
 
-    return new Response(JSON.stringify({ init_point: data.init_point, preference_id: data.id }), {
+    const payLink = data?.links?.find((link: { rel?: string }) => link.rel === "PAY")?.href;
+
+    if (!payLink) {
+      throw new Error("PagBank não retornou o link de pagamento");
+    }
+
+    return new Response(JSON.stringify({
+      init_point: payLink,
+      checkout_id: data.id,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erro ao criar pagamento" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : "Erro ao criar pagamento",
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
