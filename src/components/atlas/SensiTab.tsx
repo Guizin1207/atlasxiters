@@ -57,13 +57,19 @@ export function SensiTab() {
         body: { device, dpi, fingers, style },
       });
 
-      if (error) throw error;
-      if (!isSensiResult(data)) {
-        throw new Error("Resposta da IA inválida.");
+      if (!error && isSensiResult(data)) {
+        setResult(data);
+        toast.success("Sensi IA gerada para Free Fire 2026");
+        return;
       }
 
-      setResult(data);
-      toast.success("Sensi IA gerada para Free Fire 2026");
+      // Fallback local para a sensi continuar funcionando mesmo quando a Edge Function/IA estiver indisponível.
+      const { generateSensi } = await import("@/lib/atlas-sensi");
+      const fallback = generateSensi({ device, dpi, fingers, style });
+      setResult(fallback);
+      toast.warning("Gerador IA indisponível no momento", {
+        description: "Foi usada uma configuração local para você não ficar sem a sensi.",
+      });
     } catch (error) {
       console.error("sensi-ai", error);
       toast.error("Não foi possível gerar a sensi", {
