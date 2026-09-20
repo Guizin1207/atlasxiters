@@ -24,7 +24,9 @@ export default function PainelPage() {
   const maintenance = useMaintenance();
   const { expired } = useKeyValidity();
   const [tab, setTab] = useState<AtlasTab>("funcoes");
-  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(
+    () => new URLSearchParams(window.location.search).get("suporte") === "1"
+  );
 
   useEffect(() => {
     if (!loading && !keyData) navigate("/login", { replace: true });
