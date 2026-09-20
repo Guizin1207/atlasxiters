@@ -77,7 +77,7 @@ export function SensiTab() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      text: "Fala! Sou a Sensi AI do Atlas VIP. Me diga seu aparelho e o que você quer ajustar. Eu calibro a sensibilidade para o seu dispositivo e para o seu estilo no Free Fire 2026.",
+      text: "Me diga seu aparelho + ajuste. Ex.: “iPhone 13, mais capa no rush”.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -150,14 +150,13 @@ export function SensiTab() {
 
       setResult(data);
 
-      const summary = [
-        `Pronto. Calibrei a sensi para ${formatDevice(inferredDevice)}.`,
-        `Geral ${data.geral} • Red Dot ${data.pontoVermelho} • 2x ${data.mira2x} • 4x ${data.mira4x}`,
-        `AWM ${data.miraAwm} • Olhar Livre ${data.olharLivre}`,
-        data.notas?.[0] ? data.notas[0] : "O perfil foi ajustado para equilibrar arrasto, controle e troca de alvo.",
-      ].join("\n");
-
-      setMessages((current) => [...current, { role: "ai", text: summary }]);
+      const focus = data.notas?.[0]
+        ? data.notas[0].replace(/\s+/g, " ").trim().slice(0, 100)
+        : "Perfil ajustado para capa e controle.";
+      setMessages((current) => [
+        ...current,
+        { role: "ai", text: `Pronto. ${formatDevice(inferredDevice)} calibrado para FF 2026.\n${focus}` },
+      ]);
     } catch (error) {
       console.error("sensi-ai", error);
       const message = error instanceof Error ? error.message : "Erro desconhecido.";
@@ -313,7 +312,7 @@ export function SensiTab() {
                   <Zap className="h-3.5 w-3.5" />
                   Perfil da calibração
                 </div>
-                <p className="text-xs leading-5 text-muted-foreground">
+                <p className="text-[11px] leading-4 text-muted-foreground">
                   Ajuste pensado para o comportamento do dispositivo e para o pedido mais recente, mantendo controle de arrasto e estabilidade.
                 </p>
               </div>
@@ -333,7 +332,7 @@ export function SensiTab() {
               <div className="border-t border-white/10 px-4 py-3">
                 <p className="vip-eyebrow mb-2">RESPOSTA DA IA</p>
                 <div className="space-y-1.5">
-                  {result.notas.slice(0, 4).map((note, index) => (
+                  {result.notas.slice(0, 2).map((note, index) => (
                     <p key={index} className="text-xs leading-5 text-muted-foreground">
                       • {note}
                     </p>
