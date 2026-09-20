@@ -460,18 +460,6 @@ export type Database = {
         Args: { _password: string; _proposal: Json }
         Returns: Json
       }
-      admin_touch_access_session: {
-        Args: { _password: string; _session_id: string; _device_id: string; _device_label: string }
-        Returns: boolean
-      }
-      admin_end_access_session: {
-        Args: { _password: string; _session_id: string }
-        Returns: boolean
-      }
-      admin_list_access_sessions: {
-        Args: { _password: string }
-        Returns: Json
-      }
       admin_create_keys: {
         Args: {
           _count: number
@@ -495,6 +483,10 @@ export type Database = {
         Returns: boolean
       }
       admin_device_stats: { Args: { _password: string }; Returns: Json }
+      admin_end_access_session: {
+        Args: { _password: string; _session_id: string }
+        Returns: boolean
+      }
       admin_extend_key: {
         Args: { _days: number; _id: string; _password: string }
         Returns: {
@@ -519,6 +511,7 @@ export type Database = {
         }
       }
       admin_get_ai_messages: { Args: { _password: string }; Returns: Json }
+      admin_list_access_sessions: { Args: { _password: string }; Returns: Json }
       admin_list_keys: {
         Args: { _password: string }
         Returns: {
@@ -837,6 +830,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_touch_access_session: {
+        Args: {
+          _device_id: string
+          _device_label: string
+          _password: string
+          _session_id: string
+        }
+        Returns: boolean
       }
       admin_unrevoke_key: {
         Args: { _id: string; _password: string }
