@@ -9,6 +9,16 @@ import { useAdmin } from "@/lib/admin-context";
 type Thread = { id: string; key_id: string; key: string; updated_at: string };
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string };
 
+const QUICK_ADMIN = [
+  ["👋 Olá", "Olá! Como posso ajudar?"],
+  ["💳 Pix", "Pode enviar o comprovante."],
+  ["🔑 Key", "Pode informar sua key."],
+  ["⏳ Aguarde", "Vou verificar para você."],
+  ["📩 Detalhes", "Pode explicar melhor?"],
+  ["🛠️ Configuração", "Vou ajudar na configuração."],
+  ["✅ Resolvido", "Pronto! Resolvido."],
+] as const;
+
 export function SupportAdminCard() {
   const { password } = useAdmin();
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -33,6 +43,18 @@ export function SupportAdminCard() {
   useEffect(() => { loadThreads(); const t = window.setInterval(loadThreads, 2500); return () => window.clearInterval(t); }, [loadThreads]);
   useEffect(() => { loadMessages(); const t = window.setInterval(loadMessages, 2000); return () => window.clearInterval(t); }, [loadMessages]);
 
+  const sendQuick = async (message: string) => {
+    if (!password || !selected) return;
+    const { error } = await supabase.rpc("admin_support_send_message", {
+      _password: password,
+      _thread_id: selected.id,
+      _body: message,
+    });
+    if (error) { toast.error("Não foi possível enviar."); return; }
+    loadMessages();
+    loadThreads();
+  };
+
   const send = async () => {
     if (!password || !selected || !body.trim()) return;
     const { error } = await supabase.rpc("admin_support_send_message", { _password: password, _thread_id: selected.id, _body: body.trim() });
@@ -56,7 +78,15 @@ export function SupportAdminCard() {
               {!selected ? <p className="text-xs text-muted-foreground text-center py-10">Selecione uma conversa.</p> :
                 messages.map((m) => <div key={m.id} className={`flex ${m.sender_type === "admin" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "admin" ? "bg-white text-black" : "glass"}`}>{m.body}</div></div>)}
             </div>
-            {selected && <div className="flex gap-2"><Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Responder…" rows={2} className="rounded-2xl bg-white/5 border-white/10 resize-none" /><Button onClick={send} disabled={!body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black"><Send className="w-4 h-4" /></Button></div>}
+            {selected && <>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_ADMIN.map(([label, message]) => (
+                  <Button key={label} variant="outline" onClick={() => sendQuick(message)} className="rounded-xl border-white/10 bg-white/5 text-xs h-8 px-3">
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex gap-2"><Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Responder…" rows={2} className="rounded-2xl bg-white/5 border-white/10 resize-none" /><Button onClick={send} disabled={!body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black"><Send className="w-4 h-4" /></Button></div></>}
           </div>
         </div>}
     </section>
