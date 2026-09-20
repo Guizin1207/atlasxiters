@@ -582,6 +582,35 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_update_key_access: {
+        Args: {
+          _duration_days: number
+          _id: string
+          _key: string
+          _password: string
+          _plan: string
+        }
+        Returns: {
+          activated_at: string | null
+          created_at: string
+          device: string | null
+          device_id: string | null
+          duration_days: number
+          expires_at: string | null
+          id: string
+          is_master: boolean
+          key: string
+          note: string | null
+          plan: string
+          revoked: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "access_keys"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       count_unread_messages: { Args: { _key: string }; Returns: number }
       get_maintenance: { Args: never; Returns: Json }
       get_settings: { Args: { _key: string }; Returns: Json }

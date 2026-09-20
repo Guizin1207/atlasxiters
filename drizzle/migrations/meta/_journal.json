@@ -43,6 +43,13 @@
       "when": 1789879002116,
       "tag": "0005_demo_access_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789880337366,
+      "tag": "0006_admin_update_key_access",
+      "breakpoints": true
     }
   ]
 }
