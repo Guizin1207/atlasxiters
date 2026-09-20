@@ -172,8 +172,8 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
             <p className="text-xs text-muted-foreground mt-1">Copie a chave ou use o QR Code para pagar. Depois envie o comprovante.</p>
           </div>
           <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
-            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixKey)}&size=260`} alt="QR Code da chave Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
-            <p className="text-[11px] text-muted-foreground text-center">Aponte a câmera do banco para este QR Code.</p>
+            <p className="font-mono text-base font-bold">{pixKey}</p>
+            <button type="button" onClick={copyPixKey} className="h-10 px-4 rounded-lg bg-white text-black text-xs font-bold">Copiar chave Pix</button>
           </div>
           <a href={`https://wa.me/5538998816357?text=${encodeURIComponent(`EBA! 🎉 Você fez sua compra na Atlas Store!\n\nAgora é só enviar o comprovante. Aguarde a aprovação do ADM; assim que possível, entraremos em contato com sua nova key.\n\nPlano: ${getPlan(pixPlan).name}\nValor: ${getPlan(pixPlan).price}`)}`} target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
             EBA! Enviar comprovante
