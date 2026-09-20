@@ -121,8 +121,8 @@ Responda SOMENTE com JSON válido, sem markdown, neste formato:
 Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. A precisão estimada é apenas uma estimativa de ajuste, não uma garantia de desempenho.`;
 
     const result = await generateText({
-      model: lovable.responses("google/gemini-3.7-flash"),
-      maxTokens: 900,
+      model: lovable.responses("openai/gpt-6-astra"),
+      maxOutputTokens: 900,
       prompt,
       abortSignal: req.signal,
       providerOptions: {
