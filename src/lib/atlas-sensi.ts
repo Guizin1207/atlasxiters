@@ -7,7 +7,10 @@ export type SensiStyle = "precisao" | "equilibrado" | "agressivo";
 
 export type SensiInput = {
   device: string; // modelo do aparelho
-  dpi: number; // dpi do aparelho (mobile: 300-600)
+  dpi: number; // dpi do aparelho (Android)
+  refreshRate: 60 | 90 | 120;
+  ram: "3-4" | "6-8" | "12+";
+  deviceAge: 0 | 1 | 2 | 3;
   fingers: 2 | 3 | 4;
   style: SensiStyle;
 };
@@ -43,7 +46,7 @@ const STYLE_BIAS: Record<SensiStyle, number> = {
 
 export function generateSensi(input: SensiInput): SensiResult {
   const seed = hash(
-    `${input.device.trim().toLowerCase()}|${input.dpi}|${input.fingers}|${input.style}|ff2026`
+    `${input.device.trim().toLowerCase()}|${input.dpi}|${input.fingers}|${input.style}|${input.refreshRate}|${input.ram}|${input.deviceAge}|ff2026`
   );
   const r = (i: number, spread: number) =>
     ((seed >> (i * 3)) % (spread * 2 + 1)) - spread;
@@ -80,7 +83,7 @@ export function generateSensi(input: SensiInput): SensiResult {
       ? "Perfil de rush: giros rápidos, ideal para combate próximo com SMG."
       : "Perfil equilibrado: bom para média distância e movimentação constante.",
     `Use ${input.fingers} dedos com o botão de tiro próximo do polegar direito.`,
-    `Ajuste o DPI do aparelho para ~${res.dpiRecomendado} e mantenha o modo de desempenho ligado.`,
+    `Ajuste o DPI do aparelho para ~${res.dpiRecomendado} (Android) e mantenha o modo de desempenho ligado.`,
     "Teste no treinamento por 10 minutos antes de entrar em ranqueada.",
   ];
 
