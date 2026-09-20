@@ -79,9 +79,9 @@ export function SupportAdminCard() {
                 messages.map((m) => <div key={m.id} className={`flex ${m.sender_type === "admin" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "admin" ? "bg-white text-black" : "glass"}`}>{m.body}</div></div>)}
             </div>
             {selected && <>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
                 {QUICK_ADMIN.map(([label, message]) => (
-                  <Button key={label} variant="outline" onClick={() => sendQuick(message)} className="rounded-xl border-white/10 bg-white/5 text-xs h-8 px-3">
+                  <Button key={label} variant="outline" onClick={() => sendQuick(message)} className="shrink-0 rounded-lg border-white/10 bg-white/5 text-[10px] h-7 px-2">
                     {label}
                   </Button>
                 ))}
