@@ -4,11 +4,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  generateSensi,
-  type SensiResult,
-  type SensiStyle,
-} from "@/lib/atlas-sensi";
+import { supabase } from "@/integrations/supabase/client";
+import type { SensiResult, SensiStyle } from "@/lib/atlas-sensi";
 
 const STYLES: { id: SensiStyle; label: string }[] = [
   { id: "precisao", label: "Precisão" },
@@ -16,8 +13,26 @@ const STYLES: { id: SensiStyle; label: string }[] = [
   { id: "agressivo", label: "Agressivo" },
 ];
 
+function isSensiResult(value: unknown): value is SensiResult {
+  if (!value || typeof value !== "object") return false;
+  const result = value as Record<string, unknown>;
+  const fields = [
+    "geral",
+    "pontoVermelho",
+    "mira2x",
+    "mira4x",
+    "miraAwm",
+    "olharLivre",
+    "dpiRecomendado",
+    "precisaoEstimada",
+  ];
+  return fields.every((field) => typeof result[field] === "number") &&
+    Array.isArray(result.notas) &&
+    result.notas.every((note) => typeof note === "string");
+}
+
 /**
- * Gerador de sensibilidade (base Free Fire 2026) — análise estilo IA.
+ * Gerador de sensibilidade com IA — base Free Fire 2026.
  */
 export function SensiTab() {
   const [device, setDevice] = useState("");
@@ -33,12 +48,30 @@ export function SensiTab() {
       toast.error("Informe o modelo do aparelho");
       return;
     }
+
     setBusy(true);
     setResult(null);
-    await new Promise((r) => setTimeout(r, 1200));
-    setResult(generateSensi({ device, dpi, fingers, style }));
-    setBusy(false);
-    toast.success("Sensibilidade gerada");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("sensi-ai", {
+        body: { device, dpi, fingers, style },
+      });
+
+      if (error) throw error;
+      if (!isSensiResult(data)) {
+        throw new Error("Resposta da IA inválida.");
+      }
+
+      setResult(data);
+      toast.success("Sensi IA gerada para Free Fire 2026");
+    } catch (error) {
+      console.error("sensi-ai", error);
+      toast.error("Não foi possível gerar a sensi", {
+        description: "Tente novamente em alguns segundos.",
+      });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const copy = async () => {
@@ -66,8 +99,8 @@ export function SensiTab() {
   return (
     <section aria-label="Gerador de sensibilidade" className="space-y-5">
       <div>
-        <p className="vip-eyebrow mb-1">Free Fire 2026</p>
-        <h2 className="text-xl font-bold">Gerador de sensi</h2>
+        <p className="vip-eyebrow mb-1">Free Fire 2026 • IA</p>
+        <h2 className="text-xl font-bold">Gerador de sensi IA</h2>
       </div>
 
       <div className="glass-strong rounded-2xl p-5 space-y-4">
@@ -83,7 +116,7 @@ export function SensiTab() {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="vip-eyebrow block mb-2">DPI</span>
+            <span className="vip-eyebrow block mb-2">DPI atual</span>
             <Input
               type="number"
               min={180}
@@ -148,14 +181,14 @@ export function SensiTab() {
           ) : (
             <Sparkles className="w-4 h-4 mr-2" />
           )}
-          {busy ? "Analisando…" : "Gerar sensi"}
+          {busy ? "IA analisando…" : "Gerar sensi IA"}
         </Button>
       </div>
 
       {result && (
         <div className="glass-strong rounded-2xl p-5 space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
-            <p className="vip-eyebrow">Resultado</p>
+            <p className="vip-eyebrow">Resultado da IA</p>
             <Button
               variant="ghost"
               size="sm"
@@ -183,13 +216,13 @@ export function SensiTab() {
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-white/5 px-3 py-3">
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                DPI ideal
+                DPI recomendado
               </p>
               <p className="font-mono font-bold">{result.dpiRecomendado}</p>
             </div>
             <div className="rounded-xl bg-white/5 px-3 py-3">
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                Precisão est.
+                Ajuste estimado
               </p>
               <p className="font-mono font-bold text-status-active">
                 {result.precisaoEstimada}%
