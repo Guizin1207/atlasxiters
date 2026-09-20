@@ -48,8 +48,11 @@ Deno.serve(async (req) => {
     const fingers = Number(body?.fingers);
     const isIOS = /iphone|ipad|ipod/i.test(device);
     const style = body?.style as SensiStyle;
+    const refreshRate = Number(body?.refreshRate);
+    const ram = typeof body?.ram === "string" ? body.ram : "6-8";
+    const deviceAge = Number(body?.deviceAge);
 
-    if (!device || ![2, 3, 4].includes(fingers) || !["precisao", "equilibrado", "agressivo"].includes(style)) {
+    if (!device || ![2, 3, 4].includes(fingers) || !["precisao", "equilibrado", "agressivo"].includes(style) || ![60, 90, 120].includes(refreshRate) || !["3-4", "6-8", "12+"].includes(ram) || ![0, 1, 2, 3].includes(deviceAge)) {
       return new Response(JSON.stringify({ error: "Dados de sensibilidade inválidos." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -77,9 +80,13 @@ Dados do jogador:
 - DPI informado: ${Number.isFinite(dpi) ? Math.max(180, Math.min(900, dpi)) : "não informado"}
 - dedos: ${fingers}
 - estilo: ${style}
+- taxa de atualização: ${refreshRate} Hz
+- RAM: ${ram} GB
+- idade aproximada: ${deviceAge === 0 ? "novo" : `${deviceAge} ano(s)`}
 
 REGRAS IMPORTANTES:
-1. Use o nome/modelo do aparelho como fator principal. Considere de forma aproximada tela, proporção, fluidez, resposta de toque e capacidade do aparelho quando essas características forem conhecidas. Não invente especificações.
+1. Use o nome/modelo do aparelho como fator principal.
+1.1. Use RAM, taxa de atualização e idade como fatores de estabilidade/performance; não trate RAM isoladamente como potência real do aparelho. Considere de forma aproximada tela, proporção, fluidez, resposta de toque e capacidade do aparelho quando essas características forem conhecidas. Não invente especificações.
 2. A configuração deve ser específica para Free Fire 2026 e coerente entre Geral, Ponto Vermelho, 2x, 4x, AWM e Olhar livre.
 3. Evite entregar os mesmos números para aparelhos diferentes. Faça ajustes reais conforme o modelo, sem aleatoriedade inútil.
 4. Para iOS, NÃO use DPI como fator de ajuste. iPhone/iPad não deve receber recomendação de DPI. Concentre a calibração na sensibilidade do jogo, modelo/tamanho da tela, fluidez e estilo. Nesse caso, dpiRecomendado deve ser 0.
