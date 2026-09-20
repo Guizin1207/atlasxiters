@@ -36,7 +36,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const [busy, setBusy] = useState<PlanId | null>(null);
 
   const currentPlan = keyData?.is_master ? "master" : ((keyData?.plan as PlanId) ?? "basic");
-  const currentIdx = PLAN_ORDER.indexOf(currentPlan);
+  const currentIdx = PLAN_ORDER.indexOf(currentPlan);\n  const isDemo = currentPlan === "demo";
 
   const load = useCallback(async () => {
     if (!keyData) return;
@@ -112,7 +112,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
         {PLANS.map((p, idx) => {
           const Icon = ICONS[p.id];
           const isCurrent = p.id === currentPlan;
-          const isUpgrade = idx > currentIdx;
+          const isUpgrade = !isDemo && idx > currentIdx;
           const isPending = pending(p.id);
 
           return (
