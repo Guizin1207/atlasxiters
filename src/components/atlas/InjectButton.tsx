@@ -57,11 +57,11 @@ export function InjectButton() {
 
     const url =
       os === "android"
-        ? `intent://launch/#Intent;package=${ANDROID_PACKAGE[v]};scheme=android-app;end`
+        ? `intent://#Intent;package=${ANDROID_PACKAGE[v]};end`
         : IOS_SCHEME[v];
 
     const started = Date.now();
-    window.location.href = url;
+    window.location.assign(url);
 
     // Se o app não abrir em ~2.5s, oferece a loja.
     setTimeout(() => {
