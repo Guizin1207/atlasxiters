@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useKey } from "@/lib/key-context";
 import { ReceiptImage } from "@/components/atlas/ReceiptImage";
 import { RECEIPT_BUCKET, RECEIPT_EXTENSIONS, RECEIPT_MAX_BYTES, RECEIPT_PREFIX, isReceiptBody, receiptRef } from "@/lib/receipts";
+import { notifyAdmin } from "@/lib/push";
 
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
 const QUICK_OPTIONS = [
