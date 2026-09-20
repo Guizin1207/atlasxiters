@@ -158,7 +158,7 @@ export default function LoginPage() {
           <Button
             type="button"
             onClick={() => setSupportOpen(true)}
-            className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-sm font-semibold hover:bg-white/10 transition-colors"
+            className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-white text-sm font-semibold hover:bg-white/10 transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
             Falar com suporte
