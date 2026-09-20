@@ -64,18 +64,21 @@ export function SupportChat() {
       toast.error("Selecione uma imagem do comprovante.");
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
+    if (file.size > RECEIPT_MAX_BYTES) {
       toast.error("A imagem deve ter no máximo 8 MB.");
       return;
     }
 
     setUploading(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    let ext = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!(RECEIPT_EXTENSIONS as readonly string[]).includes(ext)) {
+      ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+    }
     const safeKey = keyData.key.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
     const path = `${safeKey}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabase.storage
-      .from("support-receipts")
-      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      .from(RECEIPT_BUCKET)
+      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type || undefined });
 
     if (uploadError) {
       setUploading(false);
@@ -83,10 +86,9 @@ export function SupportChat() {
       return;
     }
 
-    const { data } = supabase.storage.from("support-receipts").getPublicUrl(path);
     const { error } = await supabase.rpc("support_send_message", {
       _key: keyData.key,
-      _body: `${RECEIPT_PREFIX}${data.publicUrl}`,
+      _body: `${RECEIPT_PREFIX}${path}`,
     });
     setUploading(false);
 
