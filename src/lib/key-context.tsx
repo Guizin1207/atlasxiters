@@ -60,7 +60,7 @@ const ADMIN_PASSWORD_KEY = "atlas_vip_admin_pwd";
 
 const KeyContext = createContext<Ctx | null>(null);
 
-function detectDevice(): string {
+export function detectDevice(): string {
   if (typeof navigator === "undefined") return "Desconhecido";
   const ua = navigator.userAgent || "";
   const platform = navigator.platform || "";
