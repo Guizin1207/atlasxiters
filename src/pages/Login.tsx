@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert } from "lucide-react";
-import { SUPPORT_URL, SUPPORT_LABEL } from "@/lib/atlas-config";
+import { SUPPORT_URL } from "@/lib/atlas-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AUTH_ERROR_KEY, useKey } from "@/lib/key-context";
@@ -120,9 +120,8 @@ export default function LoginPage() {
               </div>
               {isExpired && (
                 <a
-                  href={SUPPORT_URL}
-                  target="_blank"
-                  rel="noreferrer"
+                  type="button"
+                  onClick={() => setSupportOpen(true)}
                   className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg border border-status-danger/30 font-semibold"
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -154,7 +153,7 @@ export default function LoginPage() {
 
         <div className="mt-8 text-center space-y-3">
           <p className="text-xs text-muted-foreground/60">
-            Não tem uma chave? Fale com o suporte para adquirir acesso.
+            Precisa de ajuda? Fale com o suporte.
           </p>
           <Button
             type="button"
