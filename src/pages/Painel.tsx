@@ -50,7 +50,7 @@ export default function PainelPage() {
         <div className="mt-4 animate-fade-in min-[390px]:mt-6" key={tab}>
           {tab === "funcoes" && <FuncoesTab />}
           {tab === "ajustes" && <AjustesTab />}
-          {tab === "perfil" && <PerfilTab />}
+          {tab === "perfil" && <PerfilTab onSupport={() => setSupportOpen(true)} />}
 
         </div>
       </div>
