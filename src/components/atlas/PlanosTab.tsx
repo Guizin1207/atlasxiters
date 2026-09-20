@@ -110,12 +110,40 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
       </div>
 
       <div className="space-y-3">
-        {PLANS.map((p, idx) => {
+        {(() => {
+          const nextPlan = isDemo
+            ? PLANS[0]
+            : currentPlan === "basic"
+              ? PLANS[1]
+              : currentPlan === "pro"
+                ? PLANS[2]
+                : null;
+          const isPending = nextPlan ? pending(nextPlan.id) : false;
+
+          if (!nextPlan) return null;
+
+          return (
+            <div className="space-y-2">
+              <Button
+                onClick={() => request(nextPlan.id)}
+                disabled={busy === nextPlan.id}
+                className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
+              >
+                {busy === nextPlan.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Adquirir plano {nextPlan.name} • {nextPlan.price}
+              </Button>
+              {isPending && (
+                <p className="text-[11px] text-status-warning">
+                  Pedido em análise pelo administrador.
+                </p>
+              )}
+            </div>
+          );
+        })()}
+
+        {PLANS.map((p) => {
           const Icon = ICONS[p.id];
           const isCurrent = p.id === currentPlan;
-          const nextPlan = PLANS[idx + 1];
-          const isAvailable = Boolean(nextPlan) && (isDemo ? true : idx >= currentIdx);
-          const isPending = nextPlan ? pending(nextPlan.id) : false;
 
           return (
             <div
@@ -130,6 +158,37 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center">
                     <Icon className="w-4 h-4" />
                   </div>
+                  <div>
+                    <p className="font-bold leading-tight">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">{p.tagline}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-mono text-base font-bold leading-none">{p.price}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{p.priceNote}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
+                {isCurrent && (
+                  <span className="text-[10px] uppercase tracking-[0.2em] bg-white text-black rounded-full px-2 py-1 font-bold">
+                    Atual
+                  </span>
+                )}
+              </div>
+
+              <ul className="space-y-1.5">
+                {p.perks.map((perk) => (
+                  <li key={perk} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Check className="w-3.5 h-3.5 text-status-active shrink-0" />
+                    {perk}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
                   <div>
                     <p className="font-bold leading-tight">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p.tagline}</p>
