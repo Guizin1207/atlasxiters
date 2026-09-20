@@ -69,26 +69,9 @@ export function SupportChat() {
         </div>
       </header>
 
-      <div className="rounded-2xl border border-white/10 bg-black/15 p-2">
-        <p className="text-xs mb-2">👋 Como podemos ajudar?</p>
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-          {QUICK_OPTIONS.map(([label, message]) => (
-            <Button
-              key={label}
-              variant="outline"
-              disabled={sending}
-              onClick={() => sendMessage(message)}
-              className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2"
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      <div className="h-80 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
+            <div className="h-80 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
         {loading ? <div className="flex justify-center py-10"><Loader2 className="w-4 h-4 animate-spin" /></div> :
-          messages.length === 0 ? <p className="text-xs text-muted-foreground text-center py-10">Nenhuma mensagem ainda. Escolha uma opção acima ou envie sua dúvida.</p> :
+          messages.length === 0 ? <p className="text-xs text-muted-foreground text-center py-10">Nenhuma mensagem ainda. Envie sua dúvida abaixo.</p> :
           messages.map((m) => (
             <div key={m.id} className={`flex ${m.sender_type === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "user" ? "bg-white text-black" : "glass"}`}>
@@ -103,6 +86,20 @@ export function SupportChat() {
         <Button onClick={send} disabled={sending || !body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black">
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
+      </div>
+
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+        {QUICK_OPTIONS.map(([label, message]) => (
+          <Button
+            key={label}
+            variant="outline"
+            disabled={sending}
+            onClick={() => sendMessage(message)}
+            className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2"
+          >
+            {label}
+          </Button>
+        ))}
       </div>
     </section>
   );
