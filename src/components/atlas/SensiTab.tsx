@@ -39,6 +39,9 @@ export function SensiTab() {
   const [dpi, setDpi] = useState(480);
   const [fingers, setFingers] = useState<2 | 3 | 4>(3);
   const [style, setStyle] = useState<SensiStyle>("equilibrado");
+  const [refreshRate, setRefreshRate] = useState<60 | 90 | 120>(90);
+  const [ram, setRam] = useState<"3-4" | "6-8" | "12+">("6-8");
+  const [deviceAge, setDeviceAge] = useState(1);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<SensiResult | null>(null);
   const [aiMode, setAiMode] = useState<"analisando" | "pronto">("pronto");
@@ -57,12 +60,12 @@ export function SensiTab() {
 
     const generateLocal = async () => {
       const { generateSensi } = await import("@/lib/atlas-sensi");
-      return generateSensi({ device, dpi, fingers, style });
+      return generateSensi({ device, dpi, fingers, style, refreshRate, ram, deviceAge });
     };
 
     try {
       const { data, error } = await supabase.functions.invoke("sensi-ai", {
-        body: { device, dpi, fingers, style },
+        body: { device, dpi, fingers, style, refreshRate, ram, deviceAge },
       });
 
       if (!error && isSensiResult(data)) {
@@ -123,7 +126,7 @@ export function SensiTab() {
             <h2 className="text-xl font-bold">Análise profissional de sensibilidade</h2>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">A IA cruza aparelho, plataforma, DPI, dedos e estilo para montar um perfil completo de mira.</p>
+        <p className="text-sm text-muted-foreground">A IA cruza aparelho, plataforma, tela, RAM, idade, DPI, dedos e estilo para montar um perfil completo de mira.</p>
         <div className="grid grid-cols-2 gap-2 mt-4">
           {[
             [Smartphone, "Aparelho"],
@@ -147,7 +150,7 @@ export function SensiTab() {
 
         <div className={cn("grid gap-3", isIOS ? "grid-cols-1" : "grid-cols-2")}>
           <label className={cn("block", isIOS && "hidden")}>
-            <span className="vip-eyebrow block mb-2">DPI do aparelho</span>
+            <span className="vip-eyebrow block mb-2">DPI do aparelho (Android)</span>
             <Input
               type="number"
               min={180}
@@ -179,6 +182,12 @@ export function SensiTab() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div><span className="vip-eyebrow block mb-2">Tela</span><select value={refreshRate} onChange={(e) => setRefreshRate(Number(e.target.value) as 60 | 90 | 120)} className="w-full h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm"><option value={60}>60 Hz</option><option value={90}>90 Hz</option><option value={120}>120 Hz</option></select></div>
+          <div><span className="vip-eyebrow block mb-2">RAM</span><select value={ram} onChange={(e) => setRam(e.target.value as typeof ram)} className="w-full h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm"><option value="3-4">3–4 GB</option><option value="6-8">6–8 GB</option><option value="12+">12+ GB</option></select></div>
+          <div><span className="vip-eyebrow block mb-2">Idade</span><select value={deviceAge} onChange={(e) => setDeviceAge(Number(e.target.value))} className="w-full h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm"><option value={0}>Novo</option><option value={1}>1 ano</option><option value={2}>2 anos</option><option value={3}>3+ anos</option></select></div>
         </div>
 
         <div>
