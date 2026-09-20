@@ -642,6 +642,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_support_delete_chat: {
+        Args: { _password: string; _thread_id: string }
+        Returns: boolean
+      }
       admin_support_edit_message: {
         Args: { _body: string; _message_id: string; _password: string }
         Returns: {
@@ -790,6 +794,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      support_delete_chat: { Args: { _key: string }; Returns: boolean }
       support_edit_message: {
         Args: { _body: string; _key: string; _message_id: string }
         Returns: {
