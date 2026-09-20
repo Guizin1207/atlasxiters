@@ -25,7 +25,9 @@ export function useKeyValidity(intervalMs = 30_000) {
       });
       if (!mounted) return;
       if (error) {
-        setExpired(error.message.toLowerCase().includes("expired_key"));
+        const isExpired = error.message.toLowerCase().includes("expired_key");
+        setExpired(isExpired);
+        if (isExpired) void notifyExpired(keyData.key);
         // não chama refresh aqui — o ExpiredKeyModal cuida do logout final
       } else {
         // mantém os dados frescos (ex.: expires_at atualizado)
