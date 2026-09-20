@@ -71,10 +71,10 @@ export function SupportChat() {
 
   const finishChat = async () => {
     if (!keyData?.key) return;
-    const { error } = await supabase.rpc("support_delete_chat", { _key: keyData.key });
+    const { error } = await supabase.rpc("support_close_chat", { _key: keyData.key });
     if (error) { toast.error("Não foi possível finalizar o chat."); return; }
     setClosed(true);
-    toast.success("Chat excluído.");
+    toast.success("Chat finalizado.");
   };
 
   return (
