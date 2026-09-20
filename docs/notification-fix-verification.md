@@ -28,6 +28,14 @@ Os diagnósticos da interface agora distinguem função antiga/ausente, rejeiç�
 - O teste usa o serviço remoto e limita o envio a esse endpoint; um retorno de envio aceito não prova a exibição pelo sistema operacional. Conferir também permissões/Foco no aparelho.
 - No mesmo celular, é possível entrar também como usuário e ativar os avisos da key sem desligar os avisos do ADM. O perfil do usuário possui **Testar avisos desta key**. Nenhum desses vínculos concede acesso de ADM sem login.
 
+## Compatibilidade do login ADM
+
+O formulário antigo transformava o texto em maiúsculas antes de chamar `_check_admin`, cuja comparação no servidor diferencia maiúsculas e minúsculas. O login separado agora valida primeiro o texto informado; somente após uma recusa explícita tenta a conversão antiga. A sessão guarda exatamente o valor aceito pelo servidor para que as demais ações e os testes de push usem a mesma credencial. Nenhuma senha foi redefinida.
+
+Falhas de conexão/RPC ou respostas inesperadas não são tratadas como chave inválida e não concedem acesso. Uma falha ao restaurar a sessão também não apaga a credencial salva; uma recusa explícita do servidor a remove. O botão de ADM ficou acima do formulário de usuário para reduzir entradas na tela errada.
+
+Validação local: 76 testes passaram, incluindo compatibilidade do acesso antigo, preservação de senhas com caixa própria, recusa de credenciais incorretas, falhas de serviço e isolamento dos dois formulários. TypeScript e build passaram. O login com a chave real do administrador depende da validação no aparelho; nenhuma credencial foi solicitada nem testada nesta sessão.
+
 ## Cenários de aceitação no ambiente publicado
 
 - Usuário com key ativa envia uma mensagem: o ADM recebe o push e a mensagem permanece no chat.

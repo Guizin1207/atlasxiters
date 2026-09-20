@@ -35,7 +35,7 @@ describe("logins separados", () => {
 
   it("login de ADM preserva maiúsculas/minúsculas e não usa redeem", async () => {
     open("/admin/login");
-    fireEvent.change(screen.getByLabelText("Senha do ADM"), { target: { value: "MinhaSenhaAdm" } });
+    fireEvent.change(screen.getByLabelText("Chave ou senha do ADM"), { target: { value: "MinhaSenhaAdm" } });
     fireEvent.submit(screen.getByRole("form", { name: "Login de administrador" }));
     await screen.findByText("Painel ADM autenticado");
     expect(mocks.signIn).toHaveBeenCalledWith("MinhaSenhaAdm");
@@ -45,7 +45,7 @@ describe("logins separados", () => {
   it("senha ADM inválida mantém o formulário e não libera painel", async () => {
     mocks.signIn.mockResolvedValue(false);
     open("/admin/login");
-    fireEvent.change(screen.getByLabelText("Senha do ADM"), { target: { value: "senha-invalida" } });
+    fireEvent.change(screen.getByLabelText("Chave ou senha do ADM"), { target: { value: "senha-invalida" } });
     fireEvent.submit(screen.getByRole("form", { name: "Login de administrador" }));
     await screen.findByRole("alert");
     expect(screen.queryByText("Painel ADM autenticado")).not.toBeInTheDocument();
@@ -62,5 +62,27 @@ describe("logins separados", () => {
     open("/login?trocar=1");
     await waitFor(() => expect(screen.getByRole("form", { name: "Formulário de chave de acesso" })).toBeVisible());
     expect(screen.queryByText("Painel usuário autenticado")).not.toBeInTheDocument();
+  });
+
+  it("indica o acesso ADM separado quando uma chave é recusada no login de usuário", async () => {
+    mocks.redeem.mockResolvedValue({ ok: false, error: "invalid_key" });
+    open("/login");
+    fireEvent.change(screen.getByPlaceholderText("XXXX-XXXX-XXXX"), { target: { value: "acesso-antigo" } });
+    fireEvent.submit(screen.getByRole("form", { name: "Formulário de chave de acesso" }));
+    await screen.findByText(/Se esta é sua chave de administrador/);
+    fireEvent.click(screen.getByRole("link", { name: "Entrar como ADM" }));
+    expect(screen.getByRole("form", { name: "Login de administrador" })).toBeVisible();
+    expect(mocks.signIn).not.toHaveBeenCalled();
+  });
+
+  it("falha do serviço mostra erro de validação sem dizer que a chave é inválida", async () => {
+    mocks.signIn.mockRejectedValue(new Error("admin_validation_unavailable"));
+    open("/admin/login");
+    fireEvent.change(screen.getByLabelText("Chave ou senha do ADM"), { target: { value: "acesso-adm" } });
+    fireEvent.submit(screen.getByRole("form", { name: "Login de administrador" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Não foi possível confirmar seu acesso ADM");
+    expect(alert).not.toHaveTextContent("ADM inválida");
+    expect(screen.queryByText("Painel ADM autenticado")).not.toBeInTheDocument();
   });
 });

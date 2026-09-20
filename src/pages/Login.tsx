@@ -67,6 +67,10 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground mt-3 max-w-xs mx-auto">
             Insira sua chave de ativação para entrar no painel.
           </p>
+          <Link to="/admin/login" className="inline-flex items-center justify-center gap-2 mt-5 rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold hover:bg-white/5">
+            <ShieldCheck className="w-4 h-4" aria-hidden />
+            Entrar como ADM
+          </Link>
         </header>
 
         {/* Form */}
@@ -109,6 +113,9 @@ export default function LoginPage() {
                 <div className="min-w-0">
                   {isExpired && <strong className="block text-base">Sua key foi expirada</strong>}
                   <span>{isExpired ? "Seu acesso está bloqueado. Fale com o suporte para renovar." : displayError}</span>
+                  {displayError === ERROR_MESSAGES.invalid_key && (
+                    <p className="mt-2">Se esta é sua chave de administrador, use o botão “Entrar como ADM” acima.</p>
+                  )}
                 </div>
               </div>
               {isExpired && (
@@ -145,7 +152,6 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-8 text-center space-y-3">
-          <Link to="/admin/login" className="inline-block text-sm underline underline-offset-4">Entrar como ADM</Link>
           <p className="text-xs text-muted-foreground/60">
             Precisa de ajuda? Fale com o suporte.
           </p>

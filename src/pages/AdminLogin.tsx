@@ -21,9 +21,9 @@ export default function AdminLoginPage() {
     setBusy(true); setError(null);
     try {
       if (await signIn(value.trim())) navigate("/admin", { replace: true });
-      else setError("Senha de ADM inválida. Confira e tente novamente.");
+      else setError("Chave ou senha de ADM inválida. Confira e tente novamente.");
     } catch {
-      setError("Não foi possível validar o login. Confira sua conexão e tente novamente.");
+      setError("Não foi possível confirmar seu acesso ADM agora. Confira sua conexão e tente novamente. Isso não significa que sua chave está errada.");
     } finally { setBusy(false); }
   };
 
@@ -34,11 +34,11 @@ export default function AdminLoginPage() {
           <ShieldCheck className="w-12 h-12 mx-auto" />
           <p className="vip-eyebrow">Administrador</p>
           <h1 className="vip-title text-3xl">Acesso ADM</h1>
-          <p className="text-sm text-muted-foreground">Entre com sua senha de administrador para gerenciar o painel e os aparelhos do ADM.</p>
+          <p className="text-sm text-muted-foreground">Use a mesma chave ou senha de ADM que você já usava para gerenciar o painel.</p>
         </header>
         <form onSubmit={submit} aria-label="Login de administrador" className="glass-strong rounded-3xl p-6 space-y-5">
           <label className="block space-y-3">
-            <span className="vip-eyebrow">Senha do ADM</span>
+            <span className="vip-eyebrow">Chave ou senha do ADM</span>
             <Input type="password" autoComplete="current-password" autoCapitalize="none" spellCheck={false}
               value={value} onChange={(event) => { setValue(event.target.value); setError(null); }}
               disabled={busy} required className="h-14 rounded-2xl" />
