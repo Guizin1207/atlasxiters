@@ -115,3 +115,73 @@ export async function notifyAdmin(kind: "message" | "receipt", key: string) {
     console.warn("Não foi possível notificar o admin:", err);
   }
 }
+
+/* ---------- Notificações do usuário (chave de acesso) ---------- */
+
+/** Cadastra este aparelho para receber avisos do suporte, atualizações e manutenção. */
+export async function enableUserPush(key: string): Promise<PushStatus> {
+  const status = await currentPushStatus();
+  if (status === "unsupported" || status === "ios-needs-install" || status === "denied") return status;
+
+  const permission =
+    Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
+  if (permission !== "granted") return "denied";
+
+  const registration = await registerPushServiceWorker();
+  await navigator.serviceWorker.ready;
+
+  const existing = await registration.pushManager.getSubscription();
+  const subscription =
+    existing ??
+    (await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    }));
+
+  const json = subscription.toJSON();
+  const { error } = await supabase.rpc("user_save_push_subscription", {
+    _key: key,
+    _endpoint: json.endpoint ?? subscription.endpoint,
+    _p256dh: json.keys?.p256dh ?? "",
+    _auth: json.keys?.auth ?? "",
+    _device: detectDevice(),
+  });
+  if (error) throw error;
+
+  return "enabled";
+}
+
+/** Remove este aparelho das notificações do usuário. */
+export async function disableUserPush(key: string) {
+  try {
+    const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+    const sub = await reg?.pushManager.getSubscription();
+    const endpoint = sub?.endpoint;
+    await sub?.unsubscribe();
+    if (endpoint) {
+      await supabase.rpc("user_delete_push_subscription", { _key: key, _endpoint: endpoint });
+    }
+  } catch (err) {
+    console.warn("Não foi possível remover a inscrição:", err);
+  }
+}
+
+export type UserNotifyKind = "reply" | "update" | "maintenance" | "maintenance_end";
+
+/**
+ * Dispara notificação para os aparelhos dos usuários (somente ADM autenticado).
+ * `targetKey` limita o envio a um único cliente. Nunca lança erro.
+ */
+export async function notifyUsers(
+  password: string,
+  kind: UserNotifyKind,
+  options?: { targetKey?: string; body?: string },
+) {
+  try {
+    await supabase.functions.invoke("notify-admin", {
+      body: { kind, password, targetKey: options?.targetKey, body: options?.body },
+    });
+  } catch (err) {
+    console.warn("Não foi possível notificar os usuários:", err);
+  }
+}
