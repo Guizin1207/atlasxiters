@@ -44,6 +44,12 @@ serve(async (req) => {
           unit_price: selected.price,
         }],
         external_reference: externalReference,
+        payment_methods: {
+          excluded_payment_types: [],
+          excluded_payment_methods: [],
+          installments: 12,
+          default_payment_method_id: null,
+        },
         back_urls: {
           success: `${appUrl}/painel?pagamento=sucesso`,
           pending: `${appUrl}/painel?pagamento=pendente`,
