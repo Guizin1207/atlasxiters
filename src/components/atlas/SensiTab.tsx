@@ -52,6 +52,11 @@ export function SensiTab() {
     setBusy(true);
     setResult(null);
 
+    const generateLocal = async () => {
+      const { generateSensi } = await import("@/lib/atlas-sensi");
+      return generateSensi({ device, dpi, fingers, style });
+    };
+
     try {
       const { data, error } = await supabase.functions.invoke("sensi-ai", {
         body: { device, dpi, fingers, style },
@@ -63,17 +68,17 @@ export function SensiTab() {
         return;
       }
 
-      // Fallback local para a sensi continuar funcionando mesmo quando a Edge Function/IA estiver indisponível.
-      const { generateSensi } = await import("@/lib/atlas-sensi");
-      const fallback = generateSensi({ device, dpi, fingers, style });
+      const fallback = await generateLocal();
       setResult(fallback);
-      toast.warning("Gerador IA indisponível no momento", {
-        description: "Foi usada uma configuração local para você não ficar sem a sensi.",
+      toast.success("Sensi gerada para Free Fire 2026", {
+        description: "O servidor da IA não respondeu; use esta configuração e teste no treinamento.",
       });
     } catch (error) {
       console.error("sensi-ai", error);
-      toast.error("Não foi possível gerar a sensi", {
-        description: "Tente novamente em alguns segundos.",
+      const fallback = await generateLocal();
+      setResult(fallback);
+      toast.success("Sensi gerada para Free Fire 2026", {
+        description: "Modo local ativado para a sensi não ficar indisponível.",
       });
     } finally {
       setBusy(false);
