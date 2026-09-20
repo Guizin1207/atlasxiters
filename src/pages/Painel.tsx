@@ -10,7 +10,6 @@ import { useKeyValidity } from "@/hooks/use-key-validity";
 import { PanelHeader } from "@/components/atlas/PanelHeader";
 import { TabsNav, type AtlasTab } from "@/components/atlas/TabsNav";
 import { FuncoesTab } from "@/components/atlas/FuncoesTab";
-import { SensiTab } from "@/components/atlas/SensiTab";
 import { AjustesTab } from "@/components/atlas/AjustesTab";
 import { PerfilTab } from "@/components/atlas/PerfilTab";
 import { InjectButton } from "@/components/atlas/InjectButton";
@@ -47,7 +46,6 @@ export default function PainelPage() {
 
         <div className="mt-4 animate-fade-in min-[390px]:mt-6" key={tab}>
           {tab === "funcoes" && <FuncoesTab />}
-          {tab === "sensi" && <SensiTab />}
           {tab === "ajustes" && <AjustesTab />}
           {tab === "perfil" && <PerfilTab />}
         </div>
