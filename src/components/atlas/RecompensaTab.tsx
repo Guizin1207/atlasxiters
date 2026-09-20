@@ -44,10 +44,22 @@ export function RecompensaTab() {
     });
     if (error) {
       const msg = String(error.message ?? "");
-      if (msg.includes("already_claimed")) toast.info("Você já recebeu a recompensa de hoje.");
-      else toast.error("Não foi possível receber a recompensa.");
+      if (msg.includes("already_claimed")) {
+        toast.info("Você já recebeu a recompensa de hoje.");
+      } else {
+        toast.error(msg || "Não foi possível receber a recompensa.");
+      }
+    } else if (data?.ok === false) {
+      if (data.reason === "already_claimed") {
+        toast.info("Você já recebeu a recompensa de hoje.");
+      } else if (data.reason === "invalid_key") {
+        toast.error("Sua chave não está válida para receber a recompensa.");
+      } else {
+        toast.error("Não foi possível receber a recompensa.");
+      }
+      void load();
     } else {
-      setReward(data as RewardState);
+      await load();
       toast.success("Você recebeu +10 Atlas Coins!");
     }
     setBusy(false);
