@@ -79,7 +79,8 @@ export function KeyRowItem({
   const status = getKeyStatus(data);
   const DeviceIcon = getDeviceIcon(data.device);
 
-  const isDemo = data.plan === "demo";\n  const remaining = data.is_master || isDemo ? Infinity : msUntil(data.expires_at);
+  const isDemo = data.plan === "demo";
+  const remaining = data.is_master || isDemo ? Infinity : msUntil(data.expires_at);
   const warn = isFinite(remaining) && remaining > 0 && remaining < 86_400_000;
   const expired = isFinite(remaining) && remaining <= 0 && !!data.activated_at;
 
