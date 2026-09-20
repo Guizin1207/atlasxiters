@@ -43,6 +43,8 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => null);
+    const question = typeof body?.question === "string" ? body.question.trim().slice(0, 500) : "";
+    const chat = Array.isArray(body?.chat) ? body.chat.slice(-8).filter((m: unknown) => m && typeof m === "object") : [];
     const device = typeof body?.device === "string" ? body.device.trim().slice(0, 100) : "";
     const dpi = Number(body?.dpi);
     const fingers = Number(body?.fingers);
@@ -85,7 +87,8 @@ Dados do jogador:
 - idade aproximada: ${deviceAge === 0 ? "novo" : `${deviceAge} ano(s)`}
 
 REGRAS IMPORTANTES:
-1. Use o nome/modelo do aparelho como fator principal.
+1. Use o nome/modelo do aparelho como fator principal. Se o modelo for conhecido, adapte a configuração à sua tela, proporção, resposta de toque, desempenho e taxa de atualização; não use uma tabela fixa universal.
+1.2. Se o usuário pedir ajuste em uma sensibilidade anterior, trate os valores atuais e a mensagem como contexto e altere somente o necessário.
 1.1. Use RAM, taxa de atualização e idade como fatores de estabilidade/performance; não trate RAM isoladamente como potência real do aparelho. Considere de forma aproximada tela, proporção, fluidez, resposta de toque e capacidade do aparelho quando essas características forem conhecidas. Não invente especificações.
 2. A configuração deve ser específica para Free Fire 2026 e coerente entre Geral, Ponto Vermelho, 2x, 4x, AWM e Olhar livre.
 3. Evite entregar os mesmos números para aparelhos diferentes. Faça ajustes reais conforme o modelo, sem aleatoriedade inútil.
@@ -95,6 +98,12 @@ REGRAS IMPORTANTES:
 7. Gere uma configuração de nível PRO, mas realista: evite números redondos demais e ajuste cada mira de forma independente. Pense em controle de arrasto, microajuste, estabilidade no spray, velocidade de troca de alvo, combate curto e médio e precisão com AWM.
 8. Além dos valores, as notas devem explicar de forma específica o perfil criado para este aparelho e dar 2 a 3 instruções práticas de uso. Não diga apenas "teste no treinamento".
 9. A configuração deve parecer feita sob medida para o modelo informado, sem prometer que ela garante capa ou vitória.
+10. Responda ao pedido atual da conversa, podendo explicar o ajuste nas notas. Não ignore a pergunta do usuário.
+
+Mensagem atual do jogador:
+${question || "Gerar uma configuração inicial personalizada"}
+Histórico recente da conversa:
+${JSON.stringify(chat)}
 
 Responda SOMENTE com JSON válido, sem markdown, neste formato:
 {
@@ -113,6 +122,7 @@ Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 
 
     const result = await generateText({
       model: lovable.responses("google/gemini-3.7-flash"),
+      maxTokens: 900,
       prompt,
       abortSignal: req.signal,
       providerOptions: {
