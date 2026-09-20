@@ -65,7 +65,7 @@ export function SensiTab() {
       });
       if (error || !isSensiResult(data)) throw error ?? new Error("Resposta inválida");
       setResult(data);
-      setMessages((current) => [...current, { role: "ai", text: "Pronto. Ajustei sua configuração. Geral " + data.geral + " • Red Dot " + data.pontoVermelho + " • 2x " + data.mira2x + " • 4x " + data.mira4x + " • AWM " + data.miraAwm + " • Olhar Livre " + data.olharLivre + (data.notas?.[0] ? "\n\n" + data.notas[0] : "") }]);
+      setMessages((current) => [...current, { role: "ai", text: "Ajustei sua sensi para " + (inferredDevice || device || "seu aparelho") + ".\n\nGeral " + data.geral + " • Red Dot " + data.pontoVermelho + " • 2x " + data.mira2x + " • 4x " + data.mira4x + " • AWM " + data.miraAwm + " • Olhar Livre " + data.olharLivre + (data.notas?.length ? "\n\n" + data.notas.slice(0, 3).join("\n") : "") }]);
     } catch (error) {
       console.error("sensi-ai", error);
       setMessages((current) => [...current, { role: "ai", text: "Não consegui gerar agora. Tente novamente em alguns segundos." }]);
