@@ -166,7 +166,7 @@ export async function disableUserPush(key: string) {
   }
 }
 
-export type UserNotifyKind = "reply" | "update" | "maintenance" | "maintenance_end";
+export type UserNotifyKind = "reply" | "notice" | "update" | "maintenance" | "maintenance_end";
 
 /**
  * Dispara notificação para os aparelhos dos usuários (somente ADM autenticado).

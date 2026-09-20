@@ -26,6 +26,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
 import type { KeyData } from "@/lib/key-context";
+import { notifyUsers } from "@/lib/push";
 
 type AdminMessage = {
   id: string;
@@ -102,6 +103,10 @@ export function MessagesCard() {
       toast.error("Falha ao enviar mensagem.");
       return;
     }
+    void notifyUsers(password, "notice", {
+      targetKey: target === BROADCAST ? undefined : keys.find((k) => k.id === target)?.key,
+      body: title.trim(),
+    });
     toast.success(
       target === BROADCAST
         ? "Mensagem enviada para todas as chaves."
@@ -111,7 +116,7 @@ export function MessagesCard() {
     setBody("");
     setTarget(BROADCAST);
     load();
-  }, [password, busy, title, body, target, load]);
+  }, [password, busy, title, body, target, keys, load]);
 
   const remove = useCallback(
     async (id: string) => {
