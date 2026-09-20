@@ -37,7 +37,11 @@ const cleanResult = (raw: Record<string, unknown>, isIOS = false) => ({
   dpiRecomendado: isIOS ? 0 : Math.max(320, Math.min(720, Math.round(Number(raw.dpiRecomendado) || 480))),
   precisaoEstimada: Math.max(1, Math.min(99, Math.round(Number(raw.precisaoEstimada) || 85))),
   notas: Array.isArray(raw.notas)
-    ? raw.notas.filter((item): item is string => typeof item === "string").slice(0, 5)
+    ? raw.notas
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.replace(/\s+/g, " ").trim().slice(0, 105))
+        .filter(Boolean)
+        .slice(0, 3)
     : [],
 });
 
@@ -117,9 +121,9 @@ REGRAS IMPORTANTES:
 5. Para Android, use DPI apenas como fator secundário e respeite o DPI informado. Não trate DPI como garantia de capa.
 6. Priorize controle de arrasto, estabilidade da mira e resposta em curta/média distância. Não prometa porcentagem real de headshot.
 7. Gere uma configuração de nível PRO, mas realista: evite números redondos demais e ajuste cada mira de forma independente. Pense em controle de arrasto, microajuste, estabilidade no spray, velocidade de troca de alvo, combate curto e médio e precisão com AWM.
-8. Além dos valores, as notas devem explicar de forma específica o perfil criado para este aparelho, citar como a tela/proporção influenciou quando isso for confiável e dar 2 a 3 instruções práticas de uso. Não diga apenas "teste no treinamento".
+8. As notas devem ser MUITO curtas e diretas. Gere no máximo 3 notas, cada uma com uma única frase de até 100 caracteres. A primeira resume o perfil do aparelho; as outras dão ajustes práticos.
 9. A configuração deve parecer feita sob medida para o modelo informado, sem prometer que ela garante capa ou vitória.
-10. Responda ao pedido atual da conversa, podendo explicar o ajuste nas notas. Não ignore a pergunta do usuário.
+10. Responda de forma objetiva e curta. Nunca escreva texto longo, parágrafos ou explicações gerais.
 
 Mensagem atual do jogador:
 ${question || "Gerar uma configuração inicial personalizada"}
@@ -136,7 +140,7 @@ Responda SOMENTE com JSON válido, sem markdown, neste formato:
   "olharLivre": number,
   "dpiRecomendado": number,
   "precisaoEstimada": number,
-  "notas": ["perfil específico do aparelho em uma frase", "ajuste prático 1", "ajuste prático 2", "ajuste prático 3"]
+  "notas": ["perfil curto do aparelho", "ajuste prático curto", "ajuste prático curto"]
 }
 
 Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. Mantenha a diferença entre miras coerente com o aparelho e o estilo. A precisão estimada é apenas um índice heurístico de adequação, nunca uma promessa de desempenho.`;
