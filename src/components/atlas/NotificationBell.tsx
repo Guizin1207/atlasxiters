@@ -15,11 +15,34 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMessages } from "@/hooks/use-messages";
+import { useKey } from "@/lib/key-context";
 import { cn } from "@/lib/utils";
 
 export function NotificationBell() {
   const { messages, unread, markAllRead } = useMessages();
+  const { keyData } = useKey();
   const [open, setOpen] = useState(false);
+
+  const alert = (() => {
+    if (!keyData) return null;
+    if (keyData.revoked)
+      return {
+        title: "Acesso encerrado",
+        body: "Sua key foi excluída ou desativada. Fale com o suporte para reativar.",
+      };
+    if (
+      !keyData.is_master &&
+      keyData.expires_at &&
+      new Date(keyData.expires_at).getTime() <= Date.now()
+    )
+      return {
+        title: "Acesso expirado",
+        body: "Sua key expirou. Fale com o suporte para renovar o acesso.",
+      };
+    return null;
+  })();
+
+  const totalUnread = unread + (alert ? 1 : 0);
 
   useEffect(() => {
     if (open && unread > 0) {
