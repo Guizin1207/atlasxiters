@@ -112,28 +112,13 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
         </span>
       </div>
 
-      {nextPlanInfo && (
-        <div className="space-y-2">
-          <Button
-            onClick={() => request(nextPlanInfo.id)}
-            disabled={busy === nextPlanInfo.id}
-            className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
-          >
-            {busy === nextPlanInfo.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Adquirir plano {nextPlanInfo.name} • {nextPlanInfo.price}
-          </Button>
-          {isPending && (
-            <p className="text-[11px] text-status-warning">
-              Pedido em análise pelo administrador.
-            </p>
-          )}
-        </div>
-      )}
-
       <div className="space-y-3">
         {PLANS.map((p) => {
           const Icon = ICONS[p.id];
           const isCurrent = p.id === currentPlan;
+          const planIdx = p.id === "basic" ? 1 : p.id === "pro" ? 2 : 3;
+          const currentIdx = currentPlan === "demo" ? 0 : currentPlan === "basic" ? 1 : currentPlan === "pro" ? 2 : 3;
+          const isAvailable = isDemo ? true : planIdx > currentIdx;
 
           return (
             <div
@@ -175,6 +160,24 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   </li>
                 ))}
               </ul>
+
+              {isAvailable && (
+                <div className="space-y-2">
+                  <Button
+                    onClick={() => request(p.id)}
+                    disabled={busy === p.id}
+                    className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
+                  >
+                    {busy === p.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Adquirir plano {p.name} • {p.price}
+                  </Button>
+                  {pending(p.id) && (
+                    <p className="text-[11px] text-status-warning">
+                      Pedido em análise pelo administrador.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
