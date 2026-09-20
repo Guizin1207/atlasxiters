@@ -14,6 +14,7 @@ import { KeyGeneratorCard } from "@/components/admin/KeyGeneratorCard";
 import { KeysListCard } from "@/components/admin/KeysListCard";
 import { MessagesCard } from "@/components/admin/MessagesCard";
 import { SupportAdminCard } from "@/components/admin/SupportAdminCard";
+import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard";
 
 export default function AdminPage() {
   const { password, loading, signOut } = useAdmin();
@@ -87,6 +88,8 @@ export default function AdminPage() {
         <KeysListCard />
 
         <MessagesCard />
+
+        <PushNotificationsCard />
 
         <SupportAdminCard />
       </div>
