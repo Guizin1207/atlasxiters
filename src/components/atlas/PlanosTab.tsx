@@ -58,14 +58,6 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const request = async (plan: PlanId) => {
     if (!keyData) return;
 
-    const whatsappUrl = upgradeWhatsAppUrl(keyData.key, plan, currentPlan);
-    const whatsappWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-
-    if (!whatsappWindow) {
-      window.location.href = whatsappUrl;
-      return;
-    }
-
     setBusy(plan);
     const { error } = await supabase.rpc("request_upgrade", {
       _key: keyData.key,
@@ -82,8 +74,17 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     }
 
     await load();
+
+    const whatsappUrl = upgradeWhatsAppUrl(keyData.key, plan, currentPlan);
+    const whatsappWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+
+    if (!whatsappWindow) {
+      window.location.href = whatsappUrl;
+      return;
+    }
+
     toast.success("Solicitação enviada", {
-      description: "O WhatsApp foi aberto com a mensagem pronta.",
+      description: "O pedido foi registrado no administrador e o WhatsApp foi aberto.",
     });
   };
 
