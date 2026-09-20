@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useKey } from "@/lib/key-context";
+import { ReceiptImage } from "@/components/atlas/ReceiptImage";
+import { RECEIPT_BUCKET, RECEIPT_EXTENSIONS, RECEIPT_MAX_BYTES, RECEIPT_PREFIX, isReceiptBody, receiptRef } from "@/lib/receipts";
 
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
-
-const RECEIPT_PREFIX = "[[receipt]]";
 const QUICK_OPTIONS = [
   ["🔑 Não recebi minha key.", "🔑 Não recebi minha key."],
   ["💰 Enviei o Pix.", "💰 Enviei o Pix."],
@@ -64,18 +64,21 @@ export function SupportChat() {
       toast.error("Selecione uma imagem do comprovante.");
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
+    if (file.size > RECEIPT_MAX_BYTES) {
       toast.error("A imagem deve ter no máximo 8 MB.");
       return;
     }
 
     setUploading(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    let ext = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!(RECEIPT_EXTENSIONS as readonly string[]).includes(ext)) {
+      ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+    }
     const safeKey = keyData.key.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
     const path = `${safeKey}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabase.storage
-      .from("support-receipts")
-      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      .from(RECEIPT_BUCKET)
+      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type || undefined });
 
     if (uploadError) {
       setUploading(false);
@@ -83,10 +86,9 @@ export function SupportChat() {
       return;
     }
 
-    const { data } = supabase.storage.from("support-receipts").getPublicUrl(path);
     const { error } = await supabase.rpc("support_send_message", {
       _key: keyData.key,
-      _body: `${RECEIPT_PREFIX}${data.publicUrl}`,
+      _body: `${RECEIPT_PREFIX}${path}`,
     });
     setUploading(false);
 
@@ -114,16 +116,12 @@ export function SupportChat() {
         {loading ? <div className="flex justify-center py-10"><Loader2 className="w-4 h-4 animate-spin" /></div> :
           messages.length === 0 ? <p className="text-xs text-muted-foreground text-center py-10">Nenhuma mensagem ainda. Envie sua dúvida abaixo.</p> :
           messages.map((m) => {
-            const isReceipt = m.body.startsWith(RECEIPT_PREFIX);
-            const receiptUrl = isReceipt ? m.body.slice(RECEIPT_PREFIX.length) : "";
+            const isReceipt = isReceiptBody(m.body);
             return (
               <div key={m.id} className={`flex ${m.sender_type === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "user" ? "bg-white text-black" : "glass"}`}>
                   {isReceipt ? (
-                    <a href={receiptUrl} target="_blank" rel="noreferrer" className="block">
-                      <img src={receiptUrl} alt="Comprovante" className="max-h-56 w-auto rounded-xl object-contain" />
-                      <span className="mt-1 block text-[10px] opacity-60">Comprovante enviado</span>
-                    </a>
+                    <ReceiptImage refValue={receiptRef(m.body)} caption="Comprovante enviado" />
                   ) : m.body}
                 </div>
               </div>
