@@ -57,16 +57,6 @@ export default function PainelPage() {
 
       {tab === "funcoes" && <InjectButton />}
 
-      <button
-        type="button"
-        onClick={() => setSupportOpen(true)}
-        className="fixed bottom-24 right-5 z-50 flex h-12 items-center justify-center gap-2 rounded-full bg-white px-4 text-black shadow-2xl ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"
-        aria-label="Abrir suporte"
-      >
-        <MessageCircle className="h-4 w-4" />
-        <span className="text-xs font-semibold">Falar com suporte</span>
-      </button>
-
       {supportOpen && (
         <div
           className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-3 sm:items-center"
