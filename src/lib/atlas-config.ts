@@ -33,8 +33,13 @@ export function getPlan(id?: string | null): PlanInfo {
   return PLANS.find((p) => p.id === id) ?? PLANS[0];
 }
 
-export function upgradeWhatsAppUrl(key: string, plan: PlanId) {
+export function upgradeWhatsAppUrl(key: string, plan: PlanId, currentPlan?: PlanId) {
   const p = getPlan(plan);
-  const msg = `Olá! Quero fazer upgrade para o plano ${p.name} — ${p.price} (${p.priceNote}).\nMinha chave: ${key}`;
+  const isDemo = currentPlan === "demo";
+  const intro = isDemo
+    ? `Olá! Quero adquirir o plano ${p.name} — ${p.price} (${p.priceNote}).`
+    : `Olá! Quero adquirir o plano ${p.name} — ${p.price} (${p.priceNote}).`;
+  const keyLine = isDemo ? "" : `\nMinha chave: ${key}`;
+  const msg = `${intro}${keyLine}`;
   return `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 }
