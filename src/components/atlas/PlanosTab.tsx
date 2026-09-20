@@ -1,5 +1,5 @@
 /**
- * Aba "Planos" — mostra o plano atual e permite pedir upgrade.
+ * Aba "Planos" — mostra o plano atual e permite adquirir um plano pago.
  * O pedido fica registrado para o admin e abre o WhatsApp com a mensagem pronta.
  */
 import { useCallback, useEffect, useState } from "react";
@@ -58,12 +58,8 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const request = async (plan: PlanId) => {
     if (!keyData) return;
 
-    const whatsappUrl = upgradeWhatsAppUrl(keyData.key, plan);
-    const whatsappWindow = window.open(
-      whatsappUrl,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    const whatsappUrl = upgradeWhatsAppUrl(keyData.key, plan, currentPlan);
+    const whatsappWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
 
     if (!whatsappWindow) {
       window.location.href = whatsappUrl;
@@ -86,7 +82,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     }
 
     await load();
-    toast.success("Pedido enviado", {
+    toast.success("Solicitação enviada", {
       description: "O WhatsApp foi aberto com a mensagem pronta.",
     });
   };
@@ -116,10 +112,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
         {PLANS.map((p, idx) => {
           const Icon = ICONS[p.id];
           const isCurrent = p.id === currentPlan;
-
-          // Demo é um acesso neutro e pode fazer upgrade para qualquer plano pago.
-          // Para planos pagos, só aparecem upgrades acima do plano atual.
-          const isUpgrade = isDemo ? true : idx > currentIdx;
+          const isAvailable = isDemo ? true : idx > currentIdx;
           const isPending = pending(p.id);
 
           return (
@@ -127,9 +120,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
               key={p.id}
               className={cn(
                 "rounded-2xl p-5 space-y-4 border transition-colors",
-                isCurrent
-                  ? "glass-strong border-white/25"
-                  : "glass border-white/10"
+                isCurrent ? "glass-strong border-white/25" : "glass border-white/10"
               )}
             >
               <div className="flex items-start justify-between gap-3">
@@ -139,9 +130,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   </div>
                   <div>
                     <p className="font-bold leading-tight">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {p.tagline}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{p.tagline}</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
@@ -160,24 +149,21 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
 
               <ul className="space-y-1.5">
                 {p.perks.map((perk) => (
-                  <li
-                    key={perk}
-                    className="flex items-center gap-2 text-xs text-muted-foreground"
-                  >
+                  <li key={perk} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Check className="w-3.5 h-3.5 text-status-active shrink-0" />
                     {perk}
                   </li>
                 ))}
               </ul>
 
-              {isUpgrade && (
+              {isAvailable && (
                 <Button
                   onClick={() => request(p.id)}
                   disabled={busy === p.id}
                   className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
                 >
                   {busy === p.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Fazer upgrade • {p.price}
+                  Adquirir plano {p.name} • {p.price}
                 </Button>
               )}
 
