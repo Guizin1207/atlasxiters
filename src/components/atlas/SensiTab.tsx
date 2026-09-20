@@ -42,6 +42,7 @@ export function SensiTab() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<SensiResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const isIOS = /iphone|ipad|ipod/i.test(device);
 
   const run = async () => {
     if (!device.trim()) {
@@ -95,7 +96,7 @@ export function SensiTab() {
       `Mira 4x: ${result.mira4x}`,
       `Mira AWM: ${result.miraAwm}`,
       `Olhar livre: ${result.olharLivre}`,
-      `DPI recomendado: ${result.dpiRecomendado}`,
+      ...(isIOS ? [] : [`DPI recomendado: ${result.dpiRecomendado}`]),
     ].join("\n");
     try {
       await navigator.clipboard.writeText(txt);
@@ -125,8 +126,8 @@ export function SensiTab() {
           />
         </label>
 
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
+        <div className={cn("grid gap-3", isIOS ? "grid-cols-1" : "grid-cols-2")}>
+          <label className={cn("block", isIOS && "hidden")}>
             <span className="vip-eyebrow block mb-2">DPI atual</span>
             <Input
               type="number"
@@ -225,12 +226,14 @@ export function SensiTab() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-white/5 px-3 py-3">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                DPI recomendado
-              </p>
-              <p className="font-mono font-bold">{result.dpiRecomendado}</p>
-            </div>
+            {!isIOS && (
+              <div className="rounded-xl bg-white/5 px-3 py-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                  DPI recomendado
+                </p>
+                <p className="font-mono font-bold">{result.dpiRecomendado}</p>
+              </div>
+            )}
             <div className="rounded-xl bg-white/5 px-3 py-3">
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
                 Ajuste estimado
