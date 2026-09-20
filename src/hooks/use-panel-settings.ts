@@ -70,6 +70,33 @@ export function usePanelSettings() {
     };
   }, [keyData]);
 
+  useEffect(() => {
+    if (!keyData) return;
+
+    const clearFunctions = () => {
+      const cleared = { ...readLocal(keyData.key), functions: {} };
+      setSettings((current) => ({ ...current, functions: {} }));
+      localStorage.setItem(localKey(keyData.key), JSON.stringify(cleared));
+      void supabase.rpc("save_settings", {
+        _key: keyData.key,
+        _settings: cleared as never,
+      });
+    };
+
+    const handlePageHide = () => clearFunctions();
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") clearFunctions();
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [keyData]);
+
   const update = useCallback(
     async (patch: Partial<PanelSettings>) => {
       if (!keyData) return;
