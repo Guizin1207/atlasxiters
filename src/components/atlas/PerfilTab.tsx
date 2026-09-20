@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
 import { useNavigate } from "react-router-dom";
 import { PlanosTab } from "@/components/atlas/PlanosTab";
+import { SupportChat } from "@/components/atlas/SupportChat";
 import { useTicker } from "@/hooks/use-ticker";
 import {
   formatCountdown,
@@ -17,12 +18,13 @@ import { cn } from "@/lib/utils";
 /**
  * Aba "Perfil" — chave (mascarada/copiável), dispositivo, contador regressivo ao vivo.
  */
-export function PerfilTab({ onSupport }: { onSupport: () => void }) {
+export function PerfilTab() {
   const { keyData, signOut, device, adminPreview, closeAdminPanel } = useKey();
   const navigate = useNavigate();
   useTicker(1000); // re-render a cada segundo p/ contador
 
   const [copied, setCopied] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   if (!keyData) return null;
 
   const DeviceIcon = getDeviceIcon(device);
@@ -127,12 +129,35 @@ export function PerfilTab({ onSupport }: { onSupport: () => void }) {
       {!adminPreview && (
         <button
           type="button"
-          onClick={onSupport}
+          onClick={() => setSupportOpen(true)}
           className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
         >
           <MessageCircle className="w-4 h-4" />
           Falar com suporte
         </button>
+      )}
+
+      {supportOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 p-3 sm:items-center"
+          onClick={() => setSupportOpen(false)}
+        >
+          <div
+            className="w-full max-w-md max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSupportOpen(false)}
+                className="rounded-full bg-black/70 px-3 py-1 text-xs text-white"
+              >
+                Fechar
+              </button>
+            </div>
+            <SupportChat />
+          </div>
+        </div>
       )}
 
       <Button
