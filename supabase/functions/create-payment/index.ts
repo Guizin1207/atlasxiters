@@ -11,85 +11,81 @@ const PLANS = {
   master: { name: "Atlas VIP Master", price: 149.99, days: null },
 } as const;
 
-const PAYMENT_METHODS = [
-  { type: "CREDIT_CARD" },
-  { type: "DEBIT_CARD" },
-  { type: "PIX" },
-  { type: "BOLETO" },
-  { type: "PAGBANK" },
-  { type: "APPLE_PAY" },
-  { type: "GOOGLE_PAY" },
-];
-
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const token = Deno.env.get("PAGBANK_ACCESS_TOKEN");
-    if (!token) throw new Error("PAGBANK_ACCESS_TOKEN não configurado");
+    const token = Deno.env.get("ASAAS_API_KEY");
+    if (!token) throw new Error("ASAAS_API_KEY não configurada");
 
     const { key, plan } = await req.json();
     const selected = PLANS[plan as keyof typeof PLANS];
 
     if (!selected || typeof key !== "string" || !key.trim()) {
       return new Response(JSON.stringify({ error: "Plano ou chave inválidos" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const appUrl = req.headers.get("origin") || "https://atlasxiters.lovable.app";
-    const referenceId = `ATLAS|${key.trim().toUpperCase()}|${plan}`;
+    const headers = {
+      access_token: token,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
 
-    const response = await fetch("https://api.pagseguro.com/checkouts", {
+    const customerResponse = await fetch("https://api.asaas.com/v3/customers", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
-        reference_id: referenceId,
-        items: [{
-          reference_id: `atlas-${plan}`,
-          name: selected.name,
-          quantity: 1,
-          unit_amount: Math.round(selected.price * 100),
-        }],
-        customer_modifiable: true,
-        payment_methods: PAYMENT_METHODS,
-        redirect_url: `${appUrl}/painel?pagamento=sucesso`,
-        notification_urls: [`${Deno.env.get("SUPABASE_URL")}/functions/v1/pagbank-webhook`],
-        payment_notification_urls: [`${Deno.env.get("SUPABASE_URL")}/functions/v1/pagbank-webhook`],
+        name: "Cliente Atlas VIP",
+        externalReference: key.trim().toUpperCase(),
       }),
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data?.error_messages?.[0]?.description || data?.message || "PagBank recusou a criação do checkout");
+    const customer = await customerResponse.json();
+    if (!customerResponse.ok) {
+      throw new Error(customer?.errors?.[0]?.description || "Asaas recusou o cliente");
     }
 
-    const payLink = data?.links?.find((link: { rel?: string }) => link.rel === "PAY")?.href;
+    const paymentResponse = await fetch("https://api.asaas.com/v3/payments", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        customer: customer.id,
+        billingType: "PIX",
+        value: selected.price,
+        dueDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+        description: selected.name,
+        externalReference: `ATLAS|${key.trim().toUpperCase()}|${plan}`,
+      }),
+    });
+    const payment = await paymentResponse.json();
+    if (!paymentResponse.ok) {
+      throw new Error(payment?.errors?.[0]?.description || "Asaas recusou a cobrança");
+    }
 
-    if (!payLink) {
-      throw new Error("PagBank não retornou o link de pagamento");
+    const qrResponse = await fetch(`https://api.asaas.com/v3/payments/${payment.id}/pixQrCode`, {
+      headers: { access_token: token, Accept: "application/json" },
+    });
+    const qr = await qrResponse.json();
+    if (!qrResponse.ok) {
+      throw new Error(qr?.errors?.[0]?.description || "Asaas não retornou o QR Code");
     }
 
     return new Response(JSON.stringify({
-      init_point: payLink,
-      checkout_id: data.id,
+      payment_id: payment.id,
+      encoded_image: qr.encodedImage,
+      payload: qr.payload,
+      expiration_date: qr.expirationDate,
+      plan,
+      price: selected.price,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : "Erro ao criar pagamento",
+      error: error instanceof Error ? error.message : "Erro ao criar cobrança Pix",
     }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
