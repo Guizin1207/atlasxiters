@@ -157,6 +157,20 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     refresh();
+
+    const clearLoginOnExit = () => {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(DEVICE_ID_KEY);
+    };
+
+    window.addEventListener("pagehide", clearLoginOnExit);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") clearLoginOnExit();
+    });
+
+    return () => {
+      window.removeEventListener("pagehide", clearLoginOnExit);
+    };
   }, [refresh]);
 
   const redeem = useCallback<Ctx["redeem"]>(async (rawKey) => {
