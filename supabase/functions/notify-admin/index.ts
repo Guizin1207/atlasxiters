@@ -60,10 +60,10 @@ const CONTENT: Record<
   },
   // Disparada pelo próprio usuário quando a chave dele expira → vai só para os aparelhos dele
   expired: {
-    title: "Atlas VIP — Acesso expirado",
-    body: "Sua chave expirou. Fale com o suporte para renovar.",
+    title: "Atlas VIP — Sua key foi expirada",
+    body: "Sua key foi expirada. Fale com o suporte para renovar seu acesso.",
     audience: "user",
-    url: "/painel",
+    url: "/painel?suporte=1",
   },
 };
 

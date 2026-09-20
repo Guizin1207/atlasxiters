@@ -23,8 +23,12 @@ export function NotificationBell() {
   const { keyData } = useKey();
   const [open, setOpen] = useState(false);
 
+  const isExpiryMessage = (title: string) =>
+    title.toLowerCase().includes("expirad");
+  const hasExpiryMessage = messages.some((m) => isExpiryMessage(m.title));
+
   const alert = (() => {
-    if (!keyData) return null;
+    if (!keyData || hasExpiryMessage) return null;
     if (keyData.revoked)
       return {
         title: "Acesso encerrado",
@@ -108,11 +112,18 @@ export function NotificationBell() {
                     key={m.id}
                     className={cn(
                       "glass rounded-2xl p-4 space-y-1.5 animate-fade-in transition-all",
-                      !m.is_read && "ring-1 ring-white/20"
+                      !m.is_read && "ring-1 ring-white/20",
+                      isExpiryMessage(m.title) &&
+                        "border border-status-danger/40 bg-status-danger/10"
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-semibold leading-tight">
+                      <p
+                        className={cn(
+                          "text-sm font-semibold leading-tight",
+                          isExpiryMessage(m.title) && "text-status-danger"
+                        )}
+                      >
                         {m.title}
                       </p>
                       {!m.is_read && (
