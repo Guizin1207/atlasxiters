@@ -24,6 +24,9 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const startPayment = (plan: PlanId) => {
     if (plan === "demo") return;
     setPixPlan(plan);
+    setTimeout(() => {
+      document.getElementById("pix-payment")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 0);
   };
 
   const pixKey = "38998816357";
@@ -132,7 +135,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
 
 
       {pixPlan && (
-        <div className="glass-strong rounded-2xl p-5 space-y-4 border border-white/15">
+        <div id="pix-payment" className="glass-strong rounded-2xl p-5 space-y-4 border border-white/15">
           <div>
             <p className="vip-eyebrow mb-1">Pagamento via Pix</p>
             <p className="font-bold">{getPlan(pixPlan).name} — {getPlan(pixPlan).price}</p>
