@@ -1,6 +1,6 @@
 /**
  * Página /admin — dashboard protegido.
- * Sem login próprio: sem senha mestra, redireciona para a tela de login única.
+ * Login de administrador separado do acesso de usuário por key.
  */
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -18,7 +18,7 @@ import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard"
 
 export default function AdminPage() {
   const { password, loading, signOut } = useAdmin();
-  const { openAdminPanel } = useKey();
+  const { openAdminPanel, closeAdminPanel, adminPreview } = useKey();
   const navigate = useNavigate();
   const [openingPanel, setOpeningPanel] = useState(false);
 
@@ -30,7 +30,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!password) return <Navigate to="/login" replace />;
+  if (!password) return <Navigate to="/admin/login" replace />;
 
   return (
     <main className="min-h-screen pb-16">
@@ -46,7 +46,11 @@ export default function AdminPage() {
               <h1 className="vip-title text-lg leading-none">Atlas Control</h1>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" className="rounded-2xl" onClick={() => {
+              if (adminPreview) closeAdminPanel();
+              navigate("/login?trocar=1");
+            }}>Acesso de usuário</Button>
             <Button
               onClick={async () => {
                 if (!password || openingPanel) return;
@@ -67,7 +71,10 @@ export default function AdminPage() {
             </Button>
             <Button
               variant="ghost"
-              onClick={signOut}
+              onClick={() => {
+                if (adminPreview) closeAdminPanel();
+                signOut();
+              }}
               className="rounded-2xl glass hover:bg-white/10"
               aria-label="Sair do admin"
             >

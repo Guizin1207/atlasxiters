@@ -9,11 +9,17 @@ const publicKey = Deno.env.get("VAPID_PUBLIC_KEY");
 const privateKey = Deno.env.get("VAPID_PRIVATE_KEY");
 const subject = Deno.env.get("VAPID_SUBJECT") ?? "mailto:suporte@atlasxiters.lovable.app";
 
-if (publicKey && privateKey) webpush.setVapidDetails(subject, publicKey, privateKey);
+let pushConfigCode: "PUSH_NOT_CONFIGURED" | "PUSH_CONFIG_INVALID" | undefined;
+if (!publicKey || !privateKey) pushConfigCode = "PUSH_NOT_CONFIGURED";
+else {
+  try { webpush.setVapidDetails(subject, publicKey, privateKey); }
+  catch { pushConfigCode = "PUSH_CONFIG_INVALID"; }
+}
 
 Deno.serve(createNotifyHandler({
   admin: createClient(url, serviceRole, { auth: { persistSession: false } }),
-  pushConfigured: Boolean(publicKey && privateKey),
+  pushConfigured: !pushConfigCode,
+  pushConfigCode,
   corsHeaders,
-  sendNotification: (target, payload) => webpush.sendNotification(target, payload),
+  sendNotification: (target, payload) => webpush.sendNotification(target, payload, { TTL: 300, timeout: 8_000 }),
 }));

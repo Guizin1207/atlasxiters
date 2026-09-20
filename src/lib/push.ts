@@ -5,6 +5,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { detectDevice } from "@/lib/device";
 import { withTimeout } from "@/lib/request-timeout";
+import { pushFailure, type PushDelivery } from "@/lib/push-errors";
+export type { PushDelivery } from "@/lib/push-errors";
 
 /** Chave pública VAPID — pode ficar no código (é pública por definição). */
 export const VAPID_PUBLIC_KEY =
@@ -15,7 +17,6 @@ export type PushStatus =
   | "ios-needs-install"
   | "denied"
   | "unknown"
-  | "admin-device"
   | "ready"
   | "enabled";
 
@@ -23,16 +24,32 @@ export type PushSubscriptionRecord = {
   id: string; endpoint: string; device: string | null; created_at: string; scope?: string | null;
 };
 
-const BINDING_KEY = "atlas_push_binding_v1";
+type PushRole = "admin" | "user";
+const BINDING_PREFIX = "atlas_push_binding_v2";
+const LEGACY_BINDING_KEY = "atlas_push_binding_v1";
+const ROLE_SCOPES: Record<PushRole, string> = { admin: "/push/admin/", user: "/push/user/" };
 type PushBinding = { endpoint: string; scope: "admin" | "user"; key?: string };
 
-function readBinding(): PushBinding | null {
-  try { return JSON.parse(localStorage.getItem(BINDING_KEY) ?? "null"); }
+function readBinding(role: PushRole): PushBinding | null {
+  try { return JSON.parse(localStorage.getItem(`${BINDING_PREFIX}:${role}`) ?? "null"); }
   catch { return null; }
 }
 
 function saveBinding(binding: PushBinding) {
-  localStorage.setItem(BINDING_KEY, JSON.stringify(binding));
+  localStorage.setItem(`${BINDING_PREFIX}:${binding.scope}`, JSON.stringify(binding));
+}
+
+async function roleRegistration(role: PushRole) {
+  const registration = await navigator.serviceWorker.getRegistration(ROLE_SCOPES[role]);
+  // getRegistration também pode devolver o worker antigo da raiz. Ele não serve
+  // como inscrição de um papel: ADM e usuário precisam de endpoints distintos.
+  return registration?.scope === new URL(ROLE_SCOPES[role], location.origin).href ? registration : undefined;
+}
+
+async function legacySubscription() {
+  const registration = await navigator.serviceWorker.getRegistration("/");
+  if (registration?.scope !== new URL("/", location.origin).href) return null;
+  return registration.pushManager.getSubscription();
 }
 
 function isIOS() {
@@ -62,11 +79,10 @@ export async function currentPushStatus(key?: string): Promise<PushStatus> {
   const available = pushAvailability();
   if (available !== "ready") return available;
   try {
-    const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+    const reg = await roleRegistration("user");
     const sub = await reg?.pushManager.getSubscription();
-    const binding = readBinding();
+    const binding = readBinding("user");
     if (Notification.permission !== "granted" || !sub || binding?.endpoint !== sub.endpoint) return "ready";
-    if (key && binding.scope === "admin") return "admin-device";
     if (key && binding.scope === "user" && binding.key === key.trim().toUpperCase()) {
       const { data, error } = await withTimeout(supabase.rpc("user_push_status", { _key: key }));
       if (error) return "unknown";
@@ -86,7 +102,7 @@ export async function adminPushState(password: string) {
   let status = pushAvailability();
   let endpoint: string | null = null;
   if (status === "ready") {
-    const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+    const reg = await roleRegistration("admin");
     const sub = await reg?.pushManager.getSubscription();
     endpoint = sub?.endpoint ?? null;
     const registered = subscriptions.find((s) => s.endpoint === endpoint && (s.scope ?? "admin") === "admin");
@@ -107,8 +123,37 @@ function urlBase64ToUint8Array(base64: string) {
   return out;
 }
 
-export async function registerPushServiceWorker() {
-  return navigator.serviceWorker.register("/sw.js", { scope: "/" });
+export async function registerPushServiceWorker(role: PushRole) {
+  const registration = await navigator.serviceWorker.register("/sw.js", { scope: ROLE_SCOPES[role] });
+  if (registration.active) return registration;
+  // navigator.serviceWorker.ready refere-se ao worker que controla a página,
+  // não necessariamente ao worker deste papel. Espera o registro correto.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let worker: ServiceWorker | null = null;
+  let onStateChange = () => {};
+  let onUpdateFound = () => {};
+  try {
+    await new Promise<void>((resolve, reject) => {
+      onStateChange = () => {
+        if (registration.active || worker?.state === "activated") resolve();
+        else if (worker?.state === "redundant") reject(new Error("Não foi possível iniciar as notificações. Atualize o app."));
+      };
+      onUpdateFound = () => {
+        worker?.removeEventListener("statechange", onStateChange);
+        worker = registration.installing ?? registration.waiting;
+        worker?.addEventListener("statechange", onStateChange);
+        onStateChange();
+      };
+      registration.addEventListener("updatefound", onUpdateFound, { once: true });
+      timer = setTimeout(() => reject(new Error("A ativação das notificações demorou. Tente novamente.")), 12_000);
+      onUpdateFound();
+    });
+    return registration;
+  } finally {
+    clearTimeout(timer);
+    registration.removeEventListener("updatefound", onUpdateFound);
+    worker?.removeEventListener("statechange", onStateChange);
+  }
 }
 
 /** Cadastra este aparelho para o admin. Retorna o status final. */
@@ -120,8 +165,7 @@ export async function enableAdminPush(password: string): Promise<PushStatus> {
     Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
   if (permission !== "granted") return "denied";
 
-  const registration = await registerPushServiceWorker();
-  await withTimeout(navigator.serviceWorker.ready);
+  const registration = await registerPushServiceWorker("admin");
 
   const existing = await registration.pushManager.getSubscription();
   const subscription =
@@ -152,10 +196,24 @@ export async function enableAdminPush(password: string): Promise<PushStatus> {
     saved = await withTimeout(supabase.rpc("admin_save_push_subscription", args));
   }
   if (saved.error || !saved.data || (saved.data.scope ?? "admin") !== "admin") {
-    localStorage.removeItem(BINDING_KEY);
+    localStorage.removeItem(`${BINDING_PREFIX}:admin`);
     throw new Error("Vínculo ADM não confirmado. Toque em ativar novamente.");
   }
   saveBinding({ endpoint: subscription.endpoint, scope: "admin" });
+
+  // Evita dois pushes no mesmo celular após atualizar o cadastro antigo.
+  // Só remove a inscrição da raiz se o servidor confirmar que ela era do ADM.
+  try {
+    const legacy = await legacySubscription();
+    if (legacy && legacy.endpoint !== subscription.endpoint) {
+      const { data, error } = await withTimeout(supabase.rpc("admin_list_push_subscriptions", { _password: password }));
+      const old = !error && data?.find((s) => s.endpoint === legacy.endpoint && (s.scope ?? "admin") === "admin");
+      if (old) {
+        const removed = await withTimeout(supabase.rpc("admin_delete_push_subscription", { _password: password, _id: old.id }));
+        if (!removed.error) await legacy.unsubscribe();
+      }
+    }
+  } catch { /* A inscrição nova já está salva; a antiga pode ser removida na lista. */ }
 
   return "enabled";
 }
@@ -164,27 +222,27 @@ export async function enableAdminPush(password: string): Promise<PushStatus> {
 export async function disableAdminPush(password: string, id: string, endpoint: string) {
   const { error } = await withTimeout(supabase.rpc("admin_delete_push_subscription", { _password: password, _id: id }));
   if (error) throw error;
-  const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+  const reg = await roleRegistration("admin");
   const sub = await reg?.pushManager.getSubscription();
   // Remover outro celular da lista não pode desligar o celular atual.
   if (sub?.endpoint === endpoint) {
     await sub.unsubscribe();
-    localStorage.removeItem(BINDING_KEY);
+    localStorage.removeItem(`${BINDING_PREFIX}:admin`);
   }
 }
 
-export type PushDelivery = { ok: boolean; sent: number; message: string };
-
 async function deliver(body: Record<string, unknown>): Promise<PushDelivery> {
   try {
-    const { data, error } = await withTimeout(supabase.functions.invoke("notify-admin", { body }));
-    if (error || data?.error) return { ok: false, sent: 0, message: "Falha no serviço de notificações. Confira a publicação da função notify-admin e a configuração de push." };
+    const { data, error } = await withTimeout(supabase.functions.invoke("notify-admin", { body }), 30_000);
+    if (error || data?.error) return pushFailure(error, data);
     const sent = Number(data?.sent ?? 0);
     return sent > 0
-      ? { ok: true, sent, message: "Envio aceito pelo serviço de push. Confira o aparelho." }
-      : { ok: false, sent: 0, message: "Nenhum aparelho recebeu o envio. Reative as notificações e tente novamente." };
+      ? { ok: true, sent, message: Number(data?.failed ?? 0) > 0
+        ? `Envio aceito para ${sent} aparelho(s); ${data.failed} envio(s) falharam.`
+        : "Envio aceito pelo serviço de push. Confira o aparelho." }
+      : pushFailure(null, { code: "NO_RECIPIENTS" });
   } catch {
-    return { ok: false, sent: 0, message: "Não foi possível contatar o serviço de notificações." };
+    return pushFailure(null, { code: "NETWORK_ERROR" });
   }
 }
 
@@ -200,6 +258,14 @@ export async function testAdminPush(password: string): Promise<PushDelivery> {
     return { ok: false, sent: 0, message: "Vincule este aparelho ao ADM antes de testar." };
   }
   return deliver({ kind: "admin_test", password, targetEndpoint: state.endpoint });
+}
+
+/** Usuário só pode testar o próprio endpoint, autorizado pela própria key. */
+export async function testUserPush(key: string): Promise<PushDelivery> {
+  const registration = await roleRegistration("user");
+  const subscription = await registration?.pushManager.getSubscription();
+  if (!subscription || await currentPushStatus(key) !== "enabled") return pushFailure(null, { code: "NO_RECIPIENTS" });
+  return deliver({ kind: "user_test", key, targetEndpoint: subscription.endpoint });
 }
 
 const EXPIRED_NOTIFY_FLAG = "atlas_expired_delivered_v2";
@@ -241,12 +307,9 @@ export async function enableUserPush(key: string): Promise<PushStatus> {
     Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
   if (permission !== "granted") return "denied";
 
-  const registration = await registerPushServiceWorker();
-  await withTimeout(navigator.serviceWorker.ready);
+  const registration = await registerPushServiceWorker("user");
 
   const existing = await registration.pushManager.getSubscription();
-  const binding = readBinding();
-  if (existing && binding?.endpoint === existing.endpoint && binding.scope === "admin") return "admin-device";
   const subscription =
     existing ??
     (await registration.pushManager.subscribe({
@@ -265,15 +328,28 @@ export async function enableUserPush(key: string): Promise<PushStatus> {
   if (error) throw error;
   saveBinding({ endpoint: subscription.endpoint, scope: "user", key: key.trim().toUpperCase() });
 
+  // Migra somente o push antigo desta key neste navegador, preservando o ADM.
+  try {
+    const binding = JSON.parse(localStorage.getItem(LEGACY_BINDING_KEY) ?? "null") as PushBinding | null;
+    const legacy = await legacySubscription();
+    if (legacy && binding?.scope === "user" && binding.key === key.trim().toUpperCase() && binding.endpoint === legacy.endpoint) {
+      const removed = await withTimeout(supabase.rpc("user_delete_push_subscription", { _key: key, _endpoint: legacy.endpoint }));
+      if (!removed.error) {
+        await legacy.unsubscribe();
+        localStorage.removeItem(LEGACY_BINDING_KEY);
+      }
+    }
+  } catch { /* A inscrição antiga fica disponível até poder ser removida. */ }
+
   return "enabled";
 }
 
 /** Remove este aparelho das notificações do usuário. */
 export async function disableUserPush(key: string) {
-  const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+  const reg = await roleRegistration("user");
   const sub = await reg?.pushManager.getSubscription();
   const endpoint = sub?.endpoint;
-  const binding = readBinding();
+  const binding = readBinding("user");
   if (binding?.scope !== "user" || binding.key !== key.trim().toUpperCase() || binding.endpoint !== endpoint) {
     throw new Error("Este aparelho não está vinculado a esta key.");
   }
@@ -281,8 +357,22 @@ export async function disableUserPush(key: string) {
     const { error } = await withTimeout(supabase.rpc("user_delete_push_subscription", { _key: key, _endpoint: endpoint }));
     if (error) throw error;
     await sub.unsubscribe();
-    localStorage.removeItem(BINDING_KEY);
+    localStorage.removeItem(`${BINDING_PREFIX}:user`);
   }
+}
+
+/** Uma nova key neste navegador não pode continuar recebendo os avisos da anterior. */
+export async function retireOtherUserPush(nextKey: string) {
+  const binding = readBinding("user");
+  if (!binding?.key || binding.key === nextKey.trim().toUpperCase()) return;
+  const registration = await roleRegistration("user");
+  const subscription = await registration?.pushManager.getSubscription();
+  if (subscription?.endpoint === binding.endpoint) await subscription.unsubscribe();
+  // O endpoint antigo não recebe mais push no navegador mesmo se a limpeza no banco falhar.
+  localStorage.removeItem(`${BINDING_PREFIX}:user`);
+  try {
+    await withTimeout(supabase.rpc("user_delete_push_subscription", { _key: binding.key, _endpoint: binding.endpoint }));
+  } catch { /* Endpoints revogados também são limpos pelo servidor ao retornar 410. */ }
 }
 
 export type UserNotifyKind = "reply" | "notice" | "update" | "maintenance" | "maintenance_end";

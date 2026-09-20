@@ -51,7 +51,9 @@ export function SupportAdminCard() {
 
   const alertUser = (thread: Thread, text: string) => {
     if (!password) return;
-    void notifyUsers(password, "reply", { targetKey: thread.key });
+    void notifyUsers(password, "reply", { targetKey: thread.key }).then((result) => {
+      if (!result.ok) toast.warning(`Resposta salva no chat. ${result.message}`);
+    });
     void supabase.rpc("admin_send_message", {
       _password: password,
       _title: "Nova mensagem do suporte",

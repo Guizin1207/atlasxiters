@@ -3,12 +3,11 @@
  * Aceita upper/lower; auto-formata para maiúsculas; mostra erros amigáveis.
  */
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
-import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { NotificationBell } from "@/components/atlas/NotificationBell";
 
@@ -25,7 +24,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, expiredKey, redeem, loading } = useKey();
-  const { signIn: adminSignIn } = useAdmin();
+  const [search] = useSearchParams();
+  const switchingUser = search.get("trocar") === "1";
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -35,21 +35,14 @@ export default function LoginPage() {
   const displayError = error ?? (isExpired ? ERROR_MESSAGES.expired_key : null);
 
   useEffect(() => {
-    if (!loading && keyData) navigate("/painel", { replace: true });
-  }, [keyData, loading, navigate]);
+    if (!loading && keyData && !switchingUser) navigate("/painel", { replace: true });
+  }, [keyData, loading, switchingUser, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
     setError(null);
     setSubmitting(true);
-    // Senha mestra digitada na tela de login abre o painel admin
-    const isAdmin = await adminSignIn(value.trim());
-    if (isAdmin) {
-      setSubmitting(false);
-      navigate("/admin", { replace: true });
-      return;
-    }
     const attemptedKey = value.trim().toUpperCase();
     const result = await redeem(attemptedKey);
     setSubmitting(false);
@@ -69,7 +62,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl glass-strong mb-6">
             <ShieldCheck className="w-7 h-7" />
           </div>
-          <p className="vip-eyebrow mb-2">Acesso restrito</p>
+          <p className="vip-eyebrow mb-2">Acesso de usuário</p>
           <h1 className="vip-title text-4xl">Atlas VIP</h1>
           <p className="text-sm text-muted-foreground mt-3 max-w-xs mx-auto">
             Insira sua chave de ativação para entrar no painel.
@@ -152,6 +145,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-8 text-center space-y-3">
+          <Link to="/admin/login" className="inline-block text-sm underline underline-offset-4">Entrar como ADM</Link>
           <p className="text-xs text-muted-foreground/60">
             Precisa de ajuda? Fale com o suporte.
           </p>

@@ -8,6 +8,7 @@ import { AdminProvider } from "@/lib/admin-context";
 import LoginPage from "./pages/Login";
 import PainelPage from "./pages/Painel";
 import AdminPage from "./pages/Admin";
+import AdminLoginPage from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
               <Route path="/login" element={<LoginPage />} />
               <Route path="/painel" element={<PainelPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/login" element={<AdminLoginPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -36,4 +38,3 @@ const App = () => (
 );
 
 export default App;
-

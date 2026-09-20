@@ -4,14 +4,13 @@ import { BellRing, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
-import { currentPushStatus, enableUserPush, disableUserPush, type PushStatus } from "@/lib/push";
+import { currentPushStatus, enableUserPush, disableUserPush, testUserPush, type PushStatus } from "@/lib/push";
 
 const STATUS_TEXT: Record<PushStatus, string> = {
   unsupported: "Este navegador não aceita notificações.",
   "ios-needs-install": "No iPhone, adicione o app à Tela de Início e abra por lá.",
   denied: "Notificações bloqueadas. Libere nas configurações do navegador.",
   unknown: "Não foi possível conferir o cadastro. Tente ativar novamente.",
-  "admin-device": "Este aparelho recebe os avisos do ADM. Gerencie o vínculo no painel administrativo.",
   ready: "Ativar avisos do suporte, atualizações e manutenção.",
   enabled: "Avisos ativados para esta key neste aparelho.",
 };
@@ -20,6 +19,7 @@ export function UserPushRow() {
   const { keyData } = useKey();
   const [status, setStatus] = useState<PushStatus>("ready");
   const [busy, setBusy] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -50,7 +50,20 @@ export function UserPushRow() {
 
   const canToggle = status === "ready" || status === "enabled" || status === "unknown";
 
+  const test = async () => {
+    if (!keyData?.key || busy) return;
+    setBusy(true);
+    try {
+      const result = await testUserPush(keyData.key);
+      setTestResult(result.code ? `${result.message} Código: ${result.code}.` : result.message);
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+    } catch { setTestResult("Não foi possível conferir este aparelho. Tente ativar novamente."); }
+    finally { setBusy(false); }
+  };
+
   return (
+    <div>
     <div className="flex items-center gap-3 px-4 py-4">
       <div className="w-9 h-9 rounded-xl glass flex items-center justify-center shrink-0">
         <BellRing className="w-4 h-4" />
@@ -66,8 +79,11 @@ export function UserPushRow() {
         disabled={!canToggle || busy}
         className="rounded-xl shrink-0"
       >
-        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : status === "admin-device" ? "ADM" : status === "enabled" ? "Desativar" : "Ativar"}
+        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : status === "enabled" ? "Desativar" : "Ativar"}
       </Button>
+    </div>
+    {status === "enabled" && <Button variant="ghost" size="sm" disabled={busy} onClick={test} className="mx-4 mb-3">Testar avisos desta key</Button>}
+    {testResult && <p role="status" className="px-4 pb-4 text-xs text-muted-foreground">{testResult}</p>}
     </div>
   );
 }

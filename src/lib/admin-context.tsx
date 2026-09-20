@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { withTimeout } from "@/lib/request-timeout";
 
 const SESSION_KEY = "atlas_vip_admin_pwd";
 
@@ -36,19 +37,19 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     (async () => {
-      const { data, error } = await supabase.rpc("_check_admin", {
-        _password: stored,
-      });
-      if (!error && data === true) setPassword(stored);
-      else sessionStorage.removeItem(SESSION_KEY);
-      setLoading(false);
+      try {
+        const { data, error } = await withTimeout(supabase.rpc("_check_admin", { _password: stored }));
+        if (!error && data === true) setPassword(stored);
+        else sessionStorage.removeItem(SESSION_KEY);
+      } catch { /* O usuário pode tentar o login novamente quando a conexão voltar. */ }
+      finally { setLoading(false); }
     })();
   }, []);
 
   const signIn = useCallback(async (pwd: string) => {
-    const { data, error } = await supabase.rpc("_check_admin", {
+    const { data, error } = await withTimeout(supabase.rpc("_check_admin", {
       _password: pwd,
-    });
+    }));
     if (error || data !== true) return false;
     sessionStorage.setItem(SESSION_KEY, pwd);
     setPassword(pwd);

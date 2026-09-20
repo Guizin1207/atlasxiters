@@ -16,7 +16,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { detectDevice } from "@/lib/device";
-import { notifyExpired, resetExpiryNotification } from "@/lib/push";
+import { notifyExpired, resetExpiryNotification, retireOtherUserPush } from "@/lib/push";
 import { withTimeout } from "@/lib/request-timeout";
 
 export { detectDevice } from "@/lib/device";
@@ -167,6 +167,8 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
         }
         // Falha de rede não é expiração e não apaga a identidade do aparelho.
       } else if (data) {
+        await retireOtherUserPush(stored);
+        if (version !== requestVersion.current) return;
         clearExpiry();
         resetExpiryNotification(stored);
         localStorage.setItem(STORAGE_KEY, stored);
@@ -234,8 +236,12 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
         }
         return { ok: false, error: reason };
       }
+      await retireOtherUserPush(key);
+      if (version !== requestVersion.current) return { ok: false, error: "network_error" };
       clearExpiry();
       resetExpiryNotification(key);
+      sessionStorage.removeItem(ADMIN_PREVIEW_KEY);
+      setAdminPreview(false);
       persist(data as unknown as KeyData);
       return { ok: true };
     } catch {

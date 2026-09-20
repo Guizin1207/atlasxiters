@@ -4,6 +4,7 @@ type PushTarget = { endpoint: string; keys: { p256dh: string; auth: string } };
 type Dependencies = {
   admin: SupabaseClient;
   pushConfigured: boolean;
+  pushConfigCode?: "PUSH_NOT_CONFIGURED" | "PUSH_CONFIG_INVALID";
   corsHeaders: Record<string, string>;
   sendNotification: (target: PushTarget, payload: string) => Promise<unknown>;
 };
@@ -14,6 +15,12 @@ const CONTENT: Record<
   string,
   { title: string; body: string; audience: Audience; url: string }
 > = {
+  user_test: {
+    title: "Atlas VIP — Teste do usuário",
+    body: "Este aparelho está vinculado às notificações da sua key.",
+    audience: "user",
+    url: "/painel",
+  },
   admin_test: {
     title: "Atlas VIP — Teste do ADM chefe",
     body: "Este aparelho está vinculado aos avisos de mensagens e comprovantes do suporte.",
@@ -38,7 +45,7 @@ const CONTENT: Record<
     title: "Atlas VIP — Suporte respondeu",
     body: "Você recebeu uma nova mensagem no chat de suporte.",
     audience: "user",
-    url: "/painel",
+    url: "/painel?suporte=1",
   },
   notice: {
     title: "Atlas VIP — Novo aviso",
@@ -73,19 +80,19 @@ const CONTENT: Record<
   },
 };
 
-export function createNotifyHandler({ admin, pushConfigured, corsHeaders, sendNotification }: Dependencies) {
+export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "PUSH_NOT_CONFIGURED", corsHeaders, sendNotification }: Dependencies) {
   return async (req: Request) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-    const json = (payload: unknown, status = 200) =>
-      new Response(JSON.stringify(payload), {
+    const json = (payload: Record<string, unknown>, status = 200) =>
+      new Response(JSON.stringify({ ...payload, version: 2 }), {
         status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
 
     try {
       if (!pushConfigured) {
-        return json({ error: "Notificações não configuradas." }, 500);
+        return json({ code: pushConfigCode, error: "Notificações não configuradas." }, 500);
       }
 
       const raw = await req.json().catch(() => null);
@@ -97,7 +104,7 @@ export function createNotifyHandler({ admin, pushConfigured, corsHeaders, sendNo
       const messageId = typeof raw?.messageId === "string" ? raw.messageId : "";
       const customBody = typeof raw?.body === "string" ? raw.body.trim().slice(0, 180) : "";
 
-      const content = CONTENT[kind];
+      const content = Object.prototype.hasOwnProperty.call(CONTENT, kind) ? CONTENT[kind] : null;
       if (!content) return json({ error: "Tipo de notificação inválido." }, 400);
 
 
@@ -106,9 +113,19 @@ export function createNotifyHandler({ admin, pushConfigured, corsHeaders, sendNo
       if (kind === "admin_test") {
         if (!password || !targetEndpoint) return json({ error: "Autenticação e aparelho de destino obrigatórios." }, 400);
         const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
-        if (adminError || isAdmin !== true) return json({ error: "Acesso negado." }, 403);
+        if (adminError || isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Acesso negado." }, 403);
         // Nunca faz broadcast de um teste e nunca envia para endpoints fora do cadastro ADM.
         query = query.eq("scope", "admin").eq("endpoint", targetEndpoint);
+      } else if (kind === "user_test") {
+        if (!key || !targetEndpoint) return json({ error: "Key e aparelho de destino obrigatórios." }, 400);
+        const { data: validKey, error: validError } = await admin.rpc("_valid_access_key", { _key: key });
+        if (validError) return json({ code: "DATABASE_ERROR", error: "Falha ao validar key." }, 500);
+        if (validKey !== true) return json({ code: "REQUEST_FORBIDDEN", error: "Key inválida." }, 403);
+        const { data: keyRow, error: keyError } = await admin.from("access_keys")
+          .select("id").eq("key", key.toUpperCase()).eq("revoked", false).maybeSingle();
+        if (keyError) return json({ code: "DATABASE_ERROR", error: "Falha ao validar key." }, 500);
+        if (!keyRow) return json({ code: "REQUEST_FORBIDDEN", error: "Key inválida." }, 403);
+        query = query.eq("scope", "user").eq("key_id", keyRow.id).eq("endpoint", targetEndpoint);
       } else if (content.audience === "admin") {
         if (!key) return json({ error: "Chave ausente." }, 400);
         if (messageId) {
@@ -156,7 +173,10 @@ export function createNotifyHandler({ admin, pushConfigured, corsHeaders, sendNo
           console.error("Falha ao validar senha:", adminError.message);
           return json({ error: "Falha ao validar senha." }, 500);
         }
-        if (isAdmin !== true) return json({ error: "Senha inválida." }, 403);
+        if (isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Senha inválida." }, 403);
+
+        // Respostas do suporte são sempre individuais; destino ausente nunca vira broadcast.
+        if (kind === "reply" && !targetKey) return json({ error: "Destinatário da resposta obrigatório." }, 400);
 
         query = query.eq("scope", "user");
 
@@ -166,7 +186,7 @@ export function createNotifyHandler({ admin, pushConfigured, corsHeaders, sendNo
             .select("id")
             .eq("key", targetKey.toUpperCase())
             .maybeSingle();
-          if (!keyRow?.id) return json({ sent: 0, removed: 0, note: "Chave de destino não encontrada." });
+          if (!keyRow?.id) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
           query = query.eq("key_id", keyRow.id);
         }
       }
@@ -174,22 +194,27 @@ export function createNotifyHandler({ admin, pushConfigured, corsHeaders, sendNo
       const { data: subs, error: subsError } = await query;
       if (subsError) {
         console.error("Falha ao listar inscrições:", subsError.message);
-        return json({ error: "Falha ao listar inscrições." }, 500);
+        return json({ code: "DATABASE_ERROR", error: "Falha ao listar inscrições." }, 500);
       }
-      if (!subs?.length) return json({ sent: 0, removed: 0, note: "Nenhum aparelho cadastrado." });
+      if (!subs?.length) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
 
 
       const payload = JSON.stringify({
         title: content.title,
-        body: content.audience === "admin" || kind === "expired" ? content.body : customBody || content.body,
+        body: content.audience === "admin" || kind === "expired" || kind === "user_test" ? content.body : customBody || content.body,
         url: content.url,
         tag: `atlas-${kind}`,
       });
       const stale: string[] = [];
       let sent = 0;
       let failed = 0;
+      let credentialsRejected = false;
+      let next = 0;
 
-      for (const sub of subs) {
+      // Um aparelho com conexão lenta não impede o envio aos demais.
+      await Promise.all(Array.from({ length: Math.min(8, subs.length) }, async () => {
+        while (next < subs.length) {
+          const sub = subs[next++];
         try {
           await sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -201,12 +226,17 @@ export function createNotifyHandler({ admin, pushConfigured, corsHeaders, sendNo
           const status = (err as { statusCode?: number })?.statusCode;
           console.error(`Envio push falhou [${status ?? "?"}].`);
           if (status === 404 || status === 410) stale.push(sub.id);
+          if (status === 401 || status === 403) credentialsRejected = true;
         }
-      }
+        }
+      }));
 
       if (stale.length) await admin.from("push_subscriptions").delete().in("id", stale);
 
-      return json({ sent, failed, removed: stale.length }, sent === 0 && failed > 0 ? 502 : 200);
+      const code = sent > 0 ? undefined
+        : credentialsRejected ? "PUSH_CREDENTIALS_REJECTED"
+        : stale.length === failed ? "PUSH_SUBSCRIPTION_EXPIRED" : "PUSH_SEND_FAILED";
+      return json({ sent, failed, removed: stale.length, code }, sent === 0 && failed > 0 ? 502 : 200);
     } catch (err) {
       console.error("notify-admin falhou:", (err as Error)?.message);
       return json({ error: "Não foi possível concluir o envio." }, 500);

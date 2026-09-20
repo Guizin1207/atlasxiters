@@ -37,7 +37,10 @@ export function PanelHeader() {
           Admin
         </Button>
       ) : (
-        <NotificationBell />
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => navigate("/admin/login")} aria-label="Acesso do administrador">ADM</Button>
+          <NotificationBell />
+        </div>
       )}
     </header>
   );

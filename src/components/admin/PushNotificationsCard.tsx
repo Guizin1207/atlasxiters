@@ -14,7 +14,6 @@ const STATUS_TEXT: Record<PushStatus, string> = {
   "ios-needs-install": "No iPhone, adicione o app à Tela de Início e abra por lá para ativar.",
   denied: "As notificações foram bloqueadas. Libere nas configurações do navegador.",
   unknown: "Não foi possível conferir o cadastro. Atualize ou tente ativar novamente.",
-  "admin-device": "Este aparelho está vinculado ao ADM.",
   ready: "Este aparelho ainda não está vinculado às notificações do ADM.",
   enabled: "Este aparelho está cadastrado como ADM chefe para receber mensagens e comprovantes.",
 };
@@ -80,7 +79,7 @@ export function PushNotificationsCard() {
     setBusy(true);
     try {
       const result = await testAdminPush(password);
-      setTestResult(result.message);
+      setTestResult(result.code ? `${result.message} Código: ${result.code}${result.httpStatus ? ` · HTTP ${result.httpStatus}` : ""}.` : result.message);
       if (result.ok) toast.success(result.message);
       else toast.error(result.message);
     } catch {
@@ -129,7 +128,8 @@ export function PushNotificationsCard() {
 
       <p className="text-[11px] text-muted-foreground">
         O vínculo vale só para notificações: o login de ADM continua obrigatório.
-        Ao ativar aqui, os avisos de cliente neste aparelho são substituídos pelos do ADM.
+        Você pode ativar vários aparelhos. Os avisos de ADM e de usuário ficam separados,
+        mesmo quando os dois acessos são usados neste celular.
       </p>
       <Button onClick={sendTest} disabled={busy || status !== "enabled" || loading} variant="outline" className="w-full rounded-2xl">
         <Bell className="mr-2 h-4 w-4" /> Testar neste aparelho

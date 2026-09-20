@@ -1,1 +1,6 @@
 project_id = "soadsghfbmogayootqwl"
+
+# O app usa login próprio por senha ADM/key. Cada ação valida essas credenciais
+# dentro do handler; o projeto já recebe essas chamadas sem JWT de Supabase Auth.
+[functions.notify-admin]
+verify_jwt = false

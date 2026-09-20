@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createNotifyHandler } from "../../supabase/functions/notify-admin/handler";
 
 type Row = Record<string, unknown>;
-function fixture(options: { adminValid?: boolean; keyExpired?: boolean; revoked?: boolean } = {}) {
+function fixture(options: { adminValid?: boolean; userValid?: boolean; keyExpired?: boolean; revoked?: boolean } = {}) {
   const rows: Record<string, Row[]> = {
     access_keys: [{ id: "key-a", key: "KEY-A", is_master: false, revoked: options.revoked ?? false, expires_at: options.keyExpired === false ? "2099-01-01T00:00:00Z" : "2000-01-01T00:00:00Z" }],
     support_threads: [{ id: "thread-a", key_id: "key-a" }],
@@ -31,7 +31,10 @@ function fixture(options: { adminValid?: boolean; keyExpired?: boolean; revoked?
     };
     return query;
   };
-  const rpc = vi.fn().mockImplementation((name: string) => Promise.resolve({ data: name === "_check_admin" && (options.adminValid ?? true), error: null }));
+  const rpc = vi.fn().mockImplementation((name: string) => Promise.resolve({
+    data: name === "_check_admin" ? (options.adminValid ?? true) : options.userValid !== false && options.keyExpired === false,
+    error: null,
+  }));
   const sendNotification = vi.fn().mockResolvedValue(undefined);
   const admin = { from, rpc } as unknown as Parameters<typeof createNotifyHandler>[0]["admin"];
   const handler = createNotifyHandler({ admin, pushConfigured: true, corsHeaders: {}, sendNotification });
@@ -100,7 +103,59 @@ describe("destinatários e autorização do servidor push", () => {
     f.sendNotification.mockRejectedValue({ statusCode: 410 });
     const result = await f.send({ kind: "admin_test", password: "admin", targetEndpoint: "https://push.test/admin-a" });
     expect(result.status).toBe(502);
-    expect(await result.json()).toEqual({ sent: 0, failed: 1, removed: 1 });
+    expect(await result.json()).toMatchObject({ sent: 0, failed: 1, removed: 1, code: "PUSH_SUBSCRIPTION_EXPIRED", version: 2 });
     quiet.mockRestore();
+  });
+
+  it("uma resposta chega a todos os aparelhos da mesma key e a nenhum outro usuário", async () => {
+    const f = fixture();
+    f.rows.push_subscriptions.push({ ...f.rows.push_subscriptions[2], id: "user-a-2", endpoint: "https://push.test/user-a-2" });
+    expect((await f.send({ kind: "reply", password: "admin", targetKey: "KEY-A" })).status).toBe(200);
+    expect(f.sendNotification.mock.calls.map(([target]) => target.endpoint)).toEqual(["https://push.test/user-a", "https://push.test/user-a-2"]);
+  });
+
+  it("resposta sem destinatário não vira aviso para todos", async () => {
+    const f = fixture();
+    expect((await f.send({ kind: "reply", password: "admin" })).status).toBe(400);
+    expect(f.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("usuário só testa o aparelho vinculado à sua key", async () => {
+    const f = fixture({ keyExpired: false });
+    const own = await f.send({ kind: "user_test", key: "KEY-A", targetEndpoint: "https://push.test/user-a" });
+    expect((await own.json()).sent).toBe(1);
+    f.sendNotification.mockClear();
+    const other = await f.send({ kind: "user_test", key: "KEY-A", targetEndpoint: "https://push.test/user-b" });
+    expect((await other.json()).sent).toBe(0);
+    expect(f.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("usuário não pode usar seu teste para enviar ao ADM", async () => {
+    const f = fixture({ keyExpired: false });
+    const result = await f.send({ kind: "user_test", key: "KEY-A", targetEndpoint: "https://push.test/admin-a" });
+    expect((await result.json()).sent).toBe(0);
+    expect(f.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("teste de usuário exige key válida", async () => {
+    const f = fixture({ keyExpired: false, userValid: false });
+    expect((await f.send({ kind: "user_test", key: "KEY-A", targetEndpoint: "https://push.test/user-a" })).status).toBe(403);
+    expect(f.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("uma falha de um dispositivo não interrompe os outros", async () => {
+    const f = fixture();
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    f.sendNotification.mockRejectedValueOnce({ statusCode: 410 });
+    const result = await f.send({ kind: "message", key: "KEY-A", messageId: "message-a" });
+    expect(await result.json()).toMatchObject({ sent: 1, failed: 1, removed: 1 });
+    expect(f.sendNotification).toHaveBeenCalledTimes(2);
+    quiet.mockRestore();
+  });
+
+  it("nomes herdados do protótipo não são tipos de notificação válidos", async () => {
+    const f = fixture();
+    expect((await f.send({ kind: "__proto__" })).status).toBe(400);
+    expect(f.sendNotification).not.toHaveBeenCalled();
   });
 });

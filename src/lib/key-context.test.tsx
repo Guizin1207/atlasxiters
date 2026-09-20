@@ -4,7 +4,7 @@ import { KeyProvider, useKey } from "./key-context";
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), notifyExpired: vi.fn(), resetExpiryNotification: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc } }));
-vi.mock("@/lib/push", () => ({ notifyExpired: mocks.notifyExpired, resetExpiryNotification: mocks.resetExpiryNotification }));
+vi.mock("@/lib/push", () => ({ notifyExpired: mocks.notifyExpired, resetExpiryNotification: mocks.resetExpiryNotification, retireOtherUserPush: vi.fn().mockResolvedValue(undefined) }));
 
 const activeKey = {
   id: "key-a", key: "KEY-A", is_master: false, revoked: false,
