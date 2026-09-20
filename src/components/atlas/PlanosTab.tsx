@@ -189,8 +189,8 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
             <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixPayload)}&size=260`} alt="QR Code do Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
             <p className="text-[11px] text-muted-foreground text-center">Aponte a câmera do banco para este QR Code.</p>
           </div>
-          <a href="https://wa.me/5538998816357" target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
-            Enviar comprovante
+          <a href={`https://wa.me/5538998816357?text=${encodeURIComponent(`EBA! 🎉 Você fez sua compra na Atlas Store!\n\nAgora é só enviar o comprovante. Aguarde a aprovação do ADM; assim que possível, entraremos em contato com sua nova key.\n\nPlano: ${getPlan(pixPlan).name}\nValor: ${getPlan(pixPlan).price}`)}`} target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
+            EBA! Enviar comprovante
           </a>
         </div>
       )}
