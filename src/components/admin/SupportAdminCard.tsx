@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
 
 type Thread = { id: string; key_id: string; key: string; updated_at: string };
-type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };\nconst RECEIPT_PREFIX = "[[receipt]]";
+type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
+const RECEIPT_PREFIX = "[[receipt]]";
 
 const QUICK_ADMIN = [
   ["👋 Olá! Como posso ajudar?", "👋 Olá! Como posso ajudar?"],
