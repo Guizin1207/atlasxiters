@@ -92,7 +92,7 @@ Responda SOMENTE com JSON válido, sem markdown, neste formato:
 Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. A precisão estimada é apenas uma estimativa de ajuste, não uma garantia de desempenho.`;
 
     const result = await generateText({
-      model: lovable.responses("openai/gpt-6-astra"),
+      model: lovable.responses("google/gemini-3.7-flash"),
       prompt,
       abortSignal: req.signal,
       providerOptions: {
@@ -115,7 +115,7 @@ Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 
       return new Response(null, { status: 499, headers: corsHeaders });
     }
     console.error("sensi-ai error", error);
-    return new Response(JSON.stringify({ error: "Não foi possível gerar a sensibilidade com IA agora." }), {
+    return new Response(JSON.stringify({ error: (error as Error)?.message ?? "Não foi possível gerar a sensibilidade com IA agora." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
