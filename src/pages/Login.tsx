@@ -1,13 +1,14 @@
 /**
  * Tela de login por chave.
- * Aceita upper/lower; auto-formata para maiúsculas; mostra erros amigáveis.
+ * Reconhece o acesso ADM no servidor; keys de usuário mantêm seu fluxo próprio.
  */
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
+import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { NotificationBell } from "@/components/atlas/NotificationBell";
 
@@ -24,13 +25,18 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, expiredKey, redeem, loading } = useKey();
+  const { recognize, signIn } = useAdmin();
   const [search] = useSearchParams();
   const switchingUser = search.get("trocar") === "1";
   const [value, setValue] = useState("");
+  const [recognition, setRecognition] = useState<{ value: string; admin: boolean } | null>(null);
+  const detecting = Boolean(value.trim()) && recognition?.value !== value;
+  const isAdminEntry = Boolean(value.trim()) && recognition?.value === value && recognition.admin;
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get("suporte") === "1");
-  const supportKey = expiredKey && (!value.trim() || value.trim() === expiredKey) ? expiredKey : value;
+  const enteredKey = value.trim().toUpperCase();
+  const supportKey = isAdminEntry ? "" : expiredKey && (!enteredKey || enteredKey === expiredKey) ? expiredKey : enteredKey;
   const isExpired = error === ERROR_MESSAGES.expired_key || Boolean(expiredKey && supportKey === expiredKey);
   const displayError = error ?? (isExpired ? ERROR_MESSAGES.expired_key : null);
 
@@ -38,19 +44,40 @@ export default function LoginPage() {
     if (!loading && keyData && !switchingUser) navigate("/painel", { replace: true });
   }, [keyData, loading, switchingUser, navigate]);
 
+  useEffect(() => {
+    if (!value.trim()) return;
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const admin = await recognize(value);
+        if (!cancelled) setRecognition({ value, admin });
+      } catch {
+        if (!cancelled) {
+          setRecognition({ value, admin: false });
+          setError("Não foi possível verificar o acesso agora. Tente novamente em instantes.");
+        }
+      }
+    }, 350);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [value, recognize]);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || detecting || !value.trim()) return;
     setError(null);
     setSubmitting(true);
-    const attemptedKey = value.trim().toUpperCase();
-    const result = await redeem(attemptedKey);
-    setSubmitting(false);
-    if (result.ok === true) {
-      navigate("/painel", { replace: true });
-      return;
-    }
-    setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
+    try {
+      if (isAdminEntry) {
+        if (await signIn(value)) navigate("/admin", { replace: true });
+        else setError("Acesso não confirmado. Confira sua chave e tente novamente.");
+        return;
+      }
+      const result = await redeem(enteredKey);
+      if (result.ok === true) navigate("/painel", { replace: true });
+      else setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
+    } catch {
+      setError("Não foi possível confirmar seu acesso agora. Tente novamente em instantes.");
+    } finally { setSubmitting(false); }
   };
 
   return (
@@ -62,15 +89,11 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl glass-strong mb-6">
             <ShieldCheck className="w-7 h-7" />
           </div>
-          <p className="vip-eyebrow mb-2">Acesso de usuário</p>
+          <p className="vip-eyebrow mb-2">Acesso restrito</p>
           <h1 className="vip-title text-4xl">Atlas VIP</h1>
           <p className="text-sm text-muted-foreground mt-3 max-w-xs mx-auto">
             Insira sua chave de ativação para entrar no painel.
           </p>
-          <Link to="/admin/login" className="inline-flex items-center justify-center gap-2 mt-5 rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold hover:bg-white/5">
-            <ShieldCheck className="w-4 h-4" aria-hidden />
-            Entrar como ADM
-          </Link>
         </header>
 
         {/* Form */}
@@ -87,14 +110,16 @@ export default function LoginPage() {
                 aria-hidden
               />
               <Input
+                type="password"
                 value={value}
                 onChange={(e) => {
-                  setValue(e.target.value.toUpperCase());
+                  setValue(e.target.value);
+                  setRecognition(null);
                   if (error) setError(null);
                 }}
                 placeholder="XXXX-XXXX-XXXX"
                 autoComplete="off"
-                autoCapitalize="characters"
+                autoCapitalize="none"
                 spellCheck={false}
                 disabled={submitting}
                 className="h-14 pl-11 pr-4 text-base font-mono tracking-wider rounded-2xl bg-white/5 border-white/10 focus-visible:ring-white/30"
@@ -113,9 +138,6 @@ export default function LoginPage() {
                 <div className="min-w-0">
                   {isExpired && <strong className="block text-base">Sua key foi expirada</strong>}
                   <span>{isExpired ? "Seu acesso está bloqueado. Fale com o suporte para renovar." : displayError}</span>
-                  {displayError === ERROR_MESSAGES.invalid_key && (
-                    <p className="mt-2">Se esta é sua chave de administrador, use o botão “Entrar como ADM” acima.</p>
-                  )}
                 </div>
               </div>
               {isExpired && (
@@ -133,21 +155,21 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            disabled={submitting || !value.trim()}
+            disabled={submitting || detecting || !value.trim()}
             className="w-full h-14 rounded-2xl text-base font-bold uppercase tracking-[0.15em] bg-white text-black hover:bg-white/90"
           >
-            {submitting ? (
+            {submitting || detecting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Validando…
               </>
             ) : (
-              "Entrar"
+              isAdminEntry ? "Entrar como ADM" : "Entrar"
             )}
           </Button>
 
           <p className="text-[11px] text-center text-muted-foreground/70 pt-2">
-            Sua chave fica vinculada a este dispositivo.
+            {isAdminEntry ? "Confirme para abrir seu painel." : "Sua chave fica vinculada a este dispositivo."}
           </p>
         </form>
 
@@ -157,6 +179,7 @@ export default function LoginPage() {
           </p>
           <Button
             type="button"
+            disabled={detecting || isAdminEntry}
             onClick={() => setSupportOpen(true)}
             className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-white text-sm font-semibold hover:bg-white/10 transition-colors"
           >
@@ -183,7 +206,7 @@ export default function LoginPage() {
                 Fechar
               </button>
             </div>
-            <SupportChat accessKey={supportKey || value} />
+            <SupportChat accessKey={supportKey} />
           </div>
         </div>
       )}

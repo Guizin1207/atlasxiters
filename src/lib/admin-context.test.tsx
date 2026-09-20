@@ -19,6 +19,14 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("autenticação ADM compatível com o acesso antigo", () => {
+  it("reconhecimento não cria sessão nem armazena a credencial", async () => {
+    mocks.rpc.mockResolvedValue({ data: true, error: null });
+    const { result } = await mount();
+    await act(async () => { expect(await result.current.recognize("AdmTeste")).toBe(true); });
+    expect(result.current.password).toBeNull();
+    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+  });
+
   it("preserva a senha exata quando aceita pelo servidor", async () => {
     mocks.rpc.mockResolvedValue({ data: true, error: null });
     const { result } = await mount();

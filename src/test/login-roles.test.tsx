@@ -4,13 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import LoginPage from "@/pages/Login";
 import AdminLoginPage from "@/pages/AdminLogin";
 
-const mocks = vi.hoisted(() => ({ signIn: vi.fn(), redeem: vi.fn(), keyData: null as null | { key: string } }));
-vi.mock("@/lib/admin-context", () => ({ useAdmin: () => ({ password: null, loading: false, signIn: mocks.signIn }) }));
+const mocks = vi.hoisted(() => ({ recognize: vi.fn(), signIn: vi.fn(), redeem: vi.fn(), keyData: null as null | { key: string } }));
+vi.mock("@/lib/admin-context", () => ({ useAdmin: () => ({ password: null, loading: false, recognize: mocks.recognize, signIn: mocks.signIn }) }));
 vi.mock("@/lib/key-context", () => ({ useKey: () => ({ keyData: mocks.keyData, expiredKey: null, loading: false, redeem: mocks.redeem }) }));
 vi.mock("@/components/atlas/SupportChat", () => ({ SupportChat: () => null }));
 vi.mock("@/components/atlas/NotificationBell", () => ({ NotificationBell: () => null }));
 
-beforeEach(() => { vi.clearAllMocks(); mocks.keyData = null; mocks.signIn.mockResolvedValue(true); mocks.redeem.mockResolvedValue({ ok: true }); });
+beforeEach(() => { vi.resetAllMocks(); mocks.keyData = null; mocks.recognize.mockResolvedValue(false); mocks.signIn.mockResolvedValue(true); mocks.redeem.mockResolvedValue({ ok: true }); });
 afterEach(cleanup);
 function open(path: string) {
   return render(<MemoryRouter initialEntries={[path]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -24,9 +24,11 @@ function open(path: string) {
 }
 
 describe("logins separados", () => {
-  it("login de usuário valida só a key, nunca tenta senha de ADM", async () => {
+  it("key de usuário não exibe botão ADM e não abre sessão administrativa", async () => {
     open("/login");
     fireEvent.change(screen.getByPlaceholderText("XXXX-XXXX-XXXX"), { target: { value: "key-a" } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled());
+    expect(screen.queryByRole("button", { name: "Entrar como ADM" })).not.toBeInTheDocument();
     fireEvent.submit(screen.getByRole("form", { name: "Formulário de chave de acesso" }));
     await screen.findByText("Painel usuário autenticado");
     expect(mocks.redeem).toHaveBeenCalledWith("KEY-A");
@@ -64,15 +66,75 @@ describe("logins separados", () => {
     expect(screen.queryByText("Painel usuário autenticado")).not.toBeInTheDocument();
   });
 
-  it("indica o acesso ADM separado quando uma chave é recusada no login de usuário", async () => {
+  it("uma chave inválida também não revela o botão ADM", async () => {
     mocks.redeem.mockResolvedValue({ ok: false, error: "invalid_key" });
     open("/login");
     fireEvent.change(screen.getByPlaceholderText("XXXX-XXXX-XXXX"), { target: { value: "acesso-antigo" } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled());
     fireEvent.submit(screen.getByRole("form", { name: "Formulário de chave de acesso" }));
-    await screen.findByText(/Se esta é sua chave de administrador/);
-    fireEvent.click(screen.getByRole("link", { name: "Entrar como ADM" }));
-    expect(screen.getByRole("form", { name: "Login de administrador" })).toBeVisible();
+    await screen.findByText("Chave inválida. Verifique e tente novamente.");
+    expect(screen.queryByText("Entrar como ADM")).not.toBeInTheDocument();
     expect(mocks.signIn).not.toHaveBeenCalled();
+  });
+
+  it("não mostra acesso ADM antes de digitar e só abre a sessão ao clicar após reconhecimento", async () => {
+    mocks.recognize.mockResolvedValue(true);
+    open("/login");
+    expect(screen.queryByText("Entrar como ADM")).not.toBeInTheDocument();
+    expect(mocks.recognize).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByPlaceholderText("XXXX-XXXX-XXXX"), { target: { value: "AdmTeste" } });
+    const button = await screen.findByRole("button", { name: "Entrar como ADM" });
+    expect(mocks.recognize).toHaveBeenCalledWith("AdmTeste");
+    expect(mocks.signIn).not.toHaveBeenCalled();
+    fireEvent.click(button);
+    await screen.findByText("Painel ADM autenticado");
+    expect(mocks.signIn).toHaveBeenCalledWith("AdmTeste");
+    expect(mocks.redeem).not.toHaveBeenCalled();
+  });
+
+  it("esconde imediatamente o botão ADM ao trocar a senha por uma key de usuário", async () => {
+    mocks.recognize.mockResolvedValueOnce(true).mockResolvedValue(false);
+    open("/login");
+    const input = screen.getByPlaceholderText("XXXX-XXXX-XXXX");
+    fireEvent.change(input, { target: { value: "AdmTeste" } });
+    await screen.findByRole("button", { name: "Entrar como ADM" });
+    fireEvent.change(input, { target: { value: "key-a" } });
+    expect(screen.queryByText("Entrar como ADM")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled());
+    expect(screen.queryByText("Entrar como ADM")).not.toBeInTheDocument();
+  });
+
+  it("ignora reconhecimento antigo que termina depois de o campo mudar", async () => {
+    let finish: (admin: boolean) => void;
+    mocks.recognize.mockImplementationOnce(() => new Promise<boolean>(resolve => { finish = resolve; }));
+    open("/login");
+    const input = screen.getByPlaceholderText("XXXX-XXXX-XXXX");
+    fireEvent.change(input, { target: { value: "AdmTeste" } });
+    await waitFor(() => expect(mocks.recognize).toHaveBeenCalledOnce());
+    fireEvent.change(input, { target: { value: "key-a" } });
+    finish!(true);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled());
+    expect(screen.queryByText("Entrar como ADM")).not.toBeInTheDocument();
+  });
+
+  it("falha no reconhecimento não revela botão ADM nem cria sessão", async () => {
+    mocks.recognize.mockRejectedValue(new Error("offline"));
+    open("/login");
+    fireEvent.change(screen.getByPlaceholderText("XXXX-XXXX-XXXX"), { target: { value: "qualquer-entrada" } });
+    await screen.findByRole("alert");
+    expect(screen.queryByText("Entrar como ADM")).not.toBeInTheDocument();
+    expect(mocks.signIn).not.toHaveBeenCalled();
+  });
+
+  it("revalida o acesso ao clicar e não libera ADM se a senha deixar de ser aceita", async () => {
+    mocks.recognize.mockResolvedValue(true);
+    mocks.signIn.mockResolvedValue(false);
+    open("/login");
+    fireEvent.change(screen.getByPlaceholderText("XXXX-XXXX-XXXX"), { target: { value: "AdmTeste" } });
+    fireEvent.click(await screen.findByRole("button", { name: "Entrar como ADM" }));
+    await screen.findByRole("alert");
+    expect(screen.queryByText("Painel ADM autenticado")).not.toBeInTheDocument();
+    expect(mocks.redeem).not.toHaveBeenCalled();
   });
 
   it("falha do serviço mostra erro de validação sem dizer que a chave é inválida", async () => {

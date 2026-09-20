@@ -19,6 +19,7 @@ const SESSION_KEY = "atlas_vip_admin_pwd";
 type Ctx = {
   password: string | null;
   loading: boolean;
+  recognize: (pwd: string) => Promise<boolean>;
   signIn: (pwd: string) => Promise<boolean>;
   signOut: () => void;
 };
@@ -54,22 +55,31 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const signIn = useCallback(async (pwd: string) => {
+  const validatedCredential = useCallback(async (pwd: string): Promise<string | null> => {
     const entered = pwd.trim();
-    if (!entered) return false;
+    if (!entered) return null;
     // O formulário antigo convertia tudo para maiúsculas antes de validar.
     // Preserve senhas com caixa própria; tente o formato antigo somente se
     // o servidor rejeitar explicitamente o texto original.
     const candidates = [...new Set([entered, entered.toUpperCase()])];
     for (const candidate of candidates) {
       if (!await checkAdmin(candidate)) continue;
-      // As próximas RPCs precisam usar exatamente a credencial aceita.
-      sessionStorage.setItem(SESSION_KEY, candidate);
-      setPassword(candidate);
-      return true;
+      return candidate;
     }
-    return false;
+    return null;
   }, []);
+
+  // Reconhecer a entrada não abre sessão nem concede acesso administrativo.
+  const recognize = useCallback(async (pwd: string) => Boolean(await validatedCredential(pwd)), [validatedCredential]);
+
+  const signIn = useCallback(async (pwd: string) => {
+    const candidate = await validatedCredential(pwd);
+    if (!candidate) return false;
+    // As próximas RPCs precisam usar exatamente a credencial aceita.
+    sessionStorage.setItem(SESSION_KEY, candidate);
+    setPassword(candidate);
+    return true;
+  }, [validatedCredential]);
 
   const signOut = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY);
@@ -77,8 +87,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<Ctx>(
-    () => ({ password, loading, signIn, signOut }),
-    [password, loading, signIn, signOut]
+    () => ({ password, loading, recognize, signIn, signOut }),
+    [password, loading, recognize, signIn, signOut]
   );
 
   return (

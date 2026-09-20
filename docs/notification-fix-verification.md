@@ -30,11 +30,13 @@ Os diagnósticos da interface agora distinguem função antiga/ausente, rejeiç�
 
 ## Compatibilidade do login ADM
 
-O formulário antigo transformava o texto em maiúsculas antes de chamar `_check_admin`, cuja comparação no servidor diferencia maiúsculas e minúsculas. O login separado agora valida primeiro o texto informado; somente após uma recusa explícita tenta a conversão antiga. A sessão guarda exatamente o valor aceito pelo servidor para que as demais ações e os testes de push usem a mesma credencial. Nenhuma senha foi redefinida.
+O formulário antigo transformava o texto em maiúsculas antes de chamar `_check_admin`, cuja comparação no servidor diferencia maiúsculas e minúsculas. O login agora valida primeiro o texto informado; somente após uma recusa explícita tenta a conversão antiga. A sessão guarda exatamente o valor aceito pelo servidor para que as demais ações e os testes de push usem a mesma credencial. Nenhuma senha foi redefinida.
 
-Falhas de conexão/RPC ou respostas inesperadas não são tratadas como chave inválida e não concedem acesso. Uma falha ao restaurar a sessão também não apaga a credencial salva; uma recusa explícita do servidor a remove. O botão de ADM ficou acima do formulário de usuário para reduzir entradas na tela errada.
+Falhas de conexão/RPC ou respostas inesperadas não são tratadas como chave inválida e não concedem acesso. Uma falha ao restaurar a sessão também não apaga a credencial salva; uma recusa explícita do servidor a remove.
 
-Validação local: 76 testes passaram, incluindo compatibilidade do acesso antigo, preservação de senhas com caixa própria, recusa de credenciais incorretas, falhas de serviço e isolamento dos dois formulários. TypeScript e build passaram. O login com a chave real do administrador depende da validação no aparelho; nenhuma credencial foi solicitada nem testada nesta sessão.
+Na tela inicial, o botão ADM permanece oculto. Após uma pausa na digitação, a entrada é reconhecida pelo servidor sem criar sessão; somente uma credencial de ADM validada faz aparecer **Entrar como ADM**. O clique revalida e abre a sessão de ADM. Uma key de usuário mantém apenas **Entrar**. Alterar o campo esconde o botão imediatamente e respostas antigas são descartadas. A senha não é embutida no código público. O painel de usuário também não exibe mais o atalho de ADM; a rota direta `/admin/login` continua exigindo autenticação.
+
+Validação local: 82 testes passaram, incluindo compatibilidade do acesso antigo, preservação de senhas com caixa própria, recusa de credenciais incorretas, falhas de serviço, ocultação do botão ADM para usuários e descarte de reconhecimento antigo após editar o campo. TypeScript e build passaram. O login com a chave real do administrador depende da validação no aparelho; nenhuma credencial foi solicitada nem testada nesta sessão.
 
 ## Cenários de aceitação no ambiente publicado
 
