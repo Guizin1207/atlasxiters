@@ -56,6 +56,10 @@ serve(async (req) => {
           failure: `${appUrl}/painel?pagamento=erro`,
         },
         auto_return: "approved",
+        payment_methods: {
+          excluded_payment_types: [],
+          excluded_payment_methods: [],
+        },
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
       }),
     });
