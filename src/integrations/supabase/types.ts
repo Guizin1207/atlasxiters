@@ -246,6 +246,36 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          device: string | null
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          device?: string | null
+          endpoint: string
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          device?: string | null
+          endpoint?: string
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           body: string
@@ -408,6 +438,10 @@ export type Database = {
         Args: { _id: string; _password: string }
         Returns: boolean
       }
+      admin_delete_push_subscription: {
+        Args: { _id: string; _password: string }
+        Returns: boolean
+      }
       admin_device_stats: { Args: { _password: string }; Returns: Json }
       admin_extend_key: {
         Args: { _days: number; _id: string; _password: string }
@@ -458,6 +492,24 @@ export type Database = {
       }
       admin_list_messages: { Args: { _password: string }; Returns: Json }
       admin_list_panel_functions: { Args: { _password: string }; Returns: Json }
+      admin_list_push_subscriptions: {
+        Args: { _password: string }
+        Returns: {
+          auth: string
+          created_at: string
+          device: string | null
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "push_subscriptions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       admin_list_upgrade_requests: {
         Args: { _password: string }
         Returns: Json
@@ -538,6 +590,30 @@ export type Database = {
       admin_save_ai_messages: {
         Args: { _messages: Json; _password: string }
         Returns: boolean
+      }
+      admin_save_push_subscription: {
+        Args: {
+          _auth: string
+          _device?: string
+          _endpoint: string
+          _p256dh: string
+          _password: string
+        }
+        Returns: {
+          auth: string
+          created_at: string
+          device: string | null
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "push_subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_send_message: {
         Args: {
