@@ -67,12 +67,9 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     toast.success("Chave Pix copiada");
   };
 
-  const pixPayload = pixPlan ? makePixPayload(pixPlan) : "";
-
   const copyPixCode = async () => {
-    if (!pixPlan) return;
-    await navigator.clipboard.writeText(makePixPayload(pixPlan));
-    toast.success("Pix Copia e Cola copiado");
+    await navigator.clipboard.writeText(pixKey);
+    toast.success("Chave Pix copiada");
   };
 
   const currentPlan: PlanId = keyData?.is_master
@@ -181,12 +178,12 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
             </button>
           </div>
           <div className="rounded-xl border border-white/10 p-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"><QrCode className="w-4 h-4" /> Pix Copia e Cola</div>
-            <p className="text-[11px] text-muted-foreground break-all">{pixPayload}</p>
-            <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar Pix Copia e Cola</button>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"><QrCode className="w-4 h-4" /> Minha chave Pix</div>
+            <p className="text-sm font-mono break-all">{pixKey}</p>
+            <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar minha chave Pix</button>
           </div>
           <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
-            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixPayload)}&size=260`} alt="QR Code do Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
+            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixKey)}&size=260`} alt="QR Code da chave Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
             <p className="text-[11px] text-muted-foreground text-center">Aponte a câmera do banco para este QR Code.</p>
           </div>
           <a href={`https://wa.me/5538998816357?text=${encodeURIComponent(`EBA! 🎉 Você fez sua compra na Atlas Store!\n\nAgora é só enviar o comprovante. Aguarde a aprovação do ADM; assim que possível, entraremos em contato com sua nova key.\n\nPlano: ${getPlan(pixPlan).name}\nValor: ${getPlan(pixPlan).price}`)}`} target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
