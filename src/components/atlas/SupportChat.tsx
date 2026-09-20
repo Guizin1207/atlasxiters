@@ -24,12 +24,16 @@ export function SupportChat() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);\n  const [editingId, setEditingId] = useState<string | null>(null);\n  const [editBody, setEditBody] = useState("");\n  const [closed, setClosed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editBody, setEditBody] = useState("");
+  const [closed, setClosed] = useState(false);
 
   const load = useCallback(async () => {
     if (!keyData?.key) return;
     const { data, error } = await supabase.rpc("support_list_messages", { _key: keyData.key });
-    if (!error) setMessages((data ?? []) as Msg[]);\n    setClosed((data ?? []).some((m: Msg) => false));
+    if (!error) setMessages((data ?? []) as Msg[]);
+    setClosed((data ?? []).some((m: Msg) => false));
     setLoading(false);
   }, [keyData?.key]);
 
@@ -55,7 +59,24 @@ export function SupportChat() {
     load();
   };
 
-  const send = () => sendMessage(body);\n\n  const editMessage = async (id: string) => {\n    if (!keyData?.key || !editBody.trim()) return;\n    const { error } = await supabase.rpc("support_edit_message", { _key: keyData.key, _message_id: id, _body: editBody.trim() });\n    if (error) { toast.error("Não foi possível editar."); return; }\n    setEditingId(null);\n    setEditBody("");\n    load();\n  };\n\n  const finishChat = async () => {\n    if (!keyData?.key) return;\n    const { error } = await supabase.rpc("support_close_chat", { _key: keyData.key });\n    if (error) { toast.error("Não foi possível finalizar o chat."); return; }\n    setClosed(true);\n    toast.success("Chat finalizado.");\n  };
+  const send = () => sendMessage(body);
+
+  const editMessage = async (id: string) => {
+    if (!keyData?.key || !editBody.trim()) return;
+    const { error } = await supabase.rpc("support_edit_message", { _key: keyData.key, _message_id: id, _body: editBody.trim() });
+    if (error) { toast.error("Não foi possível editar."); return; }
+    setEditingId(null);
+    setEditBody("");
+    load();
+  };
+
+  const finishChat = async () => {
+    if (!keyData?.key) return;
+    const { error } = await supabase.rpc("support_close_chat", { _key: keyData.key });
+    if (error) { toast.error("Não foi possível finalizar o chat."); return; }
+    setClosed(true);
+    toast.success("Chat finalizado.");
+  };
 
   return (
     <section className="glass-strong rounded-3xl p-5 space-y-4">
@@ -88,7 +109,11 @@ export function SupportChat() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">\n        <Button variant="outline" onClick={finishChat} disabled={closed} className="h-7 rounded-lg text-[10px] px-2">✅ Finalizar chat</Button>\n      </div>\n\n      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={finishChat} disabled={closed} className="h-7 rounded-lg text-[10px] px-2">✅ Finalizar chat</Button>
+      </div>
+
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {QUICK_OPTIONS.map(([label, message]) => (
           <Button
             key={label}

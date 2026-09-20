@@ -25,7 +25,10 @@ export function SupportAdminCard() {
   const [selected, setSelected] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [body, setBody] = useState("");
-  const [loading, setLoading] = useState(true);\n  const [editingId, setEditingId] = useState<string | null>(null);\n  const [editBody, setEditBody] = useState("");\n  const [closed, setClosed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editBody, setEditBody] = useState("");
+  const [closed, setClosed] = useState(false);
 
   const loadThreads = useCallback(async () => {
     if (!password) return;
@@ -55,7 +58,21 @@ export function SupportAdminCard() {
     loadThreads();
   };
 
-  const editMessage = async (id: string) => {\n    if (!password || !editBody.trim()) return;\n    const { error } = await supabase.rpc("admin_support_edit_message", { _password: password, _message_id: id, _body: editBody.trim() });\n    if (error) { toast.error("Não foi possível editar."); return; }\n    setEditingId(null); setEditBody(""); loadMessages(); loadThreads();\n  };\n\n  const finishChat = async () => {\n    if (!password || !selected) return;\n    const { error } = await supabase.rpc("admin_support_close_chat", { _password: password, _thread_id: selected.id });\n    if (error) { toast.error("Não foi possível finalizar o chat."); return; }\n    setClosed(true); toast.success("Chat finalizado."); loadThreads();\n  };\n\n  const send = async () => {
+  const editMessage = async (id: string) => {
+    if (!password || !editBody.trim()) return;
+    const { error } = await supabase.rpc("admin_support_edit_message", { _password: password, _message_id: id, _body: editBody.trim() });
+    if (error) { toast.error("Não foi possível editar."); return; }
+    setEditingId(null); setEditBody(""); loadMessages(); loadThreads();
+  };
+
+  const finishChat = async () => {
+    if (!password || !selected) return;
+    const { error } = await supabase.rpc("admin_support_close_chat", { _password: password, _thread_id: selected.id });
+    if (error) { toast.error("Não foi possível finalizar o chat."); return; }
+    setClosed(true); toast.success("Chat finalizado."); loadThreads();
+  };
+
+  const send = async () => {
     if (!password || !selected || !body.trim()) return;
     const { error } = await supabase.rpc("admin_support_send_message", { _password: password, _thread_id: selected.id, _body: body.trim() });
     if (error) { toast.error("Não foi possível enviar."); return; }
@@ -86,7 +103,8 @@ export function SupportAdminCard() {
                   </Button>
                 ))}
               </div>
-              <div className="flex items-center gap-2"><Button variant="outline" onClick={finishChat} disabled={closed} className="h-7 rounded-lg text-[10px] px-2"><CheckCircle2 className="w-3 h-3 mr-1" /> Finalizar chat</Button></div>\n              <div className="flex gap-2"><Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Responder…" rows={2} className="rounded-2xl bg-white/5 border-white/10 resize-none" /><Button onClick={send} disabled={!body.trim() || closed} className="w-12 shrink-0 rounded-2xl bg-white text-black"><Send className="w-4 h-4" /></Button></div></>}
+              <div className="flex items-center gap-2"><Button variant="outline" onClick={finishChat} disabled={closed} className="h-7 rounded-lg text-[10px] px-2"><CheckCircle2 className="w-3 h-3 mr-1" /> Finalizar chat</Button></div>
+              <div className="flex gap-2"><Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Responder…" rows={2} className="rounded-2xl bg-white/5 border-white/10 resize-none" /><Button onClick={send} disabled={!body.trim() || closed} className="w-12 shrink-0 rounded-2xl bg-white text-black"><Send className="w-4 h-4" /></Button></div></>}
           </div>
         </div>}
     </section>
