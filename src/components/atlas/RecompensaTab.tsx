@@ -70,7 +70,7 @@ export function RecompensaTab() {
   };
 
   if (!keyData || keyData.is_master) {
-    return <section className="glass-strong rounded-2xl p-5"><p className="vip-eyebrow">Recompensa</p><p className="mt-2 text-sm text-muted-foreground">A recompensa diária está disponível para chaves VIP.</p></section>;
+    return <section className="glass-strong rounded-2xl p-5"><p className="vip-eyebrow">Recompensa</p><p className="mt-2 text-sm text-muted-foreground">A recompensa diária está disponível para todos os planos ativos.</p></section>;
   }
 
   const coins = reward?.coins ?? 0;
