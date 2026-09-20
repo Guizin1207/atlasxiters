@@ -80,16 +80,5 @@ export function generateSensi(input: SensiInput): SensiResult {
       : "Calibração equilibrada para controle e arrasto.",
   };
 
-  res.notas = [
-    input.style === "precisao"
-      ? "Perfil focado em headshot parado: puxe a mira devagar em rajadas curtas."
-      : input.style === "agressivo"
-      ? "Perfil de rush: giros rápidos, ideal para combate próximo com SMG."
-      : "Perfil equilibrado: bom para média distância e movimentação constante.",
-    `Use ${input.fingers} dedos com o botão de tiro próximo do polegar direito.`,
-    `Ajuste o DPI do aparelho para ~${res.dpiRecomendado} (Android) e mantenha o modo de desempenho ligado.`,
-    "Teste no treinamento por 10 minutos antes de entrar em ranqueada.",
-  ];
-
   return res;
 }
