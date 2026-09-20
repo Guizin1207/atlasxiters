@@ -15,11 +15,34 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMessages } from "@/hooks/use-messages";
+import { useKey } from "@/lib/key-context";
 import { cn } from "@/lib/utils";
 
 export function NotificationBell() {
   const { messages, unread, markAllRead } = useMessages();
+  const { keyData } = useKey();
   const [open, setOpen] = useState(false);
+
+  const alert = (() => {
+    if (!keyData) return null;
+    if (keyData.revoked)
+      return {
+        title: "Acesso encerrado",
+        body: "Sua key foi excluída ou desativada. Fale com o suporte para reativar.",
+      };
+    if (
+      !keyData.is_master &&
+      keyData.expires_at &&
+      new Date(keyData.expires_at).getTime() <= Date.now()
+    )
+      return {
+        title: "Acesso expirado",
+        body: "Sua key expirou. Fale com o suporte para renovar o acesso.",
+      };
+    return null;
+  })();
+
+  const totalUnread = unread + (alert ? 1 : 0);
 
   useEffect(() => {
     if (open && unread > 0) {
@@ -33,17 +56,17 @@ export function NotificationBell() {
       <Button
         variant="ghost"
         size="icon"
-        aria-label={`Notificações${unread > 0 ? ` (${unread} não lidas)` : ""}`}
+        aria-label={`Notificações${totalUnread > 0 ? ` (${totalUnread} não lidas)` : ""}`}
         onClick={() => setOpen(true)}
         className="w-10 h-10 rounded-2xl glass relative hover:bg-white/10"
       >
         <Bell className="w-4 h-4" />
-        {unread > 0 ? (
+        {totalUnread > 0 ? (
           <span
             className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-status-danger text-white text-[10px] font-bold flex items-center justify-center animate-pulse-soft"
             aria-hidden
           >
-            {unread > 9 ? "9+" : unread}
+            {totalUnread > 9 ? "9+" : totalUnread}
           </span>
         ) : (
           <span
@@ -63,7 +86,17 @@ export function NotificationBell() {
           </DialogHeader>
 
           <ScrollArea className="max-h-[60vh] px-6 pb-6">
-            {messages.length === 0 ? (
+            {alert && (
+              <div className="mb-3 rounded-2xl border border-status-danger/40 bg-status-danger/10 p-4 space-y-1.5 animate-fade-in">
+                <p className="text-sm font-semibold text-status-danger leading-tight">
+                  {alert.title}
+                </p>
+                <p className="text-xs text-status-danger/90 leading-relaxed">
+                  {alert.body}
+                </p>
+              </div>
+            )}
+            {messages.length === 0 && !alert ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Inbox className="w-8 h-8 mb-3 opacity-50" />
                 <p className="text-sm">Nenhuma mensagem ainda.</p>
