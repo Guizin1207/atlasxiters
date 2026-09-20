@@ -5,3 +5,6 @@
 - [x] Adicionar criação de chave diária de 1 dia.
 - [x] Adicionar criação de chave demo de 1 dia identificada.
 - [x] Validar os fluxos em tela e os testes do projeto.
+- [ ] Tornar o plano demo real no banco: hoje a chave demo é salva como Basic.
+- [ ] Criar e entregar uma chave demo funcional ao administrador.
+
