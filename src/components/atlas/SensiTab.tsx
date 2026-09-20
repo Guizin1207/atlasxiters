@@ -68,12 +68,8 @@ export function SensiTab() {
         throw new Error(message);
       }
       setResult(data);
-      setMessages((current) => [...current, { role: "ai", text: "Ajustei sua sensi para " + (inferredDevice || device || "seu aparelho") + ".
-
-Geral " + data.geral + " • Red Dot " + data.pontoVermelho + " • 2x " + data.mira2x + " • 4x " + data.mira4x + " • AWM " + data.miraAwm + " • Olhar Livre " + data.olharLivre + (data.notas?.length ? "
-
-" + data.notas.slice(0, 3).join("
-") : "") }]);
+      const notas = data.notas?.length ? "\n\n" + data.notas.slice(0, 3).join("\n") : "";
+      setMessages((current) => [...current, { role: "ai", text: `Ajustei sua sensi para ${inferredDevice || device || "seu aparelho"}.\n\nGeral ${data.geral} • Red Dot ${data.pontoVermelho} • 2x ${data.mira2x} • 4x ${data.mira4x} • AWM ${data.miraAwm} • Olhar Livre ${data.olharLivre}${notas}` }]);
     } catch (error) {
       console.error("sensi-ai", error);
       const message = error instanceof Error ? error.message : "Erro desconhecido.";
@@ -85,8 +81,7 @@ Geral " + data.geral + " • Red Dot " + data.pontoVermelho + " • 2x " + data.
 
   const copy = async () => {
     if (!result) return;
-    const txt = ["Sensibilidade Atlas VIP — " + (device || "Free Fire") + " (FF 2026)", "Geral: " + result.geral, "Ponto vermelho: " + result.pontoVermelho, "Mira 2x: " + result.mira2x, "Mira 4x: " + result.mira4x, "Mira AWM: " + result.miraAwm, "Olhar livre: " + result.olharLivre].join("
-");
+    const txt = ["Sensibilidade Atlas VIP — " + (device || "Free Fire") + " (FF 2026)", "Geral: " + result.geral, "Ponto vermelho: " + result.pontoVermelho, "Mira 2x: " + result.mira2x, "Mira 4x: " + result.mira4x, "Mira AWM: " + result.miraAwm, "Olhar livre: " + result.olharLivre].join("\n");
     try { await navigator.clipboard.writeText(txt); setCopied(true); toast.success("Sensi copiada"); setTimeout(() => setCopied(false), 1500); } catch { toast.error("Não foi possível copiar"); }
   };
 
