@@ -56,17 +56,17 @@ export function NotificationBell() {
       <Button
         variant="ghost"
         size="icon"
-        aria-label={`Notificações${unread > 0 ? ` (${unread} não lidas)` : ""}`}
+        aria-label={`Notificações${totalUnread > 0 ? ` (${totalUnread} não lidas)` : ""}`}
         onClick={() => setOpen(true)}
         className="w-10 h-10 rounded-2xl glass relative hover:bg-white/10"
       >
         <Bell className="w-4 h-4" />
-        {unread > 0 ? (
+        {totalUnread > 0 ? (
           <span
             className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-status-danger text-white text-[10px] font-bold flex items-center justify-center animate-pulse-soft"
             aria-hidden
           >
-            {unread > 9 ? "9+" : unread}
+            {totalUnread > 9 ? "9+" : totalUnread}
           </span>
         ) : (
           <span
