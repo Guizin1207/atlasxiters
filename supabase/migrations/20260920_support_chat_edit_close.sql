@@ -57,7 +57,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare rec public.support_threads;
+declare rec public.support_threads%rowtype;
 begin
   update public.support_threads t
      set closed_at = coalesce(closed_at, now()), updated_at = now()
@@ -80,7 +80,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare rec public.support_threads;
+declare rec public.support_threads%rowtype;
 begin
   perform public._require_admin(_password);
   update public.support_threads
