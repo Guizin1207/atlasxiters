@@ -11,7 +11,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare rec public.support_messages;
+declare rec public.support_messages%rowtype;
 begin
   update public.support_messages m
      set body = trim(_body), edited_at = now()
@@ -37,7 +37,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare rec public.support_messages;
+declare rec public.support_messages%rowtype;
 begin
   perform public._require_admin(_password);
   update public.support_messages
