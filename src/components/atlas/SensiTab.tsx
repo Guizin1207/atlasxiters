@@ -182,7 +182,8 @@ export function SensiTab() {
         },
       });
 
-      const normalized = normalizeSensiResult(data);\n      if (error || !normalized) {
+      const normalized = normalizeSensiResult(data);
+      if (error || !normalized) {
         const message = (data as { error?: string } | null)?.error || error?.message || "Resposta inválida da IA.";
         throw new Error(message);
       }
