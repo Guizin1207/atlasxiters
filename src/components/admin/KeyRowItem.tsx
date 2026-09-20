@@ -342,6 +342,18 @@ export function KeyRowItem({
         </DropdownMenu>
       </div>
 
+      {!data.is_master && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setDialog("expiration")}
+          className="mt-3 w-full rounded-xl border-status-danger/30 text-status-danger"
+        >
+          <CalendarClock className="mr-2 h-4 w-4" />
+          Expirar key
+        </Button>
+      )}
+
       {/* Dialog: plano e chave */}
       <Dialog open={dialog === "plan"} onOpenChange={(o) => !o && setDialog(null)}>
         <DialogContent className="rounded-3xl">
@@ -444,32 +456,6 @@ export function KeyRowItem({
               Cancelar
             </Button>
             <Button
-              variant="outline"
-              onClick={async () => {
-                const ok = await call(
-                  "admin_set_expiration",
-                  { _id: data.id, _expires_at: null },
-                  "Chave definida sem expiração"
-                );
-                if (ok) setDialog(null);
-              }}
-            >
-              Sem expiração
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                const ok = await call(
-                  "admin_set_expiration",
-                  { _id: data.id, _expires_at: new Date(Date.now() - 1000).toISOString() },
-                  "Chave expirada agora"
-                );
-                if (ok) setDialog(null);
-              }}
-            >
-              Expirar agora
-            </Button>
-            <Button
               className="bg-white text-black hover:bg-white/90"
               onClick={async () => {
                 const ok = await call(
@@ -510,6 +496,32 @@ export function KeyRowItem({
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialog(null)}>
               Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const ok = await call(
+                  "admin_set_expiration",
+                  { _id: data.id, _expires_at: null },
+                  "Chave definida sem expiração"
+                );
+                if (ok) setDialog(null);
+              }}
+            >
+              Sem expiração
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                const ok = await call(
+                  "admin_set_expiration",
+                  { _id: data.id, _expires_at: new Date(Date.now() - 1000).toISOString() },
+                  "Chave expirada agora"
+                );
+                if (ok) setDialog(null);
+              }}
+            >
+              Expirar agora
             </Button>
             <Button
               className="bg-white text-black hover:bg-white/90"
