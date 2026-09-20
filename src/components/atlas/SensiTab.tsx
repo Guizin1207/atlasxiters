@@ -54,7 +54,18 @@ function inferDevice(text: string) {
   return text.match(/(?:iphone|ipad|redmi|poco|samsung|galaxy|motorola|moto|realme|infinix|tecno|xiaomi|oppo|vivo|asus|rog|zenfone|honor|oneplus|nothing|google\s+pixel)[^,.!?]*/i)?.[0]?.trim() || "";
 }
 
-function detectDeviceFromBrowser() {\n  if (typeof navigator === "undefined") return "";\n  const ua = navigator.userAgent || "";\n  const platform = /iPhone|iPad|iPod/i.test(ua) ? "iPhone" : "";\n  if (platform) return platform;\n  const android = ua.match(/Android[^;)]*;\\s*(?:[a-z]{2}-[A-Z]{2};\\s*)?([^;)]+?)(?:\\s+Build\\/[^;)]+)?[;)]/i);\n  if (android?.[1]) return android[1].trim();\n  return "";\n}\n\nfunction formatDevice(device: string) {
+function detectDeviceFromBrowser() {
+  if (typeof navigator === "undefined") return "";
+  const ua = navigator.userAgent || "";
+  if (/iPad/i.test(ua)) return "iPad";
+  if (/iPod/i.test(ua)) return "iPod";
+  if (/iPhone/i.test(ua)) return "iPhone";
+  const android = ua.match(/Android[^;)]*;\s*(?:[a-z]{2}-[A-Z]{2};\s*)?([^;)]+?)(?:\s+Build\/[^;)]+)?[;)]/i);
+  if (android?.[1]) return android[1].trim();
+  return "";
+}
+\nfunction formatDevice(device: string) {
+
   return device
     .replace(/\s+/g, " ")
     .replace(/^./, (char) => char.toUpperCase())
@@ -99,6 +110,20 @@ export function SensiTab() {
       pixelRatio: Number(window.devicePixelRatio.toFixed(2)),
     };
   }, []);
+
+  useEffect(() => {
+    const detected = detectDeviceFromBrowser();
+    if (detected && !device) {
+      setDevice(detected);
+      setMessages((current) => [
+        {
+          role: "ai",
+          text: `Aparelho detectado: ${formatDevice(detected)}. Escolha Mais capa, Mais controle, Rush ou AWM.`,
+        },
+        ...current.slice(1),
+      ]);
+    }
+  }, [device]);
 
   useEffect(() => {
     document.getElementById("sensi-message")?.focus();
