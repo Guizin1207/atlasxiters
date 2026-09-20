@@ -60,20 +60,23 @@ Deno.serve(async (req) => {
     const chat = Array.isArray(body?.chat) ? body.chat.slice(-8).filter((m: unknown) => m && typeof m === "object") : [];
     const device = typeof body?.device === "string" ? body.device.trim().slice(0, 100) : "";
     const dpi = Number(body?.dpi);
-    const fingers = Number(body?.fingers);
     const isIOS = /iphone|ipad|ipod/i.test(device);
-    const style = body?.style as SensiStyle;
-    const refreshRate = Number(body?.refreshRate);
-    const ram = typeof body?.ram === "string" ? body.ram : "6-8";
-    const deviceAge = Number(body?.deviceAge);
+    // Campos opcionais: usa padrões seguros em vez de recusar o pedido.
+    const fingers = [2, 3, 4].includes(Number(body?.fingers)) ? Number(body?.fingers) : 3;
+    const style: SensiStyle = ["precisao", "equilibrado", "agressivo"].includes(body?.style)
+      ? (body.style as SensiStyle)
+      : "equilibrado";
+    const refreshRate = [60, 90, 120].includes(Number(body?.refreshRate)) ? Number(body?.refreshRate) : 90;
+    const ram = ["3-4", "6-8", "12+"].includes(body?.ram) ? (body.ram as string) : "6-8";
+    const deviceAge = [0, 1, 2, 3].includes(Number(body?.deviceAge)) ? Number(body?.deviceAge) : 1;
     const screen = body?.screen && typeof body.screen === "object" ? body.screen as Record<string, unknown> : {};
     const screenWidth = Number(screen.width);
     const screenHeight = Number(screen.height);
     const screenRatio = typeof screen.ratio === "string" ? screen.ratio.slice(0, 8) : "não informada";
     const pixelRatio = Number(screen.pixelRatio);
 
-    if (!device || ![2, 3, 4].includes(fingers) || !["precisao", "equilibrado", "agressivo"].includes(style) || ![60, 90, 120].includes(refreshRate) || !["3-4", "6-8", "12+"].includes(ram) || ![0, 1, 2, 3].includes(deviceAge)) {
-      return new Response(JSON.stringify({ error: "Dados de sensibilidade inválidos." }), {
+    if (!device) {
+      return new Response(JSON.stringify({ error: "Informe o modelo do aparelho para calibrar." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
