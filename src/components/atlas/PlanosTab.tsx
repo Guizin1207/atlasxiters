@@ -39,6 +39,9 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const currentPlan = keyData?.is_master ? "master" : ((keyData?.plan as PlanId) ?? "basic");
   const currentIdx = PLAN_ORDER.indexOf(currentPlan);
   const isDemo = currentPlan === "demo";
+  // O acesso demo pode ter prazo ou não: a redação acompanha a chave real.
+  const demoHasExpiry = Boolean(keyData?.expires_at);
+  const demoTagline = demoHasExpiry ? "Acesso demo com prazo" : "Acesso demo ilimitado";
 
   const load = useCallback(async () => {
     if (!keyData) return;
@@ -106,7 +109,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
           <p className="text-lg font-bold">{getPlan(currentPlan).name}</p>
         </div>
         <span className="text-xs text-muted-foreground">
-          {getPlan(currentPlan).tagline}
+          {currentPlan === "demo" ? demoTagline : getPlan(currentPlan).tagline}
         </span>
       </div>
 
@@ -114,7 +117,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
         {PLANS.map((p, idx) => {
           const Icon = ICONS[p.id];
           const isCurrent = p.id === currentPlan;
-          const isUpgrade = !isDemo && idx > currentIdx;
+          const isUpgrade = idx > currentIdx;
           const isPending = pending(p.id);
 
           return (
@@ -134,7 +137,9 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   </div>
                   <div>
                     <p className="font-bold leading-tight">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.tagline}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {p.id === "demo" ? demoTagline : p.tagline}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
@@ -152,7 +157,10 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
               </div>
 
               <ul className="space-y-1.5">
-                {p.perks.map((perk) => (
+                {(p.id === "demo" && demoHasExpiry
+                  ? p.perks.filter((perk) => perk !== "Sem expiração")
+                  : p.perks
+                ).map((perk) => (
                   <li
                     key={perk}
                     className="flex items-center gap-2 text-xs text-muted-foreground"
