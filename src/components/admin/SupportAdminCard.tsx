@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
+import { ReceiptImage } from "@/components/atlas/ReceiptImage";
+import { isReceiptBody, receiptRef } from "@/lib/receipts";
 
 type Thread = { id: string; key_id: string; key: string; updated_at: string };
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
