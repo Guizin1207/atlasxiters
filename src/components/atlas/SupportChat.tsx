@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useKey } from "@/lib/key-context";
+import { ReceiptImage } from "@/components/atlas/ReceiptImage";
+import { RECEIPT_BUCKET, RECEIPT_EXTENSIONS, RECEIPT_MAX_BYTES, RECEIPT_PREFIX, isReceiptBody, receiptRef } from "@/lib/receipts";
 
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
-
-const RECEIPT_PREFIX = "[[receipt]]";
 const QUICK_OPTIONS = [
   ["🔑 Não recebi minha key.", "🔑 Não recebi minha key."],
   ["💰 Enviei o Pix.", "💰 Enviei o Pix."],
