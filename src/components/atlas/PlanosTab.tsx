@@ -29,7 +29,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     }, 0);
   };
 
-  const pixKey = "f5d026cb-067b-4172-8035-f3abee88ae6a";
+  const pixKey = "38998816357";
   const merchantName = "ATLAS VIP";
   const merchantCity = "SAO PAULO";
 
