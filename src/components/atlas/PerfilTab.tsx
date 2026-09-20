@@ -1,5 +1,4 @@
 import { LogOut, Copy, Check, Crown, MessageCircle, ArrowLeft } from "lucide-react";
-import { SUPPORT_URL, SUPPORT_LABEL } from "@/lib/atlas-config";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,7 @@ import { cn } from "@/lib/utils";
 /**
  * Aba "Perfil" — chave (mascarada/copiável), dispositivo, contador regressivo ao vivo.
  */
-export function PerfilTab() {
+export function PerfilTab({ onSupport }: { onSupport: () => void }) {
   const { keyData, signOut, device, adminPreview, closeAdminPanel } = useKey();
   const navigate = useNavigate();
   useTicker(1000); // re-render a cada segundo p/ contador
@@ -126,15 +125,14 @@ export function PerfilTab() {
       )}
 
       {!adminPreview && (
-        <a
-          href={SUPPORT_URL}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          type="button"
+          onClick={onSupport}
           className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
         >
           <MessageCircle className="w-4 h-4" />
-          {SUPPORT_LABEL}
-        </a>
+          Falar com suporte
+        </button>
       )}
 
       <Button
