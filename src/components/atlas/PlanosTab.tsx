@@ -3,7 +3,7 @@
  * O pedido fica registrado para o admin e abre o WhatsApp com a mensagem pronta.
  */
 import { useCallback, useEffect, useState } from "react";
-import { Check, Crown, Loader2, Sparkles, Zap } from "lucide-react";
+import { Check, Crown, FlaskConical, Loader2, Sparkles, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,7 @@ type Request = {
 };
 
 const ICONS: Record<PlanId, typeof Zap> = {
+  demo: FlaskConical,
   basic: Zap,
   pro: Sparkles,
   master: Crown,
@@ -36,7 +37,8 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const [busy, setBusy] = useState<PlanId | null>(null);
 
   const currentPlan = keyData?.is_master ? "master" : ((keyData?.plan as PlanId) ?? "basic");
-  const currentIdx = PLAN_ORDER.indexOf(currentPlan);\n  const isDemo = currentPlan === "demo";
+  const currentIdx = PLAN_ORDER.indexOf(currentPlan);
+  const isDemo = currentPlan === "demo";
 
   const load = useCallback(async () => {
     if (!keyData) return;
