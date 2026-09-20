@@ -24,7 +24,7 @@ export type SensiResult = {
   olharLivre: number;
   dpiRecomendado: number;
   precisaoEstimada: number; // %
-  notas: string[];
+  resposta: string;
 };
 
 function hash(str: string) {
