@@ -1,13 +1,12 @@
 import { LayoutGrid, SlidersHorizontal, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AtlasTab = "funcoes" | "ajustes" | "perfil" | "suporte";
+export type AtlasTab = "funcoes" | "ajustes" | "perfil";
 
 const TABS: { id: AtlasTab; label: string; icon: typeof LayoutGrid }[] = [
   { id: "funcoes", label: "Funções", icon: LayoutGrid },
   { id: "ajustes", label: "Ajustes", icon: SlidersHorizontal },
   { id: "perfil", label: "Perfil", icon: UserRound },
-  { id: "suporte", label: "Suporte", icon: },
 ];
 
 export function TabsNav({
