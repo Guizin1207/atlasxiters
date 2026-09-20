@@ -2,7 +2,7 @@
  * Card /admin — pedidos de upgrade de plano feitos pelos usuários.
  */
 import { useCallback, useEffect, useState } from "react";
-import { ArrowUpCircle, Check, Loader2, RefreshCw, X } from "lucide-react";
+import { ArrowUpCircle, Check, Loader2, RefreshCw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +65,7 @@ export function UpgradeRequestsCard() {
   };
 
   const pending = items.filter((i) => i.status === "pending");
-  const done = items.filter((i) => i.status !== "pending").slice(0, 10);
+  const done = items.filter((i) => i.status !== "pending").slice(0, 10);\n\n  const clearHistory = () => {\n    setItems((current) => current.filter((item) => item.status === "pending"));\n    toast.success("Histórico limpo da tela");\n  };
 
   return (
     <section className="glass-strong rounded-3xl p-6 space-y-5">
