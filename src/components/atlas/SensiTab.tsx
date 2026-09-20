@@ -42,53 +42,33 @@ export function SensiTab() {
   const [refreshRate, setRefreshRate] = useState<60 | 90 | 120>(90);
   const [ram, setRam] = useState<"3-4" | "6-8" | "12+">("6-8");
   const [deviceAge, setDeviceAge] = useState(1);
+  const [messages, setMessages] = useState<Array<{ role: "ai" | "user"; text: string }>>([
+    { role: "ai", text: "Fala! Sou a Sensi AI do Atlas VIP. Me diga seu aparelho e o que você quer ajustar que eu monto e ajusto sua sensibilidade para Free Fire 2026." },
+  ]);
+  const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<SensiResult | null>(null);
-  const [aiMode, setAiMode] = useState<"analisando" | "pronto">("pronto");
   const [copied, setCopied] = useState(false);
-  const isIOS = /iphone|ipad|ipod/i.test(device);
 
-  const run = async () => {
-    if (!device.trim()) {
-      toast.error("Informe o modelo do aparelho");
-      return;
-    }
-
+  const send = async () => {
+    const question = input.trim();
+    if (!question || busy) return;
+    const next = [...messages, { role: "user" as const, text: question }];
+    setMessages(next);
+    setInput("");
     setBusy(true);
-    setAiMode("analisando");
-    setResult(null);
-
-    const generateLocal = async () => {
-      const { generateSensi } = await import("@/lib/atlas-sensi");
-      return generateSensi({ device, dpi, fingers, style, refreshRate, ram, deviceAge });
-    };
-
+    const inferredDevice = device || question.match(/(?:iphone|ipad|redmi|poco|samsung|galaxy|motorola|moto|realme|infinix|tecno|xiaomi|oppo|vivo)[^,.!?]*/i)?.[0] || "";
+    if (inferredDevice && !device) setDevice(inferredDevice);
     try {
       const { data, error } = await supabase.functions.invoke("sensi-ai", {
-        body: { device, dpi, fingers, style, refreshRate, ram, deviceAge },
+        body: { device: inferredDevice || device || "aparelho não informado", dpi, fingers, style, refreshRate, ram, deviceAge, chat: next.slice(-8), question },
       });
-
-      if (!error && isSensiResult(data)) {
-        setResult(data);
-        setAiMode("pronto");
-        toast.success("Perfil IA analisado");
-        return;
-      }
-
-      const fallback = await generateLocal();
-      setResult(fallback);
-      setAiMode("pronto");
-      toast.success("Perfil inteligente gerado", {
-        description: "Configuração personalizada para o seu aparelho e estilo.",
-      });
+      if (error || !isSensiResult(data)) throw error ?? new Error("Resposta inválida");
+      setResult(data);
+      setMessages((current) => [...current, { role: "ai", text: "Pronto. Ajustei sua configuração. Geral " + data.geral + " • Red Dot " + data.pontoVermelho + " • 2x " + data.mira2x + " • 4x " + data.mira4x + " • AWM " + data.miraAwm + " • Olhar Livre " + data.olharLivre + (data.notas?.[0] ? "\n\n" + data.notas[0] : "") }]);
     } catch (error) {
       console.error("sensi-ai", error);
-      const fallback = await generateLocal();
-      setResult(fallback);
-      setAiMode("pronto");
-      toast.success("Perfil inteligente gerado", {
-        description: "Configuração calculada pelo motor do Atlas para o seu aparelho.",
-      });
+      setMessages((current) => [...current, { role: "ai", text: "Não consegui gerar agora. Tente novamente em alguns segundos." }]);
     } finally {
       setBusy(false);
     }
@@ -96,196 +76,24 @@ export function SensiTab() {
 
   const copy = async () => {
     if (!result) return;
-    const txt = [
-      `Sensibilidade Atlas VIP — ${device} (FF 2026)`,
-      `Geral: ${result.geral}`,
-      `Ponto vermelho: ${result.pontoVermelho}`,
-      `Mira 2x: ${result.mira2x}`,
-      `Mira 4x: ${result.mira4x}`,
-      `Mira AWM: ${result.miraAwm}`,
-      `Olhar livre: ${result.olharLivre}`,
-      ...(isIOS ? [] : [`DPI recomendado: ${result.dpiRecomendado}`]),
-    ].join("\n");
-    try {
-      await navigator.clipboard.writeText(txt);
-      setCopied(true);
-      toast.success("Sensibilidade copiada");
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      toast.error("Não foi possível copiar");
-    }
+    const txt = ["Sensibilidade Atlas VIP — " + (device || "Free Fire") + " (FF 2026)", "Geral: " + result.geral, "Ponto vermelho: " + result.pontoVermelho, "Mira 2x: " + result.mira2x, "Mira 4x: " + result.mira4x, "Mira AWM: " + result.miraAwm, "Olhar livre: " + result.olharLivre].join("\n");
+    try { await navigator.clipboard.writeText(txt); setCopied(true); toast.success("Sensi copiada"); setTimeout(() => setCopied(false), 1500); } catch { toast.error("Não foi possível copiar"); }
   };
 
   return (
-    <section aria-label="Gerador de sensibilidade" className="space-y-5">
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-transparent p-5">
-        <div className="flex items-center gap-3 mb-3">
+    <section aria-label="Chat de sensibilidade" className="space-y-4">
+      <div className="glass-strong rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-white/10 flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-white text-black flex items-center justify-center"><Sparkles className="w-5 h-5" /></div>
-          <div>
-            <p className="vip-eyebrow mb-1">ATLAS VIP • FREE FIRE 2026</p>
-            <h2 className="text-xl font-bold">Gerador de Sensi PRO</h2>
-          </div>
+          <div><p className="vip-eyebrow">ATLAS VIP • SENSI AI</p><h2 className="text-lg font-bold">Especialista em Sensi FF 2026</h2></div>
         </div>
-        <p className="text-sm text-muted-foreground">Configure seu aparelho e estilo para gerar uma sensibilidade personalizada para Free Fire 2026.</p>
-        <div className="grid grid-cols-2 gap-2 mt-4">
-          {[
-            [Smartphone, "Aparelho"],
-            [Crosshair, "Mira"],
-            [Gauge, "Controle"],
-            [Zap, "Resposta"],
-          ].map(([Icon, label]) => <div key={label as string} className="rounded-xl bg-white/5 p-3 text-xs"><Icon className="w-4 h-4 mb-2" /><span>{label as string}</span></div>)}
+        <div className="p-4 space-y-3 max-h-[460px] overflow-y-auto">
+          {messages.map((message, index) => <div key={index} className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}><div className={cn("max-w-[88%] rounded-2xl px-4 py-3 text-sm whitespace-pre-line", message.role === "user" ? "bg-white text-black rounded-br-md" : "bg-white/5 border border-white/10 rounded-bl-md")}>{message.text}</div></div>)}
+          {busy && <div className="flex justify-start"><div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Analisando sua sensi…</div></div>}
         </div>
+        {result && <div className="mx-4 mb-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4"><div className="flex items-center justify-between mb-3"><span className="vip-eyebrow">CONFIGURAÇÃO ATUAL</span><Button variant="ghost" size="sm" onClick={copy} className="h-8 px-3 rounded-lg text-xs">{copied ? <Check className="w-3.5 h-3.5 mr-1.5" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />} Copiar</Button></div><div className="grid grid-cols-2 gap-x-4 gap-y-2">{[["Geral", result.geral], ["Red Dot", result.pontoVermelho], ["2x", result.mira2x], ["4x", result.mira4x], ["AWM", result.miraAwm], ["Olhar Livre", result.olharLivre]].map(([label, value]) => <div key={label as string} className="flex justify-between text-sm"><span className="text-muted-foreground">{label}</span><b className="font-mono">{value as number}</b></div>)}</div></div>}
+        <div className="p-3 border-t border-white/10"><div className="flex gap-2"><Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void send(); }} placeholder="Ex: meu iPhone 13 está puxando muito..." className="rounded-xl bg-white/5 border-white/10 h-11" /><Button onClick={() => void send()} disabled={busy || !input.trim()} className="h-11 w-11 p-0 rounded-xl bg-white text-black"><Sparkles className="w-4 h-4" /></Button></div><p className="text-[10px] text-muted-foreground mt-2 px-1">Peça “mais capa”, “mais controle”, “rush”, “AWM” ou informe seu aparelho.</p></div>
       </div>
-
-      <div className="glass-strong rounded-2xl p-5 space-y-4">
-        <label className="block">
-          <span className="vip-eyebrow block mb-2">Aparelho</span>
-          <Input
-            value={device}
-            onChange={(e) => setDevice(e.target.value)}
-            placeholder="Ex: Redmi Note 12"
-            className="rounded-xl bg-white/5 border-white/10 h-11"
-          />
-        </label>
-
-        <div className={cn("grid gap-3", isIOS ? "grid-cols-1" : "grid-cols-2")}>
-          <label className={cn("block", isIOS && "hidden")}>
-            <span className="vip-eyebrow block mb-2">DPI do aparelho (Android)</span>
-            <Input
-              type="number"
-              min={180}
-              max={900}
-              value={dpi}
-              onChange={(e) =>
-                setDpi(Math.max(180, Math.min(900, Number(e.target.value) || 480)))
-              }
-              className="rounded-xl bg-white/5 border-white/10 h-11"
-            />
-          </label>
-          <div>
-            <span className="vip-eyebrow block mb-2">Dedos</span>
-            <div className="grid grid-cols-3 gap-1.5">
-              {([2, 3, 4] as const).map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setFingers(f)}
-                  className={cn(
-                    "h-11 rounded-xl text-xs font-bold border transition-colors",
-                    fingers === f
-                      ? "bg-white text-black border-white"
-                      : "bg-white/5 border-white/10 text-muted-foreground"
-                  )}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          <div><span className="vip-eyebrow block mb-2">Tela</span><select value={refreshRate} onChange={(e) => setRefreshRate(Number(e.target.value) as 60 | 90 | 120)} className="w-full h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm"><option value={60}>60 Hz</option><option value={90}>90 Hz</option><option value={120}>120 Hz</option></select></div>
-          <div><span className="vip-eyebrow block mb-2">RAM</span><select value={ram} onChange={(e) => setRam(e.target.value as typeof ram)} className="w-full h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm"><option value="3-4">3–4 GB</option><option value="6-8">6–8 GB</option><option value="12+">12+ GB</option></select></div>
-          <div><span className="vip-eyebrow block mb-2">Idade</span><select value={deviceAge} onChange={(e) => setDeviceAge(Number(e.target.value))} className="w-full h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm"><option value={0}>Novo</option><option value={1}>1 ano</option><option value={2}>2 anos</option><option value={3}>3+ anos</option></select></div>
-        </div>
-
-        <div>
-          <span className="vip-eyebrow block mb-2">Estilo de jogo</span>
-          <div className="grid grid-cols-3 gap-2">
-            {STYLES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setStyle(s.id)}
-                className={cn(
-                  "h-11 rounded-xl text-[11px] font-semibold uppercase tracking-[0.1em] border transition-colors",
-                  style === s.id
-                    ? "bg-white text-black border-white"
-                    : "bg-white/5 border-white/10 text-muted-foreground"
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <Button
-          onClick={run}
-          disabled={busy}
-          className="w-full h-12 rounded-2xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em]"
-        >
-          {busy ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Sparkles className="w-4 h-4 mr-2" />
-          )}
-          {busy ? "IA analisando aparelho…" : "Analisar com IA"}
-        </Button>
-      </div>
-
-      {result && (
-        <div className="glass-strong rounded-2xl p-5 space-y-4 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <p className="vip-eyebrow">SENSIBILIDADE GERADA</p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={copy}
-              className="h-8 px-3 rounded-lg text-xs"
-            >
-              {copied ? (
-                <Check className="w-3.5 h-3.5 mr-1.5 text-status-active" />
-              ) : (
-                <Copy className="w-3.5 h-3.5 mr-1.5" />
-              )}
-              Copiar
-            </Button>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex items-center gap-2 mb-3"><ShieldCheck className="w-4 h-4" /><span className="text-xs font-semibold">CONFIGURAÇÃO • {device}</span></div>
-            <div className="space-y-2.5">
-            <Bar label="Geral" value={result.geral} />
-            <Bar label="Ponto vermelho" value={result.pontoVermelho} />
-            <Bar label="Mira 2x" value={result.mira2x} />
-            <Bar label="Mira 4x" value={result.mira4x} />
-            <Bar label="Mira AWM" value={result.miraAwm} />
-            <Bar label="Olhar livre" value={result.olharLivre} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {!isIOS && (
-              <div className="rounded-xl bg-white/5 px-3 py-3">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                  DPI recomendado
-                </p>
-                <p className="font-mono font-bold">{result.dpiRecomendado}</p>
-              </div>
-            )}
-            <div className="rounded-xl bg-white/5 px-3 py-3">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                COMPATIBILIDADE DO PERFIL
-              </p>
-              <p className="font-mono font-bold text-status-active">
-                {result.precisaoEstimada}%
-              </p>
-              <p className="text-[10px] text-muted-foreground mt-1">referência calculada pelo gerador</p>
-            </div>
-          </div>
-
-          <ul className="space-y-2">
-            {result.notas.map((n, i) => (
-              <li key={i} className="text-xs text-muted-foreground flex gap-2">
-                <span className="text-foreground">•</span>
-                {n}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </section>
   );
 }
