@@ -20,7 +20,7 @@ export function FuncoesTab() {
 
   const plan = keyData?.is_master ? "master" : keyData?.plan ?? "basic";
   const active = settings.functions ?? {};
-  const visiveis = functions.filter((f) => f.visible !== false);
+  const visiveis = functions.filter((f) => f.visible !== false && !f.id.toLowerCase().includes("esp") && !f.name.toLowerCase().includes("esp"));
   const liberadas = visiveis.filter((f) => planAllows(plan, f.minPlan));
 
   if (loading || loadingFunctions) {
