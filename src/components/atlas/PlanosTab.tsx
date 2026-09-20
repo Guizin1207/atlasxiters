@@ -168,7 +168,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
                 >
                   {busy === p.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  `Fazer upgrade • ${p.price}`
+                  Fazer upgrade • {p.price}
                 </Button>
               )}
 
