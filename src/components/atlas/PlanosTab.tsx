@@ -2,11 +2,9 @@
  * Aba "Planos" — mostra o plano atual e permite adquirir um plano pago.
  * O pedido fica registrado para o admin e abre o WhatsApp com a mensagem pronta.
  */
-import { useCallback, useEffect, useState } from "react";
-import { Check, Crown, FlaskConical, Loader2, Sparkles, Zap } from "lucide-react";
-import { toast } from "sonner";
+
+import { Check, Crown, FlaskConical, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useKey } from "@/lib/key-context";
 import { PLANS, getPlan, upgradeWhatsAppUrl, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
@@ -27,52 +25,12 @@ const ICONS: Record<PlanId, typeof Zap> = {
 
 export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const { keyData } = useKey();
-  const [requests, setRequests] = useState<Request[]>([]);
-  const [busy, setBusy] = useState<PlanId | null>(null);
-
   const currentPlan: PlanId = keyData?.is_master
     ? "master"
     : ((keyData?.plan as PlanId) ?? "basic");
   const isDemo = currentPlan === "demo";
   const demoHasExpiry = Boolean(keyData?.expires_at);
   const demoTagline = demoHasExpiry ? "Acesso demo com prazo" : "Acesso demo ilimitado";
-
-  const load = useCallback(async () => {
-    if (!keyData) return;
-    const { data } = await supabase.rpc("list_my_upgrade_requests", { _key: keyData.key });
-    setRequests((data ?? []) as unknown as Request[]);
-  }, [keyData]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  const pending = (plan: PlanId) =>
-    requests.some((r) => r.requested_plan === plan && r.status === "pending");
-
-  const request = async (plan: PlanId) => {
-    if (!keyData) return;
-
-    setBusy(plan);
-    const { error } = await supabase.rpc("request_upgrade", {
-      _key: keyData.key,
-      _plan: plan,
-      _message: null,
-    });
-    setBusy(null);
-
-    if (error && !error.message.includes("already_pending")) {
-      toast.error("Não foi possível registrar o pedido", {
-        description: error.message,
-      });
-      return;
-    }
-
-    await load();
-
-    const whatsappUrl = upgradeWhatsAppUrl(keyData.key, plan, currentPlan);
-    window.location.href = whatsappUrl;
-  };
 
   if (!keyData) return null;
 
@@ -153,21 +111,12 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
               </ul>
 
               {isAvailable && (
-                <div className="space-y-2">
-                  <Button
-                    onClick={() => request(p.id)}
-                    disabled={busy === p.id}
-                    className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
-                  >
-                    {busy === p.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Adquirir plano {p.name} • {p.price}
-                  </Button>
-                  {pending(p.id) && (
-                    <p className="text-[11px] text-status-warning">
-                      Pedido em análise pelo administrador.
-                    </p>
-                  )}
-                </div>
+                <Button
+                  onClick={() => { window.location.href = upgradeWhatsAppUrl(keyData.key, p.id, currentPlan); }}
+                  className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
+                >
+                  Adquirir plano {p.name} • {p.price}
+                </Button>
               )}
             </div>
           );
