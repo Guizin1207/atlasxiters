@@ -21,7 +21,6 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const { keyData } = useKey();
   const [paying, setPaying] = useState<PlanId | null>(null);
   const [pixPlan, setPixPlan] = useState<PlanId | null>(null);
-  const [pixPlan, setPixPlan] = useState<PlanId | null>(null);
 
   const startPayment = (plan: PlanId) => {
     if (plan === "demo") return;
