@@ -1,6 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createOpenAI } from "npm:@ai-sdk/openai";
-import { generateText } from "npm:ai";
+import { streamText } from "npm:ai";
 import {
   createLovableAiGatewayRunIdFetch,
   getLovableAiGatewayRunId,
@@ -53,6 +53,11 @@ Deno.serve(async (req) => {
     const refreshRate = Number(body?.refreshRate);
     const ram = typeof body?.ram === "string" ? body.ram : "6-8";
     const deviceAge = Number(body?.deviceAge);
+    const screen = body?.screen && typeof body.screen === "object" ? body.screen as Record<string, unknown> : {};
+    const screenWidth = Number(screen.width);
+    const screenHeight = Number(screen.height);
+    const screenRatio = typeof screen.ratio === "string" ? screen.ratio.slice(0, 8) : "não informada";
+    const pixelRatio = Number(screen.pixelRatio);
 
     if (!device || ![2, 3, 4].includes(fingers) || !["precisao", "equilibrado", "agressivo"].includes(style) || ![60, 90, 120].includes(refreshRate) || !["3-4", "6-8", "12+"].includes(ram) || ![0, 1, 2, 3].includes(deviceAge)) {
       return new Response(JSON.stringify({ error: "Dados de sensibilidade inválidos." }), {
@@ -85,9 +90,12 @@ Dados do jogador:
 - taxa de atualização: ${refreshRate} Hz
 - RAM: ${ram} GB
 - idade aproximada: ${deviceAge === 0 ? "novo" : `${deviceAge} ano(s)`}
+- tela CSS detectada: ${Number.isFinite(screenWidth) && Number.isFinite(screenHeight) ? `${screenWidth}x${screenHeight}` : "não informada"}
+- proporção detectada: ${screenRatio}:1
+- densidade lógica detectada: ${Number.isFinite(pixelRatio) ? pixelRatio : "não informada"}
 
 REGRAS IMPORTANTES:
-1. Use o nome/modelo do aparelho como fator principal. Se o modelo for conhecido, adapte a configuração à sua tela, proporção, resposta de toque, desempenho e taxa de atualização; não use uma tabela fixa universal.
+1. Use o nome/modelo do aparelho como fator principal. Se o modelo for conhecido, adapte a configuração à sua tela, proporção, resposta de toque, desempenho e taxa de atualização; não use uma tabela fixa universal. Use a proporção detectada apenas como pista complementar, pois ela pode refletir a janela do navegador.
 1.2. Se o usuário pedir ajuste em uma sensibilidade anterior, trate os valores atuais e a mensagem como contexto e altere somente o necessário.
 1.1. Use RAM, taxa de atualização e idade como fatores de estabilidade/performance; não trate RAM isoladamente como potência real do aparelho. Considere de forma aproximada tela, proporção, fluidez, resposta de toque e capacidade do aparelho quando essas características forem conhecidas. Não invente especificações.
 2. A configuração deve ser específica para Free Fire 2026 e coerente entre Geral, Ponto Vermelho, 2x, 4x, AWM e Olhar livre.
@@ -96,7 +104,7 @@ REGRAS IMPORTANTES:
 5. Para Android, use DPI apenas como fator secundário e respeite o DPI informado. Não trate DPI como garantia de capa.
 6. Priorize controle de arrasto, estabilidade da mira e resposta em curta/média distância. Não prometa porcentagem real de headshot.
 7. Gere uma configuração de nível PRO, mas realista: evite números redondos demais e ajuste cada mira de forma independente. Pense em controle de arrasto, microajuste, estabilidade no spray, velocidade de troca de alvo, combate curto e médio e precisão com AWM.
-8. Além dos valores, as notas devem explicar de forma específica o perfil criado para este aparelho e dar 2 a 3 instruções práticas de uso. Não diga apenas "teste no treinamento".
+8. Além dos valores, as notas devem explicar de forma específica o perfil criado para este aparelho, citar como a tela/proporção influenciou quando isso for confiável e dar 2 a 3 instruções práticas de uso. Não diga apenas "teste no treinamento".
 9. A configuração deve parecer feita sob medida para o modelo informado, sem prometer que ela garante capa ou vitória.
 10. Responda ao pedido atual da conversa, podendo explicar o ajuste nas notas. Não ignore a pergunta do usuário.
 
@@ -120,20 +128,22 @@ Responda SOMENTE com JSON válido, sem markdown, neste formato:
 
 Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 a 720 e precisão estimada de 1 a 99. Mantenha a diferença entre miras coerente com o aparelho e o estilo. A precisão estimada é apenas um índice heurístico de adequação, nunca uma promessa de desempenho.`;
 
-    const result = await generateText({
+    const result = streamText({
       model: lovable.responses("openai/gpt-6-astra"),
-      maxOutputTokens: 900,
       prompt,
       abortSignal: req.signal,
       providerOptions: {
         openai: {
+          forceReasoning: true,
           store: false,
           reasoningEffort: "low",
+          reasoningSummary: "auto",
+          include: ["reasoning.encrypted_content"],
         },
       },
     });
 
-    const text = result.text.trim().replace(/^\`\`\`json\s*/i, "").replace(/\s*\`\`\`$/i, "");
+    const text = (await result.text).trim().replace(/^\`\`\`json\s*/i, "").replace(/\s*\`\`\`$/i, "");
     const parsed = JSON.parse(text) as Record<string, unknown>;
     const sensi = cleanResult(parsed, isIOS);
 

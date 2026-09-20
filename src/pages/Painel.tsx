@@ -40,12 +40,12 @@ export default function PainelPage() {
 
   return (
     <main className="min-h-screen pb-32">
-      <div className="max-w-md mx-auto px-5 pt-6">
+      <div className="mx-auto max-w-md px-3.5 pt-4 min-[390px]:px-5 min-[390px]:pt-6">
         <PanelHeader />
 
         <TabsNav value={tab} onChange={setTab} />
 
-        <div className="mt-6 animate-fade-in" key={tab}>
+        <div className="mt-4 animate-fade-in min-[390px]:mt-6" key={tab}>
           {tab === "funcoes" && <FuncoesTab />}
           {tab === "sensi" && <SensiTab />}
           {tab === "ajustes" && <AjustesTab />}
