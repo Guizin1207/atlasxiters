@@ -16,6 +16,7 @@ import { InjectButton } from "@/components/atlas/InjectButton";
 import { MaintenanceModal } from "@/components/MaintenanceModal";
 import { ExpiredKeyModal } from "@/components/ExpiredKeyModal";
 import { SupportChat } from "@/components/atlas/SupportChat";
+import { RecompensaTab } from "@/components/atlas/RecompensaTab";
 
 export default function PainelPage() {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ export default function PainelPage() {
         <div className="mt-4 animate-fade-in min-[390px]:mt-6" key={tab}>
           {tab === "funcoes" && <FuncoesTab />}
           {tab === "ajustes" && <AjustesTab />}
-          {tab === "perfil" && <PerfilTab />}
+          {tab === "perfil" && <PerfilTab />}\n          {tab === "recompensa" && <RecompensaTab />}
 
         </div>
       </div>
