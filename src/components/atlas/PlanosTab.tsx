@@ -19,14 +19,11 @@ const ICONS: Record<PlanId, typeof Zap> = {
 
 export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const { keyData } = useKey();
-  const [paying, setPaying] = useState<PlanId | null>(null);
   const [pixPlan, setPixPlan] = useState<PlanId | null>(null);
 
   const startPayment = (plan: PlanId) => {
     if (plan === "demo") return;
-    setPaying(plan);
     setPixPlan(plan);
-    setPaying(null);
   };
 
   const pixKey = "38998816357";
@@ -123,10 +120,9 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                 <button
                   type="button"
                   onClick={() => startPayment(p.id)}
-                  disabled={paying !== null}
                   className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 disabled:opacity-60 disabled:cursor-wait font-bold uppercase tracking-[0.12em] text-xs flex items-center justify-center gap-2 transition-colors"
                 >
-                  {paying === p.id ? "Abrindo Pix…" : "Pagar com Pix"}
+                  Pagar com Pix
                 </button>
               )}
             </div>
