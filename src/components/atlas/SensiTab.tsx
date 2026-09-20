@@ -64,7 +64,7 @@ function detectDeviceFromBrowser() {
   if (android?.[1]) return android[1].trim();
   return "";
 }
-\nfunction formatDevice(device: string) {
+function formatDevice(device: string) {
 
   return device
     .replace(/\s+/g, " ")
