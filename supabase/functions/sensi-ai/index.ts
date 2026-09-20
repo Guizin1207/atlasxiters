@@ -14,14 +14,14 @@ const clamp = (value: unknown, min = 20, max = 200) => {
   return Math.max(min, Math.min(max, Math.round(n)));
 };
 
-const cleanResult = (raw: Record<string, unknown>) => ({
+const cleanResult = (raw: Record<string, unknown>, isIOS = false) => ({
   geral: clamp(raw.geral),
   pontoVermelho: clamp(raw.pontoVermelho),
   mira2x: clamp(raw.mira2x),
   mira4x: clamp(raw.mira4x),
   miraAwm: clamp(raw.miraAwm),
   olharLivre: clamp(raw.olharLivre),
-  dpiRecomendado: Math.max(320, Math.min(720, Math.round(Number(raw.dpiRecomendado) || 480))),
+  dpiRecomendado: isIOS ? 0 : Math.max(320, Math.min(720, Math.round(Number(raw.dpiRecomendado) || 480))),
   precisaoEstimada: Math.max(1, Math.min(99, Math.round(Number(raw.precisaoEstimada) || 85))),
   notas: Array.isArray(raw.notas)
     ? raw.notas.filter((item): item is string => typeof item === "string").slice(0, 5)
@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
     const device = typeof body?.device === "string" ? body.device.trim().slice(0, 100) : "";
     const dpi = Number(body?.dpi);
     const fingers = Number(body?.fingers);
+    const isIOS = /iphone|ipad|ipod/i.test(device);
     const style = body?.style as SensiStyle;
 
     if (!device || ![2, 3, 4].includes(fingers) || !["precisao", "equilibrado", "agressivo"].includes(style)) {
@@ -67,14 +68,24 @@ Deno.serve(async (req) => {
       fetch: runIdFetch.fetch,
     });
 
-    const prompt = `Gere uma configuração de sensibilidade para Free Fire em 2026.
-Use os dados do jogador:
+    const prompt = `Você é o motor especialista de sensibilidade do Atlas VIP para Free Fire 2026.
+Sua tarefa é analisar o MODELO DO APARELHO e criar uma configuração personalizada, e não apenas devolver uma sensibilidade genérica.
+
+Dados do jogador:
 - aparelho: ${device}
-- DPI atual: ${Number.isFinite(dpi) ? Math.max(180, Math.min(900, dpi)) : 480}
+- plataforma: ${isIOS ? "iOS/iPhone/iPad" : "Android ou não identificado"}
+- DPI informado: ${Number.isFinite(dpi) ? Math.max(180, Math.min(900, dpi)) : "não informado"}
 - dedos: ${fingers}
 - estilo: ${style}
 
-Considere estabilidade de toque, tamanho/taxa de resposta da tela de forma aproximada, DPI, quantidade de dedos e o estilo informado. Não invente especificações exatas do aparelho que não foram fornecidas. A configuração deve ser prática para testar no jogo.
+REGRAS IMPORTANTES:
+1. Use o nome/modelo do aparelho como fator principal. Considere de forma aproximada tela, proporção, fluidez, resposta de toque e capacidade do aparelho quando essas características forem conhecidas. Não invente especificações.
+2. A configuração deve ser específica para Free Fire 2026 e coerente entre Geral, Ponto Vermelho, 2x, 4x, AWM e Olhar livre.
+3. Evite entregar os mesmos números para aparelhos diferentes. Faça ajustes reais conforme o modelo, sem aleatoriedade inútil.
+4. Para iOS, NÃO use DPI como fator de ajuste. iPhone/iPad não deve receber recomendação de DPI. Concentre a calibração na sensibilidade do jogo, modelo/tamanho da tela, fluidez e estilo. Nesse caso, dpiRecomendado deve ser 0.
+5. Para Android, use DPI apenas como fator secundário e respeite o DPI informado. Não trate DPI como garantia de capa.
+6. Priorize controle de arrasto, estabilidade da mira e resposta em curta/média distância. Não prometa porcentagem real de headshot.
+7. Gere uma configuração prática para começar a jogar e notas curtas explicando por que o aparelho recebeu aquele perfil.
 
 Responda SOMENTE com JSON válido, sem markdown, neste formato:
 {
@@ -105,7 +116,7 @@ Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 
 
     const text = result.text.trim().replace(/^\`\`\`json\s*/i, "").replace(/\s*\`\`\`$/i, "");
     const parsed = JSON.parse(text) as Record<string, unknown>;
-    const sensi = cleanResult(parsed);
+    const sensi = cleanResult(parsed, isIOS);
 
     return new Response(JSON.stringify(sensi), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
