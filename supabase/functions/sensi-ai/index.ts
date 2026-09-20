@@ -1,12 +1,25 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createOpenAI } from "npm:@ai-sdk/openai";
-import { streamText } from "npm:ai";
+import { Output, streamText } from "npm:ai";
+import { z } from "npm:zod";
 import {
   createLovableAiGatewayRunIdFetch,
   getLovableAiGatewayRunId,
 } from "../_shared/ai-gateway.ts";
 
 type SensiStyle = "precisao" | "equilibrado" | "agressivo";
+
+const sensiSchema = z.object({
+  geral: z.number(),
+  pontoVermelho: z.number(),
+  mira2x: z.number(),
+  mira4x: z.number(),
+  miraAwm: z.number(),
+  olharLivre: z.number(),
+  dpiRecomendado: z.number(),
+  precisaoEstimada: z.number(),
+  notas: z.array(z.string()),
+});
 
 const clamp = (value: unknown, min = 20, max = 200) => {
   const n = Number(value);
@@ -130,6 +143,7 @@ Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 
 
     const result = streamText({
       model: lovable.responses("openai/gpt-6-astra"),
+      output: Output.object({ schema: sensiSchema }),
       prompt,
       abortSignal: req.signal,
       providerOptions: {
@@ -143,9 +157,8 @@ Use valores inteiros de 20 a 200 para as sensibilidades, DPI recomendado de 320 
       },
     });
 
-    const text = (await result.text).trim().replace(/^\`\`\`json\s*/i, "").replace(/\s*\`\`\`$/i, "");
-    const parsed = JSON.parse(text) as Record<string, unknown>;
-    const sensi = cleanResult(parsed, isIOS);
+    const parsed = await result.output;
+    const sensi = cleanResult(parsed as Record<string, unknown>, isIOS);
 
     return new Response(JSON.stringify(sensi), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
