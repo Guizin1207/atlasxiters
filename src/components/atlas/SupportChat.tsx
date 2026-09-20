@@ -33,7 +33,6 @@ export function SupportChat() {
     if (!keyData?.key) return;
     const { data, error } = await supabase.rpc("support_list_messages", { _key: keyData.key });
     if (!error) setMessages((data ?? []) as Msg[]);
-    setClosed((data ?? []).some((m: Msg) => false));
     setLoading(false);
   }, [keyData?.key]);
 
