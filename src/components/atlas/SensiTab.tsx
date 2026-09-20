@@ -33,10 +33,10 @@ function isSensiResult(value: unknown): value is SensiResult {
     "olharLivre",
     "dpiRecomendado",
     "precisaoEstimada",
+    "resposta",
   ];
   return fields.every((field) => typeof result[field] === "number") &&
-    Array.isArray(result.notas) &&
-    result.notas.every((note) => typeof note === "string");
+    typeof result.resposta === "string";
 }
 
 const SENSI_ITEMS = [
@@ -150,12 +150,9 @@ export function SensiTab() {
 
       setResult(data);
 
-      const focus = data.notas?.[0]
-        ? data.notas[0].replace(/\s+/g, " ").trim().slice(0, 100)
-        : "Perfil ajustado para capa e controle.";
       setMessages((current) => [
         ...current,
-        { role: "ai", text: `Pronto. ${formatDevice(inferredDevice)} calibrado para FF 2026.\n${focus}` },
+        { role: "ai", text: `Pronto. ${formatDevice(inferredDevice)} • FF 2026\n${data.resposta}` },
       ]);
     } catch (error) {
       console.error("sensi-ai", error);
@@ -328,18 +325,7 @@ export function SensiTab() {
               </div>
             </div>
 
-            {result.notas?.length > 0 && (
-              <div className="border-t border-white/10 px-4 py-3">
-                <p className="vip-eyebrow mb-2">RESPOSTA DA IA</p>
-                <div className="space-y-1.5">
-                  {result.notas.slice(0, 2).map((note, index) => (
-                    <p key={index} className="text-xs leading-5 text-muted-foreground">
-                      • {note}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
+
           </div>
         )}
 
