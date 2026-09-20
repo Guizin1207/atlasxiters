@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, Cpu, Crosshair, Gauge, Smartphone, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -84,8 +84,6 @@ export function SensiTab() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<SensiResult | null>(null);
   const [copied, setCopied] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
   const deviceLabel = useMemo(() => formatDevice(device), [device]);
   const isIOS = /iphone|ipad|ipod/i.test(device);
   const screenProfile = useMemo(() => {
@@ -103,7 +101,7 @@ export function SensiTab() {
   }, []);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    document.getElementById("sensi-message")?.focus();
   }, [busy]);
 
   const send = async (text = input) => {
@@ -175,7 +173,7 @@ export function SensiTab() {
   const useQuickPrompt = (prompt: string) => {
     if (!device) {
       setInput(`${prompt}. Meu aparelho é `);
-      requestAnimationFrame(() => inputRef.current?.focus());
+      requestAnimationFrame(() => document.getElementById("sensi-message")?.focus());
       return;
     }
     void send(prompt);
@@ -349,7 +347,7 @@ export function SensiTab() {
         <div className="border-t border-border/10 p-3">
           <PromptInput onSubmit={({ text }) => void send(text)} className="rounded-xl border-border/10 bg-secondary/50">
             <PromptInputTextarea
-              ref={inputRef}
+              id="sensi-message"
               value={input}
               onChange={(event) => setInput(event.target.value)}
               disabled={busy}
