@@ -53,6 +53,19 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
 
   const request = async (plan: PlanId) => {
     if (!keyData) return;
+
+    const whatsappUrl = upgradeWhatsAppUrl(keyData.key, plan);
+    const whatsappWindow = window.open(
+      whatsappUrl,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+    if (!whatsappWindow) {
+      window.location.href = whatsappUrl;
+      return;
+    }
+
     setBusy(plan);
     const { error } = await supabase.rpc("request_upgrade", {
       _key: keyData.key,
@@ -62,14 +75,16 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     setBusy(null);
 
     if (error && !error.message.includes("already_pending")) {
-      toast.error("Não foi possível enviar o pedido", { description: error.message });
+      toast.error("Não foi possível registrar o pedido", {
+        description: error.message,
+      });
       return;
     }
+
     await load();
     toast.success("Pedido enviado", {
-      description: "Estamos te levando ao WhatsApp para finalizar.",
+      description: "O WhatsApp foi aberto com a mensagem pronta.",
     });
-    window.open(upgradeWhatsAppUrl(keyData.key, plan), "_blank", "noreferrer");
   };
 
   if (!keyData) return null;
@@ -153,9 +168,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em] text-xs"
                 >
                   {busy === p.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {isPending
-                    ? "Pedido enviado — falar de novo"
-                    : `Fazer upgrade • ${p.price}`}
+                  `Fazer upgrade • ${p.price}`
                 </Button>
               )}
 
