@@ -3,7 +3,7 @@
  * O botão de aquisição abre o WhatsApp com a mensagem pronta.
  */
 
-import { Check, Crown, Copy, FlaskConical, Sparkles, Zap } from "lucide-react";
+import { Check, Crown, Copy, FlaskConical, QrCode, Sparkles, Zap } from "lucide-react";
 import { useKey } from "@/lib/key-context";
 import { PLANS, getPlan, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
@@ -29,9 +29,17 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     setPaying(null);
   };
 
+  const pixKey = "38998816357";
+  const pixPayload = `00020126360014br.gov.bcb.pix0111${pixKey}5204000053039865802BR5913ATLAS VIP6009SAO PAULO62070503***6304`;
+
   const copyPixKey = async () => {
-    await navigator.clipboard.writeText("3898816357");
+    await navigator.clipboard.writeText(pixKey);
     toast.success("Chave Pix copiada");
+  };
+
+  const copyPixCode = async () => {
+    await navigator.clipboard.writeText(pixPayload);
+    toast.success("Pix Copia e Cola copiado");
   };
   const currentPlan: PlanId = keyData?.is_master
     ? "master"
@@ -130,13 +138,22 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
           <div>
             <p className="vip-eyebrow mb-1">Pagamento via Pix</p>
             <p className="font-bold">{getPlan(pixPlan).name} — {getPlan(pixPlan).price}</p>
-            <p className="text-xs text-muted-foreground mt-1">Faça o Pix para a chave abaixo e envie o comprovante ao suporte.</p>
+            <p className="text-xs text-muted-foreground mt-1">Copie a chave ou use o QR Code para pagar. Depois envie o comprovante.</p>
           </div>
           <div className="rounded-xl bg-black/20 border border-white/10 p-3 flex items-center justify-between gap-3">
-            <span className="font-mono text-sm break-all">3898816357</span>
+            <span className="font-mono text-sm break-all">{pixKey}</span>
             <button type="button" onClick={copyPixKey} className="shrink-0 h-9 px-3 rounded-lg bg-white text-black text-xs font-bold flex items-center gap-2">
               <Copy className="w-3.5 h-3.5" /> Copiar
             </button>
+          </div>
+          <div className="rounded-xl border border-white/10 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"><QrCode className="w-4 h-4" /> Pix Copia e Cola</div>
+            <p className="text-[11px] text-muted-foreground break-all line-clamp-3">{pixPayload}</p>
+            <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar Pix Copia e Cola</button>
+          </div>
+          <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
+            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixPayload)}&size=260`} alt="QR Code Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
+            <p className="text-[11px] text-muted-foreground text-center">Aponte a câmera do banco para este QR Code.</p>
           </div>
           <a href="https://wa.me/5538998816357" target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
             Enviar comprovante
