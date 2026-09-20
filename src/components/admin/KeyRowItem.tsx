@@ -444,6 +444,32 @@ export function KeyRowItem({
               Cancelar
             </Button>
             <Button
+              variant="outline"
+              onClick={async () => {
+                const ok = await call(
+                  "admin_set_expiration",
+                  { _id: data.id, _expires_at: null },
+                  "Chave definida sem expiração"
+                );
+                if (ok) setDialog(null);
+              }}
+            >
+              Sem expiração
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                const ok = await call(
+                  "admin_set_expiration",
+                  { _id: data.id, _expires_at: new Date(Date.now() - 1000).toISOString() },
+                  "Chave expirada agora"
+                );
+                if (ok) setDialog(null);
+              }}
+            >
+              Expirar agora
+            </Button>
+            <Button
               className="bg-white text-black hover:bg-white/90"
               onClick={async () => {
                 const ok = await call(

@@ -10,7 +10,7 @@ export function getKeyStatus(k: KeyData): KeyStatus {
   return "active";
 }
 
-export const STATUS_LABEL: Record<KeyStatus, string> = { unused: "Não usada", active: "Ativa", expired: "Expirada", revoked: "Revogada" };
+export const STATUS_LABEL: Record<KeyStatus, string> = { unused: "Não usada", active: "Ativa", expired: "Expirada", revoked: "Desativada" };
 export const STATUS_BADGE: Record<KeyStatus, string> = {
   unused: "bg-white/10 text-foreground border-white/15",
   active: "bg-status-active/15 text-status-active border-status-active/30",

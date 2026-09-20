@@ -15,7 +15,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: "active", label: "Ativas" },
   { id: "unused", label: "Não usadas" },
   { id: "expired", label: "Expiradas" },
-  { id: "revoked", label: "Revogadas" },
+  { id: "revoked", label: "Desativadas" },
 ];
 
 export function KeysListCard() {

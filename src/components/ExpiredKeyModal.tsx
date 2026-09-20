@@ -1,25 +1,18 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TimerOff, LogOut, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
-import { SUPPORT_URL } from "@/lib/atlas-config";
+import { SupportChat } from "@/components/atlas/SupportChat";
 
 /**
  * Mostra quando a chave expira/é revogada.
- * Limpa o storage automaticamente após 4s e força redirect para /login.
+ * Mantém a key disponível para o usuário abrir o atendimento antes de sair.
  */
 export function ExpiredKeyModal() {
-  const { signOut } = useKey();
+  const { keyData, signOut } = useKey();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      signOut();
-      navigate("/login", { replace: true });
-    }, 8000);
-    return () => clearTimeout(id);
-  }, [signOut, navigate]);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   const exit = () => {
     signOut();
@@ -46,11 +39,9 @@ export function ExpiredKeyModal() {
         <p className="text-sm text-muted-foreground">
           Sua chave não é mais válida. Procure o suporte para renovar seu acesso.
         </p>
-        <Button asChild className="w-full h-12 rounded-2xl bg-status-danger/15 text-status-danger border border-status-danger/30 hover:bg-status-danger/20">
-          <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Falar com o suporte
-          </a>
+        <Button onClick={() => setSupportOpen(true)} className="w-full h-12 rounded-2xl bg-status-danger/15 text-status-danger border border-status-danger/30 hover:bg-status-danger/20">
+          <MessageCircle className="w-4 h-4 mr-2" />
+          Falar com o suporte
         </Button>
         <Button
           onClick={exit}
@@ -60,6 +51,19 @@ export function ExpiredKeyModal() {
           Voltar ao login
         </Button>
       </div>
+
+      {supportOpen && (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-3 sm:items-center" onClick={() => setSupportOpen(false)}>
+          <div className="w-full max-w-md max-h-[85vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-2 flex justify-end">
+              <button type="button" onClick={() => setSupportOpen(false)} className="rounded-full bg-black/70 px-3 py-1 text-xs text-white">
+                Fechar
+              </button>
+            </div>
+            <SupportChat accessKey={keyData?.key} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

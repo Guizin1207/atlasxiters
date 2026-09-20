@@ -5,10 +5,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert } from "lucide-react";
-import { SUPPORT_URL } from "@/lib/atlas-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AUTH_ERROR_KEY, useKey } from "@/lib/key-context";
+import { AUTH_ERROR_KEY, AUTH_SUPPORT_KEY, useKey } from "@/lib/key-context";
 import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 
@@ -34,6 +33,11 @@ export default function LoginPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [supportKey, setSupportKey] = useState(() => {
+    const key = sessionStorage.getItem(AUTH_SUPPORT_KEY) ?? "";
+    sessionStorage.removeItem(AUTH_SUPPORT_KEY);
+    return key;
+  });
   const isExpired = error === ERROR_MESSAGES.expired_key;
 
   useEffect(() => {
@@ -52,13 +56,15 @@ export default function LoginPage() {
       navigate("/admin", { replace: true });
       return;
     }
-    const result = await redeem(value);
+    const attemptedKey = value.trim().toUpperCase();
+    const result = await redeem(attemptedKey);
     setSubmitting(false);
     if (result.ok === true) {
       navigate("/painel", { replace: true });
       return;
     }
     setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
+    if (result.error === "expired_key") setSupportKey(attemptedKey);
   };
 
   return (
@@ -93,6 +99,7 @@ export default function LoginPage() {
                 value={value}
                 onChange={(e) => {
                   setValue(e.target.value.toUpperCase());
+                  setSupportKey("");
                   if (error) setError(null);
                 }}
                 placeholder="XXXX-XXXX-XXXX"
@@ -183,7 +190,7 @@ export default function LoginPage() {
                 Fechar
               </button>
             </div>
-            <SupportChat />
+            <SupportChat accessKey={supportKey || value} />
           </div>
         </div>
       )}

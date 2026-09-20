@@ -55,6 +55,7 @@ type Ctx = {
 const STORAGE_KEY = "atlas_vip_key";
 const DEVICE_ID_KEY = "atlas_vip_device_id";
 export const AUTH_ERROR_KEY = "atlas_vip_auth_error";
+export const AUTH_SUPPORT_KEY = "atlas_vip_support_key";
 const ADMIN_PREVIEW_KEY = "atlas_admin_panel_preview";
 const ADMIN_PASSWORD_KEY = "atlas_vip_admin_pwd";
 
@@ -140,7 +141,10 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) {
         const reason = parseError(error.message);
-        if (reason === "expired_key") sessionStorage.setItem(AUTH_ERROR_KEY, reason);
+        if (reason === "expired_key") {
+          sessionStorage.setItem(AUTH_ERROR_KEY, reason);
+          sessionStorage.setItem(AUTH_SUPPORT_KEY, stored);
+        }
         // chave inválida/expirada/device errado → limpa
         localStorage.removeItem(STORAGE_KEY);
         setKeyData(null);
@@ -184,10 +188,14 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) {
         const reason = parseError(error.message);
-        if (reason === "expired_key") sessionStorage.setItem(AUTH_ERROR_KEY, reason);
+        if (reason === "expired_key") {
+          sessionStorage.setItem(AUTH_ERROR_KEY, reason);
+          sessionStorage.setItem(AUTH_SUPPORT_KEY, key);
+        }
         return { ok: false, error: reason };
       }
       sessionStorage.removeItem(AUTH_ERROR_KEY);
+      sessionStorage.removeItem(AUTH_SUPPORT_KEY);
       persist(data as unknown as KeyData);
       return { ok: true };
     } catch {

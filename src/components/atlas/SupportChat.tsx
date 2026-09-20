@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MessageCircle, Send, Loader2, ImagePlus } from "lucide-react";
+import { MessageCircle, Send, Loader2, ImagePlus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,33 +21,56 @@ const QUICK_OPTIONS = [
   ["👨‍💻 Quero falar com o ADM.", "👨‍💻 Quero falar com o ADM."],
 ] as const;
 
-export function SupportChat() {
+export function SupportChat({ accessKey }: { accessKey?: string | null }) {
   const { keyData } = useKey();
+  const supportKey = (accessKey || keyData?.key || "").trim().toUpperCase();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
-    if (!keyData?.key) return;
-    const { data, error } = await supabase.rpc("support_list_messages", { _key: keyData.key });
-    if (!error) setMessages((data ?? []) as Msg[]);
-    setLoading(false);
-  }, [keyData?.key]);
+    if (!supportKey) {
+      setMessages([]);
+      setLoadError(false);
+      setLoading(false);
+      return;
+    }
+
+    let timeoutId: number | undefined;
+    try {
+      const request = supabase.rpc("support_list_messages", { _key: supportKey });
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error("support_history_timeout")), 12_000);
+      });
+      const { data, error } = await Promise.race([request, timeout]);
+      if (error) throw error;
+      setMessages((data ?? []) as Msg[]);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      setLoading(false);
+    }
+  }, [supportKey]);
 
   useEffect(() => {
-    load();
+    setLoading(true);
+    void load();
+    if (!supportKey) return;
     const timer = window.setInterval(load, 2500);
     return () => window.clearInterval(timer);
-  }, [load]);
+  }, [load, supportKey]);
 
   const sendMessage = async (message: string) => {
-    if (!keyData?.key || !message.trim() || sending) return;
+    if (!supportKey || !message.trim() || sending) return;
     setSending(true);
     const { error } = await supabase.rpc("support_send_message", {
-      _key: keyData.key,
+      _key: supportKey,
       _body: message.trim(),
     });
     setSending(false);
@@ -56,12 +79,12 @@ export function SupportChat() {
       return;
     }
     setBody("");
-    void notifyAdmin("message", keyData.key);
-    load();
+    void notifyAdmin("message", supportKey);
+    void load();
   };
 
   const sendReceipt = async (file: File) => {
-    if (!keyData?.key || uploading) return;
+    if (!supportKey || uploading) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Selecione uma imagem do comprovante.");
       return;
@@ -76,7 +99,7 @@ export function SupportChat() {
     if (!(RECEIPT_EXTENSIONS as readonly string[]).includes(ext)) {
       ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
     }
-    const safeKey = keyData.key.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
+    const safeKey = supportKey.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
     const path = `${safeKey}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from(RECEIPT_BUCKET)
@@ -89,7 +112,7 @@ export function SupportChat() {
     }
 
     const { error } = await supabase.rpc("support_send_message", {
-      _key: keyData.key,
+      _key: supportKey,
       _body: `${RECEIPT_PREFIX}${path}`,
     });
     setUploading(false);
@@ -99,8 +122,8 @@ export function SupportChat() {
       return;
     }
     toast.success("Comprovante enviado.");
-    void notifyAdmin("receipt", keyData.key);
-    load();
+    void notifyAdmin("receipt", supportKey);
+    void load();
   };
 
   return (
@@ -117,6 +140,16 @@ export function SupportChat() {
 
       <div className="h-80 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
         {loading ? <div className="flex justify-center py-10"><Loader2 className="w-4 h-4 animate-spin" /></div> :
+          !supportKey ? <p className="text-xs text-muted-foreground text-center py-10">Informe sua key no campo de acesso para abrir o atendimento.</p> :
+          loadError ? (
+            <div className="flex flex-col items-center gap-3 py-9 text-center">
+              <p className="text-xs text-status-danger">Não foi possível carregar o histórico.</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => { setLoading(true); void load(); }} className="rounded-xl border-white/10 bg-white/5">
+                <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                Tentar novamente
+              </Button>
+            </div>
+          ) :
           messages.length === 0 ? <p className="text-xs text-muted-foreground text-center py-10">Nenhuma mensagem ainda. Envie sua dúvida abaixo.</p> :
           messages.map((m) => {
             const isReceipt = isReceiptBody(m.body);
@@ -147,7 +180,7 @@ export function SupportChat() {
       <Button
         type="button"
         variant="outline"
-        disabled={uploading}
+        disabled={uploading || !supportKey}
         onClick={() => fileRef.current?.click()}
         className="w-full rounded-2xl border-white/10 bg-white/5"
       >
@@ -157,14 +190,14 @@ export function SupportChat() {
 
       <div className="flex gap-2">
         <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem…" rows={2} maxLength={1000} className="rounded-2xl bg-white/5 border-white/10 resize-none" />
-        <Button onClick={() => sendMessage(body)} disabled={sending || !body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black">
+        <Button onClick={() => sendMessage(body)} disabled={sending || !supportKey || !body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black">
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {QUICK_OPTIONS.map(([label, message]) => (
-          <Button key={label} variant="outline" disabled={sending} onClick={() => sendMessage(message)} className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2">
+          <Button key={label} variant="outline" disabled={sending || !supportKey} onClick={() => sendMessage(message)} className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2">
             {label}
           </Button>
         ))}
