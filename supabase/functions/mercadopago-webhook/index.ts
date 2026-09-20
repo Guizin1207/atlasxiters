@@ -24,7 +24,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRole);
     const amount = Number(payment.transaction_amount);
-    const expected = plan === "basic" ? 39.99 : plan === "pro" ? 85.99 : 149.99;
+    const expected = plan === "basic" ? 1 : plan === "pro" ? 85.99 : 149.99;
     const days = plan === "basic" ? 30 : plan === "pro" ? 90 : 0;
 
     if (payment.status === "approved" && Math.abs(amount - expected) < 0.01) {
