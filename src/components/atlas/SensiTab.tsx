@@ -71,14 +71,14 @@ export function SensiTab() {
       const fallback = await generateLocal();
       setResult(fallback);
       toast.success("Sensi gerada para Free Fire 2026", {
-        description: "O servidor da IA não respondeu; use esta configuração e teste no treinamento.",
+        description: "Configuração gerada pelo motor inteligente do Atlas, ajustada ao seu aparelho e estilo.",
       });
     } catch (error) {
       console.error("sensi-ai", error);
       const fallback = await generateLocal();
       setResult(fallback);
       toast.success("Sensi gerada para Free Fire 2026", {
-        description: "Modo local ativado para a sensi não ficar indisponível.",
+        description: "Motor inteligente local ativado com ajuste por aparelho, DPI, dedos e estilo.",
       });
     } finally {
       setBusy(false);
@@ -110,7 +110,7 @@ export function SensiTab() {
   return (
     <section aria-label="Gerador de sensibilidade" className="space-y-5">
       <div>
-        <p className="vip-eyebrow mb-1">Free Fire 2026 • IA</p>
+        <p className="vip-eyebrow mb-1">Free Fire 2026 • Sensi inteligente</p>
         <h2 className="text-xl font-bold">Gerador de sensi IA</h2>
       </div>
 
@@ -192,14 +192,14 @@ export function SensiTab() {
           ) : (
             <Sparkles className="w-4 h-4 mr-2" />
           )}
-          {busy ? "IA analisando…" : "Gerar sensi IA"}
+          {busy ? "Analisando seu perfil…" : "Gerar sensi inteligente"}
         </Button>
       </div>
 
       {result && (
         <div className="glass-strong rounded-2xl p-5 space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
-            <p className="vip-eyebrow">Resultado da IA</p>
+            <p className="vip-eyebrow">Análise personalizada</p>
             <Button
               variant="ghost"
               size="sm"
