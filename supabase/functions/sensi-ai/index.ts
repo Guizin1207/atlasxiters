@@ -1,6 +1,10 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createOpenAI } from "npm:@ai-sdk/openai@4.0.71";
 import { generateText } from "npm:ai@7.0.107";
+import {
+  createLovableAiGatewayRunIdFetch,
+  getLovableAiGatewayRunId,
+} from "../_shared/ai-gateway.ts";
 
 type SensiStyle = "precisao" | "equilibrado" | "agressivo";
 
@@ -51,6 +55,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    const initialRunId = getLovableAiGatewayRunId(req);
+    const runIdFetch = createLovableAiGatewayRunIdFetch(initialRunId);
     const lovable = createOpenAI({
       baseURL: "https://ai.gateway.lovable.dev/v1",
       apiKey,
@@ -58,6 +64,7 @@ Deno.serve(async (req) => {
         "Lovable-API-Key": apiKey,
         "X-Lovable-AIG-SDK": "vercel-ai-sdk",
       },
+      fetch: runIdFetch.fetch,
     });
 
     const prompt = `Gere uma configuração de sensibilidade para Free Fire em 2026.
