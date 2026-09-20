@@ -3,7 +3,7 @@
  * No iOS só funciona com o app adicionado à Tela de Início.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { detectDevice } from "@/lib/atlas-utils";
+import { detectDevice } from "@/lib/key-context";
 
 /** Chave pública VAPID — pode ficar no código (é pública por definição). */
 export const VAPID_PUBLIC_KEY =
