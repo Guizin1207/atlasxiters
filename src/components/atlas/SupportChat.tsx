@@ -70,7 +70,7 @@ export function SupportChat() {
       </header>
 
       <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
-        <p className="text-sm mb-3">👋 Olá! Bem-vindo ao suporte da Atlas Store. Como podemos ajudar?</p>
+        <p className="text-sm mb-3">👋 Como podemos ajudar?</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {QUICK_OPTIONS.map(([label, message]) => (
             <Button
