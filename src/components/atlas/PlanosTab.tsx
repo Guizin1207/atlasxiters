@@ -179,7 +179,6 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
           </div>
           <div className="rounded-xl border border-white/10 p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"><QrCode className="w-4 h-4" /> Minha chave Pix</div>
-            <p className="text-sm font-mono break-all">{pixKey}</p>
             <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar minha chave Pix</button>
           </div>
           <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
