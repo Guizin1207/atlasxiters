@@ -51,8 +51,22 @@ export function usePanelSettings() {
       }
       setLoading(false);
     })();
+    const clearFunctionsOnExit = () => {
+      const cleared = { ...readLocal(keyData.key), functions: {} };
+      localStorage.setItem(localKey(keyData.key), JSON.stringify(cleared));
+      void supabase.rpc("save_settings", {
+        _key: keyData.key,
+        _settings: cleared as never,
+      });
+    };
+
+    window.addEventListener("pagehide", clearFunctionsOnExit);
+    document.addEventListener("visibilitychange", clearFunctionsOnExit);
+
     return () => {
       mounted = false;
+      window.removeEventListener("pagehide", clearFunctionsOnExit);
+      document.removeEventListener("visibilitychange", clearFunctionsOnExit);
     };
   }, [keyData]);
 
