@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
 import { ReceiptImage } from "@/components/atlas/ReceiptImage";
 import { isReceiptBody, receiptRef } from "@/lib/receipts";
+import { notifyUsers } from "@/lib/push";
 
 type Thread = { id: string; key_id: string; key: string; updated_at: string };
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
@@ -56,6 +57,7 @@ export function SupportAdminCard() {
       _body: message,
     });
     if (error) { toast.error("Não foi possível enviar."); return; }
+    void notifyUsers(password, "reply", { targetKey: selected.key });
     loadMessages();
     loadThreads();
   };
@@ -78,6 +80,7 @@ export function SupportAdminCard() {
     if (!password || !selected || !body.trim()) return;
     const { error } = await supabase.rpc("admin_support_send_message", { _password: password, _thread_id: selected.id, _body: body.trim() });
     if (error) { toast.error("Não foi possível enviar."); return; }
+    void notifyUsers(password, "reply", { targetKey: selected.key });
     setBody("");
     loadMessages();
     loadThreads();

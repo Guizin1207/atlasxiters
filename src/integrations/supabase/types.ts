@@ -253,8 +253,10 @@ export type Database = {
           device: string | null
           endpoint: string
           id: string
+          key_id: string | null
           last_seen_at: string
           p256dh: string
+          scope: string
         }
         Insert: {
           auth: string
@@ -262,8 +264,10 @@ export type Database = {
           device?: string | null
           endpoint: string
           id?: string
+          key_id?: string | null
           last_seen_at?: string
           p256dh: string
+          scope?: string
         }
         Update: {
           auth?: string
@@ -271,10 +275,20 @@ export type Database = {
           device?: string | null
           endpoint?: string
           id?: string
+          key_id?: string | null
           last_seen_at?: string
           p256dh?: string
+          scope?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_messages: {
         Row: {
@@ -500,8 +514,10 @@ export type Database = {
           device: string | null
           endpoint: string
           id: string
+          key_id: string | null
           last_seen_at: string
           p256dh: string
+          scope: string
         }[]
         SetofOptions: {
           from: "*"
@@ -605,8 +621,10 @@ export type Database = {
           device: string | null
           endpoint: string
           id: string
+          key_id: string | null
           last_seen_at: string
           p256dh: string
+          scope: string
         }
         SetofOptions: {
           from: "*"
@@ -921,6 +939,21 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      user_delete_push_subscription: {
+        Args: { _endpoint: string; _key: string }
+        Returns: boolean
+      }
+      user_push_status: { Args: { _key: string }; Returns: boolean }
+      user_save_push_subscription: {
+        Args: {
+          _auth: string
+          _device: string
+          _endpoint: string
+          _key: string
+          _p256dh: string
+        }
+        Returns: boolean
       }
       validate_key: {
         Args: { _device_id: string; _key: string }

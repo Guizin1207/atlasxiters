@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
+import { notifyUsers } from "@/lib/push";
 
 export function MaintenanceCard() {
   const { password } = useAdmin();
@@ -41,6 +42,7 @@ export function MaintenanceCard() {
     if (error) {
       toast.error("Falha ao salvar", { description: error.message });
     } else {
+      void notifyUsers(password, enabled ? "maintenance" : "maintenance_end");
       toast.success(enabled ? "Manutenção ATIVADA" : "Manutenção desativada");
     }
   };

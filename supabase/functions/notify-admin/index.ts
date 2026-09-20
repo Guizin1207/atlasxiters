@@ -8,12 +8,51 @@ const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")!;
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:suporte@atlasxiters.lovable.app";
 
-const CONTENT = {
-  message: { title: "Atlas VIP — Novo atendimento", body: "Você recebeu uma nova mensagem no suporte." },
-  receipt: { title: "Atlas VIP — Novo comprovante", body: "Um cliente enviou um comprovante." },
-} as const;
+type Audience = "admin" | "user";
 
-type Kind = keyof typeof CONTENT;
+const CONTENT: Record<
+  string,
+  { title: string; body: string; audience: Audience; url: string }
+> = {
+  // Disparadas pelo usuário → vão para os aparelhos do ADM
+  message: {
+    title: "Atlas VIP — Novo atendimento",
+    body: "Você recebeu uma nova mensagem no suporte.",
+    audience: "admin",
+    url: "/admin",
+  },
+  receipt: {
+    title: "Atlas VIP — Novo comprovante",
+    body: "Um cliente enviou um comprovante.",
+    audience: "admin",
+    url: "/admin",
+  },
+  // Disparadas pelo ADM → vão para os aparelhos dos usuários
+  reply: {
+    title: "Atlas VIP — Suporte respondeu",
+    body: "Você recebeu uma nova mensagem no chat de suporte.",
+    audience: "user",
+    url: "/painel",
+  },
+  update: {
+    title: "Atlas VIP — Atualização disponível",
+    body: "O app foi atualizado. Abra para carregar a nova versão.",
+    audience: "user",
+    url: "/painel",
+  },
+  maintenance: {
+    title: "Atlas VIP — Manutenção",
+    body: "O app entrou em manutenção. Voltamos em instantes.",
+    audience: "user",
+    url: "/painel",
+  },
+  maintenance_end: {
+    title: "Atlas VIP — Manutenção concluída",
+    body: "Tudo normalizado. O painel já está liberado.",
+    audience: "user",
+    url: "/painel",
+  },
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -30,24 +69,53 @@ Deno.serve(async (req) => {
     }
 
     const raw = await req.json().catch(() => null);
-    const kind = String(raw?.kind ?? "") as Kind;
+    const kind = String(raw?.kind ?? "");
     const key = typeof raw?.key === "string" ? raw.key.trim() : "";
+    const password = typeof raw?.password === "string" ? raw.password : "";
+    const targetKey = typeof raw?.targetKey === "string" ? raw.targetKey.trim() : "";
+    const customBody = typeof raw?.body === "string" ? raw.body.trim().slice(0, 180) : "";
 
-    if (!CONTENT[kind]) return json({ error: "Tipo de notificação inválido." }, 400);
-    if (!key) return json({ error: "Chave ausente." }, 400);
+    const content = CONTENT[kind];
+    if (!content) return json({ error: "Tipo de notificação inválido." }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
-    const { data: validKey, error: keyError } = await admin.rpc("_valid_access_key", { _key: key });
-    if (keyError) {
-      console.error("Falha ao validar chave:", keyError.message);
-      return json({ error: "Falha ao validar chave." }, 500);
-    }
-    if (validKey !== true) return json({ error: "Chave inválida." }, 403);
+    let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth");
 
-    const { data: subs, error: subsError } = await admin
-      .from("push_subscriptions")
-      .select("id, endpoint, p256dh, auth");
+    if (content.audience === "admin") {
+      // Gatilho do usuário: exige uma chave de acesso válida.
+      if (!key) return json({ error: "Chave ausente." }, 400);
+      const { data: validKey, error: keyError } = await admin.rpc("_valid_access_key", { _key: key });
+      if (keyError) {
+        console.error("Falha ao validar chave:", keyError.message);
+        return json({ error: "Falha ao validar chave." }, 500);
+      }
+      if (validKey !== true) return json({ error: "Chave inválida." }, 403);
+      query = query.eq("scope", "admin");
+    } else {
+      // Envio para usuários: só o ADM autenticado pode disparar.
+      if (!password) return json({ error: "Senha ausente." }, 400);
+      const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
+      if (adminError) {
+        console.error("Falha ao validar senha:", adminError.message);
+        return json({ error: "Falha ao validar senha." }, 500);
+      }
+      if (isAdmin !== true) return json({ error: "Senha inválida." }, 403);
+
+      query = query.eq("scope", "user");
+
+      if (targetKey) {
+        const { data: keyRow } = await admin
+          .from("access_keys")
+          .select("id")
+          .eq("key", targetKey.toUpperCase())
+          .maybeSingle();
+        if (!keyRow?.id) return json({ sent: 0, removed: 0, note: "Chave de destino não encontrada." });
+        query = query.eq("key_id", keyRow.id);
+      }
+    }
+
+    const { data: subs, error: subsError } = await query;
     if (subsError) {
       console.error("Falha ao listar inscrições:", subsError.message);
       return json({ error: "Falha ao listar inscrições." }, 500);
@@ -56,7 +124,12 @@ Deno.serve(async (req) => {
 
     webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
-    const payload = JSON.stringify({ ...CONTENT[kind], url: "/admin", tag: `atlas-${kind}` });
+    const payload = JSON.stringify({
+      title: content.title,
+      body: customBody || content.body,
+      url: content.url,
+      tag: `atlas-${kind}`,
+    });
     const stale: string[] = [];
     let sent = 0;
 
