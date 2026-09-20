@@ -53,9 +53,14 @@ export function mapPanelFunction(row: PanelFunctionRow): AtlasFunction {
 
 export { getPanelIcon };
 
-/** true se o plano atual libera a função. */
+/**
+ * true se o plano atual libera a função.
+ * O acesso demo equivale ao Basic: mostra o painel funcionando sem liberar
+ * os planos pagos.
+ */
 export function planAllows(plan: string | null | undefined, minPlan: PlanId) {
-  const cur = PLAN_ORDER.indexOf((plan ?? "basic") as PlanId);
+  const current = (plan ?? "basic") as PlanId;
+  const cur = PLAN_ORDER.indexOf(current === "demo" ? "basic" : current);
   const need = PLAN_ORDER.indexOf(minPlan);
   return (cur < 0 ? 0 : cur) >= need;
 }

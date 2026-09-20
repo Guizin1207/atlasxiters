@@ -114,7 +114,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
         {PLANS.map((p, idx) => {
           const Icon = ICONS[p.id];
           const isCurrent = p.id === currentPlan;
-          const isUpgrade = !isDemo && idx > currentIdx;
+          const isUpgrade = idx > currentIdx;
           const isPending = pending(p.id);
 
           return (
