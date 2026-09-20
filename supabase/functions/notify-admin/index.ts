@@ -34,6 +34,12 @@ const CONTENT: Record<
     audience: "user",
     url: "/painel",
   },
+  notice: {
+    title: "Atlas VIP — Novo aviso",
+    body: "Você recebeu um novo aviso do administrador.",
+    audience: "user",
+    url: "/painel",
+  },
   update: {
     title: "Atlas VIP — Atualização disponível",
     body: "O app foi atualizado. Abra para carregar a nova versão.",
