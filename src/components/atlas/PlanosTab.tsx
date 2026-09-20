@@ -26,7 +26,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     if (!keyData || plan === "demo") return;
     setPaying(plan);
     try {
-      const { data, error } = await supabase.functions.invoke("create-payment-test", {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
         body: { key: keyData.key, plan },
       });
       if (error) throw error;
