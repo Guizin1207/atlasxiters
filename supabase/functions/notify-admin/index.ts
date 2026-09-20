@@ -58,6 +58,13 @@ const CONTENT: Record<
     audience: "user",
     url: "/painel",
   },
+  // Disparada pelo próprio usuário quando a chave dele expira → vai só para os aparelhos dele
+  expired: {
+    title: "Atlas VIP — Acesso expirado",
+    body: "Sua chave expirou. Fale com o suporte para renovar.",
+    audience: "user",
+    url: "/painel",
+  },
 };
 
 Deno.serve(async (req) => {
@@ -98,6 +105,17 @@ Deno.serve(async (req) => {
       }
       if (validKey !== true) return json({ error: "Chave inválida." }, 403);
       query = query.eq("scope", "admin");
+    } else if (kind === "expired") {
+      // Autoaviso de expiração: a chave já expirou (não passa em _valid_access_key),
+      // então basta localizar a chave e limitar o envio aos aparelhos dela.
+      if (!key) return json({ error: "Chave ausente." }, 400);
+      const { data: keyRow } = await admin
+        .from("access_keys")
+        .select("id")
+        .eq("key", key.toUpperCase())
+        .maybeSingle();
+      if (!keyRow?.id) return json({ sent: 0, removed: 0, note: "Chave não encontrada." });
+      query = query.eq("scope", "user").eq("key_id", keyRow.id);
     } else {
       // Envio para usuários: só o ADM autenticado pode disparar.
       if (!password) return json({ error: "Senha ausente." }, 400);

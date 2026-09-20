@@ -116,6 +116,23 @@ export async function notifyAdmin(kind: "message" | "receipt", key: string) {
   }
 }
 
+const EXPIRED_NOTIFY_FLAG = "atlas_expired_notified";
+
+/**
+ * Autoaviso de chave expirada: envia push apenas para os aparelhos da própria chave.
+ * Dispara no máximo uma vez por chave (flag em sessionStorage). Nunca lança erro.
+ */
+export async function notifyExpired(key: string) {
+  try {
+    const flag = `${EXPIRED_NOTIFY_FLAG}:${key}`;
+    if (sessionStorage.getItem(flag)) return;
+    sessionStorage.setItem(flag, "1");
+    await supabase.functions.invoke("notify-admin", { body: { kind: "expired", key } });
+  } catch (err) {
+    console.warn("Não foi possível notificar a expiração:", err);
+  }
+}
+
 /* ---------- Notificações do usuário (chave de acesso) ---------- */
 
 /** Cadastra este aparelho para receber avisos do suporte, atualizações e manutenção. */
