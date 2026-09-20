@@ -102,7 +102,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                   className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.12em] text-xs flex items-center justify-center gap-2 transition-colors"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Comprar pelo WhatsApp
+                  Adquirir plano
                 </a>
               )}
             </div>
