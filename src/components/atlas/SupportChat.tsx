@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { MessageCircle, Send, Loader2 } from "lucide-react";
+import { MessageCircle, Send, Loader2, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useKey } from "@/lib/key-context";
 
-type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string };
+type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
 
 const QUICK_OPTIONS = [
   ["🔑 Não recebi minha key.", "🔑 Não recebi minha key."],
@@ -24,12 +24,12 @@ export function SupportChat() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [sending, setSending] = useState(false);\n  const [editingId, setEditingId] = useState<string | null>(null);\n  const [editBody, setEditBody] = useState("");\n  const [closed, setClosed] = useState(false);
 
   const load = useCallback(async () => {
     if (!keyData?.key) return;
     const { data, error } = await supabase.rpc("support_list_messages", { _key: keyData.key });
-    if (!error) setMessages((data ?? []) as Msg[]);
+    if (!error) setMessages((data ?? []) as Msg[]);\n    setClosed((data ?? []).some((m: Msg) => false));
     setLoading(false);
   }, [keyData?.key]);
 
@@ -55,7 +55,7 @@ export function SupportChat() {
     load();
   };
 
-  const send = () => sendMessage(body);
+  const send = () => sendMessage(body);\n\n  const editMessage = async (id: string) => {\n    if (!keyData?.key || !editBody.trim()) return;\n    const { error } = await supabase.rpc("support_edit_message", { _key: keyData.key, _message_id: id, _body: editBody.trim() });\n    if (error) { toast.error("Não foi possível editar."); return; }\n    setEditingId(null);\n    setEditBody("");\n    load();\n  };\n\n  const finishChat = async () => {\n    if (!keyData?.key) return;\n    const { error } = await supabase.rpc("support_close_chat", { _key: keyData.key });\n    if (error) { toast.error("Não foi possível finalizar o chat."); return; }\n    setClosed(true);\n    toast.success("Chat finalizado.");\n  };
 
   return (
     <section className="glass-strong rounded-3xl p-5 space-y-4">
@@ -83,17 +83,17 @@ export function SupportChat() {
 
       <div className="flex gap-2">
         <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem…" rows={2} maxLength={1000} className="rounded-2xl bg-white/5 border-white/10 resize-none" />
-        <Button onClick={send} disabled={sending || !body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black">
+        <Button onClick={send} disabled={sending || !body.trim() || closed} className="w-12 shrink-0 rounded-2xl bg-white text-black">
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex items-center gap-2">\n        <Button variant="outline" onClick={finishChat} disabled={closed} className="h-7 rounded-lg text-[10px] px-2">✅ Finalizar chat</Button>\n      </div>\n\n      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {QUICK_OPTIONS.map(([label, message]) => (
           <Button
             key={label}
             variant="outline"
-            disabled={sending}
+            disabled={sending || closed}
             onClick={() => sendMessage(message)}
             className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2"
           >
