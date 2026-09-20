@@ -60,10 +60,11 @@ export default function PainelPage() {
       <button
         type="button"
         onClick={() => setSupportOpen(true)}
-        className="fixed bottom-24 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-2xl ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"
+        className="fixed bottom-24 right-5 z-50 flex h-12 items-center justify-center gap-2 rounded-full bg-white px-4 text-black shadow-2xl ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"
         aria-label="Abrir suporte"
       >
-        <MessageCircle className="h-5 w-5" />
+        <MessageCircle className="h-4 w-4" />
+        <span className="text-xs font-semibold">Falar com suporte</span>
       </button>
 
       {supportOpen && (
