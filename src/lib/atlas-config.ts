@@ -19,7 +19,7 @@ export type PlanInfo = {
 };
 
 export const PLANS: PlanInfo[] = [
-  { id: "basic", name: "Basic", days: 30, tagline: "30 dias de acesso", price: "R$ 39,99", priceNote: "por mês", perks: ["Funções essenciais", "1 dispositivo", "Suporte padrão"] },
+  { id: "basic", name: "Basic", days: 30, tagline: "30 dias de acesso", price: "R$ 1,00", priceNote: "valor de teste", perks: ["Funções essenciais", "1 dispositivo", "Suporte padrão"] },
   { id: "pro", name: "Pro", days: 90, tagline: "90 dias de acesso", price: "R$ 85,99", priceNote: "a cada 3 meses", perks: ["Todas as funções", "1 dispositivo", "Suporte prioritário"] },
   { id: "master", name: "Master", days: null, tagline: "Acesso vitalício", price: "R$ 149,99", priceNote: "pagamento único", perks: ["Todas as funções", "Sem expiração", "Suporte VIP"] },
 ];
@@ -39,7 +39,7 @@ export function upgradeWhatsAppUrl(key: string, plan: PlanId, currentPlan?: Plan
   const intro = isDemo
     ? `Olá! Quero adquirir o plano ${p.name} — ${p.price} (${p.priceNote}).`
     : `Olá! Quero adquirir o plano ${p.name} — ${p.price} (${p.priceNote}).`;
-  const keyLine = isDemo ? "" : `\nMinha chave: ${key}`;
+  const keyLine = isDemo ? "" : `\\nMinha chave: ${key}`;
   const msg = `${intro}${keyLine}`;
   return `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 }
