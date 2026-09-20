@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AUTH_ERROR_KEY, useKey } from "@/lib/key-context";
 import { useAdmin } from "@/lib/admin-context";
+import { SupportChat } from "@/components/atlas/SupportChat";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_key: "Chave inválida. Verifique e tente novamente.",
@@ -32,6 +33,7 @@ export default function LoginPage() {
     return reason ? ERROR_MESSAGES[reason] ?? null : null;
   });
   const [submitting, setSubmitting] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const isExpired = error === ERROR_MESSAGES.expired_key;
 
   useEffect(() => {
@@ -154,26 +156,38 @@ export default function LoginPage() {
           <p className="text-xs text-muted-foreground/60">
             Não tem uma chave? Fale com o suporte para adquirir acesso.
           </p>
-          <a
-            href={SUPPORT_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
+          <Button
+            type="button"
+            onClick={() => setSupportOpen(true)}
+            className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-sm font-semibold hover:bg-white/10 transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
-            {SUPPORT_LABEL}
-          </a>
+            Falar com suporte
+          </Button>
         </div>
       </div>
-      <a
-        href={SUPPORT_URL}
-        target="_blank"
-        rel="noreferrer"
-        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-2xl ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"
-        aria-label="Abrir suporte"
-      >
-        <MessageCircle className="h-5 w-5" />
-      </a>
+      {supportOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-3 sm:items-center"
+          onClick={() => setSupportOpen(false)}
+        >
+          <div
+            className="w-full max-w-md max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSupportOpen(false)}
+                className="rounded-full bg-black/70 px-3 py-1 text-xs text-white"
+              >
+                Fechar
+              </button>
+            </div>
+            <SupportChat />
+          </div>
+        </div>
+      )}
     </main>
   );
 }
