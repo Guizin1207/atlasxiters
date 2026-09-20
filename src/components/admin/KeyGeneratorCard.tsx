@@ -88,31 +88,40 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
         </p>
       </Field>
 
-      <Field label="Plano">
-        <div className="grid grid-cols-3 gap-2">
-          {PLANS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => {
-                setPlan(p.id);
-                if (mode === "normal") setDays(p.days ?? 36500);
-              }}
-              className={cn(
-                "h-11 rounded-xl text-xs font-semibold uppercase tracking-[0.12em] border transition-colors",
-                plan === p.id
-                  ? "bg-white text-black border-white"
-                  : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {p.name}
-            </button>
-          ))}
+      {mode !== "demo" && (
+        <Field label="Plano">
+          <div className="grid grid-cols-3 gap-2">
+            {PLANS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setPlan(p.id);
+                  if (mode === "normal") setDays(p.days ?? 36500);
+                }}
+                className={cn(
+                  "h-11 rounded-xl text-xs font-semibold uppercase tracking-[0.12em] border transition-colors",
+                  plan === p.id
+                    ? "bg-white text-black border-white"
+                    : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            {getPlan(plan).tagline}
+          </p>
+        </Field>
+      )}
+      {mode === "demo" && (
+        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Plano</p>
+          <p className="mt-1 text-sm font-semibold">DEMO</p>
+          <p className="text-[11px] text-muted-foreground">Sem Basic, Pro ou Master. Acesso demo ilimitado.</p>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-2">
-          {getPlan(plan).tagline}
-        </p>
-      </Field>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Quantidade">
