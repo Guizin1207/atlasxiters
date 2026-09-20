@@ -9,14 +9,14 @@ import { useKey } from "@/lib/key-context";
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string };
 
 const QUICK_OPTIONS = [
-  ["🔑 Não recebi minha key", "Olá! Fiz minha compra, mas ainda não recebi minha key. Poderiam verificar, por favor?"],
-  ["💰 Enviei o Pix", "Olá! Já realizei o pagamento via Pix e estou enviando o comprovante para aprovação. Poderiam verificar, por favor?"],
-  ["⏳ Quanto demora a aprovação?", "Olá! Gostaria de saber se meu pagamento já foi analisado e quanto tempo demora a aprovação."],
-  ["🎮 Problema com o Free Fire", "Olá! Estou com problema para abrir ou utilizar o Free Fire. Preciso de ajuda."],
-  ["⚙️ Problema na configuração", "Olá! Preciso de ajuda para configurar o aplicativo."],
-  ["🔄 Problema com minha key", "Olá! Estou com um problema na minha key e preciso de ajuda."],
-  ["🛒 Quero comprar um plano", "Olá! Gostaria de informações para comprar um plano."],
-  ["👨‍💻 Falar com o ADM", "Olá ADM! Preciso de atendimento personalizado."],
+  ["🔑 Key não recebida", "Não recebi minha key."],
+  ["💰 Enviei o Pix", "Enviei o Pix."],
+  ["⏳ Aprovação", "Quero saber sobre a aprovação."],
+  ["🎮 Free Fire", "Estou com problema no Free Fire."],
+  ["⚙️ Configuração", "Preciso de ajuda na configuração."],
+  ["🔄 Problema na key", "Estou com problema na minha key."],
+  ["🛒 Comprar plano", "Quero comprar um plano."],
+  ["👨‍💻 Falar com ADM", "Quero falar com o ADM."],
 ] as const;
 
 export function SupportChat() {
