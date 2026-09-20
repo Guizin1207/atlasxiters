@@ -1,13 +1,13 @@
 /** Cartão do admin para ativar notificações push neste aparelho. */
 import { useCallback, useEffect, useState } from "react";
-import { Bell, BellOff, Loader2, Trash2, Smartphone, Info } from "lucide-react";
+import { Bell, BellOff, Loader2, Trash2, Smartphone, Info, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
-import { currentPushStatus, enableAdminPush, disableAdminPush, type PushStatus } from "@/lib/push";
+import { currentPushStatus, enableAdminPush, disableAdminPush, notifyUsers, type PushStatus } from "@/lib/push";
 
-type Sub = { id: string; endpoint: string; device: string | null; created_at: string };
+type Sub = { id: string; endpoint: string; device: string | null; created_at: string; scope?: string | null };
 
 const STATUS_TEXT: Record<PushStatus, string> = {
   unsupported: "Este navegador não aceita notificações.",
@@ -66,6 +66,16 @@ export function PushNotificationsCard() {
     void load();
   };
 
+  const announceUpdate = async () => {
+    if (!password || busy) return;
+    setBusy(true);
+    await notifyUsers(password, "update");
+    setBusy(false);
+    toast.success("Aviso de atualização enviado aos usuários.");
+  };
+
+  const adminSubs = subs.filter((s) => (s.scope ?? "admin") === "admin");
+  const userSubs = subs.filter((s) => s.scope === "user");
   const canActivate = status === "ready" || status === "enabled";
 
   return (
@@ -87,6 +97,16 @@ export function PushNotificationsCard() {
         {status === "enabled" ? "Reativar neste aparelho" : "Ativar neste aparelho"}
       </Button>
 
+      <Button
+        onClick={announceUpdate}
+        disabled={busy}
+        variant="outline"
+        className="w-full rounded-2xl border-white/10 bg-white/5"
+      >
+        <Megaphone className="mr-2 h-4 w-4" />
+        Avisar atualização do app ({userSubs.length})
+      </Button>
+
       <div className="flex items-start gap-2 rounded-2xl bg-white/5 border border-white/10 p-3">
         <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />
         <p className="text-[11px] leading-relaxed text-muted-foreground">
@@ -96,13 +116,13 @@ export function PushNotificationsCard() {
       </div>
 
       <div className="space-y-2">
-        <p className="vip-eyebrow">Aparelhos cadastrados</p>
+        <p className="vip-eyebrow">Aparelhos do ADM</p>
         {loading ? (
           <div className="flex justify-center py-4"><Loader2 className="w-4 h-4 animate-spin" /></div>
-        ) : subs.length === 0 ? (
+        ) : adminSubs.length === 0 ? (
           <p className="text-xs text-muted-foreground">Nenhum aparelho cadastrado ainda.</p>
         ) : (
-          subs.map((sub) => (
+          adminSubs.map((sub) => (
             <div key={sub.id} className="flex items-center gap-3 rounded-2xl bg-white/5 border border-white/10 px-3 py-2">
               <Smartphone className="w-3.5 h-3.5 shrink-0" />
               <div className="min-w-0 flex-1">
