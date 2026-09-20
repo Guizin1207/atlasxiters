@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAdmin } from "@/lib/admin-context";
 import { useKey } from "@/lib/key-context";
 import { DeviceStatsCard } from "@/components/admin/DeviceStatsCard";
+import { AdminDevicesCard } from "@/components/admin/AdminDevicesCard";
 import { MaintenanceCard } from "@/components/admin/MaintenanceCard";
 import { KeyGeneratorCard } from "@/components/admin/KeyGeneratorCard";
 import { KeysListCard } from "@/components/admin/KeysListCard";
@@ -84,6 +85,7 @@ export default function AdminPage() {
         </header>
 
         <DeviceStatsCard />
+        <AdminDevicesCard />
 
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

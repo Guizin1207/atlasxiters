@@ -4,6 +4,7 @@ import { AdminProvider, useAdmin } from "./admin-context";
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc } }));
+vi.mock("@/lib/admin-devices", () => ({ beginAdminSession: vi.fn(), endAdminSession: vi.fn().mockResolvedValue(undefined), touchAdminSession: vi.fn().mockResolvedValue(undefined) }));
 const SESSION_KEY = "atlas_vip_admin_pwd";
 
 async function mount() {

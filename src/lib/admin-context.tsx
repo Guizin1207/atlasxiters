@@ -13,12 +13,14 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeout } from "@/lib/request-timeout";
+import { beginAdminSession, endAdminSession, touchAdminSession } from "@/lib/admin-devices";
 
 const SESSION_KEY = "atlas_vip_admin_pwd";
 
 type Ctx = {
   password: string | null;
   loading: boolean;
+  deviceRegistryError: boolean;
   recognize: (pwd: string) => Promise<boolean>;
   signIn: (pwd: string) => Promise<boolean>;
   signOut: () => void;
@@ -38,6 +40,23 @@ async function checkAdmin(password: string): Promise<boolean> {
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [password, setPassword] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deviceRegistryError, setDeviceRegistryError] = useState(false);
+
+  useEffect(() => {
+    if (!password) return;
+    let live = true;
+    let busy = false;
+    const touch = async () => {
+      if (busy) return;
+      busy = true;
+      try { await touchAdminSession(password); if (live) setDeviceRegistryError(false); }
+      catch { if (live) setDeviceRegistryError(true); }
+      finally { busy = false; }
+    };
+    void touch();
+    const timer = window.setInterval(() => { if (!document.hidden) void touch(); }, 60_000);
+    return () => { live = false; window.clearInterval(timer); };
+  }, [password]);
 
   // Restaura sessão e revalida no servidor
   useEffect(() => {
@@ -77,18 +96,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     if (!candidate) return false;
     // As próximas RPCs precisam usar exatamente a credencial aceita.
     sessionStorage.setItem(SESSION_KEY, candidate);
+    beginAdminSession();
     setPassword(candidate);
     return true;
   }, [validatedCredential]);
 
   const signOut = useCallback(() => {
+    if (password) void endAdminSession(password).catch(() => {});
     sessionStorage.removeItem(SESSION_KEY);
     setPassword(null);
-  }, []);
+  }, [password]);
 
   const value = useMemo<Ctx>(
-    () => ({ password, loading, recognize, signIn, signOut }),
-    [password, loading, recognize, signIn, signOut]
+    () => ({ password, loading, deviceRegistryError, recognize, signIn, signOut }),
+    [password, loading, deviceRegistryError, recognize, signIn, signOut]
   );
 
   return (

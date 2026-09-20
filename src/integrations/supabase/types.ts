@@ -460,6 +460,18 @@ export type Database = {
         Args: { _password: string; _proposal: Json }
         Returns: Json
       }
+      admin_touch_access_session: {
+        Args: { _password: string; _session_id: string; _device_id: string; _device_label: string }
+        Returns: boolean
+      }
+      admin_end_access_session: {
+        Args: { _password: string; _session_id: string }
+        Returns: boolean
+      }
+      admin_list_access_sessions: {
+        Args: { _password: string }
+        Returns: Json
+      }
       admin_create_keys: {
         Args: {
           _count: number
