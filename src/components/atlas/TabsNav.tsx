@@ -1,12 +1,13 @@
-import { LayoutGrid, SlidersHorizontal, UserRound } from "lucide-react";
+import { LayoutGrid, MessageCircle, SlidersHorizontal, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AtlasTab = "funcoes" | "ajustes" | "perfil";
+export type AtlasTab = "funcoes" | "ajustes" | "perfil" | "suporte";
 
 const TABS: { id: AtlasTab; label: string; icon: typeof LayoutGrid }[] = [
   { id: "funcoes", label: "Funções", icon: LayoutGrid },
   { id: "ajustes", label: "Ajustes", icon: SlidersHorizontal },
   { id: "perfil", label: "Perfil", icon: UserRound },
+  { id: "suporte", label: "Suporte", icon: MessageCircle },
 ];
 
 export function TabsNav({
@@ -20,7 +21,7 @@ export function TabsNav({
     <nav
       role="tablist"
       aria-label="Seções do painel"
-      className="glass-strong rounded-2xl p-1 grid grid-cols-3 gap-1"
+      className="glass-strong rounded-2xl p-1 grid grid-cols-4 gap-1"
     >
       {TABS.map((t) => {
         const active = value === t.id;
