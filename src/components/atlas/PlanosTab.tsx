@@ -67,6 +67,8 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
     toast.success("Chave Pix copiada");
   };
 
+  const pixPayload = pixPlan ? makePixPayload(pixPlan) : "";
+
   const copyPixCode = async () => {
     if (!pixPlan) return;
     await navigator.clipboard.writeText(makePixPayload(pixPlan));
@@ -181,10 +183,10 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
           <div className="rounded-xl border border-white/10 p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"><QrCode className="w-4 h-4" /> Pix Copia e Cola</div>
             <p className="text-[11px] text-muted-foreground break-all">{pixPayload}</p>
-            <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar chave Pix</button>
+            <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar Pix Copia e Cola</button>
           </div>
           <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
-            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixPayload)}&size=260`} alt="QR Code da chave Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
+            <img src={`https://quickchart.io/qr?text=${encodeURIComponent(pixPayload)}&size=260`} alt="QR Code do Pix" className="w-52 h-52 rounded-lg bg-white p-2" />
             <p className="text-[11px] text-muted-foreground text-center">Aponte a câmera do banco para este QR Code.</p>
           </div>
           <a href="https://wa.me/5538998816357" target="_blank" rel="noreferrer" className="w-full h-11 rounded-xl border border-white/15 flex items-center justify-center text-xs font-bold uppercase tracking-[0.12em]">
