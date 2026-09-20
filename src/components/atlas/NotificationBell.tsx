@@ -86,7 +86,17 @@ export function NotificationBell() {
           </DialogHeader>
 
           <ScrollArea className="max-h-[60vh] px-6 pb-6">
-            {messages.length === 0 ? (
+            {alert && (
+              <div className="mb-3 rounded-2xl border border-status-danger/40 bg-status-danger/10 p-4 space-y-1.5 animate-fade-in">
+                <p className="text-sm font-semibold text-status-danger leading-tight">
+                  {alert.title}
+                </p>
+                <p className="text-xs text-status-danger/90 leading-relaxed">
+                  {alert.body}
+                </p>
+              </div>
+            )}
+            {messages.length === 0 && !alert ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Inbox className="w-8 h-8 mb-3 opacity-50" />
                 <p className="text-sm">Nenhuma mensagem ainda.</p>
