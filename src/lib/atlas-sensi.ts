@@ -73,7 +73,11 @@ export function generateSensi(input: SensiInput): SensiResult {
     olharLivre: clamp((base.olharLivre + bias + r(6, 10)) * dpiFactor),
     dpiRecomendado: Math.round(Math.max(320, Math.min(720, input.dpi * 1.05))),
     precisaoEstimada: 88 + (seed % 9),
-    notas: [],
+    resposta: input.style === "precisao"
+      ? "Calibração focada em controle e microajuste."
+      : input.style === "agressivo"
+      ? "Calibração focada em resposta rápida no rush."
+      : "Calibração equilibrada para controle e arrasto.",
   };
 
   res.notas = [
