@@ -49,6 +49,19 @@ export function SupportAdminCard() {
   useEffect(() => { loadThreads(); const t = window.setInterval(loadThreads, 2500); return () => window.clearInterval(t); }, [loadThreads]);
   useEffect(() => { loadMessages(); const t = window.setInterval(loadMessages, 2000); return () => window.clearInterval(t); }, [loadMessages]);
 
+  const alertUser = (thread: Thread, text: string) => {
+    if (!password) return;
+    void notifyUsers(password, "reply", { targetKey: thread.key });
+    void supabase.rpc("admin_send_message", {
+      _password: password,
+      _title: "Nova mensagem do suporte",
+      _body: isReceiptBody(text)
+        ? "O suporte respondeu no seu chat."
+        : text.length > 160 ? text.slice(0, 160) + "…" : text,
+      _target_key_id: thread.key_id,
+    });
+  };
+
   const sendQuick = async (message: string) => {
     if (!password || !selected) return;
     const { error } = await supabase.rpc("admin_support_send_message", {
@@ -57,7 +70,7 @@ export function SupportAdminCard() {
       _body: message,
     });
     if (error) { toast.error("Não foi possível enviar."); return; }
-    void notifyUsers(password, "reply", { targetKey: selected.key });
+    alertUser(selected, message);
     loadMessages();
     loadThreads();
   };
@@ -80,7 +93,7 @@ export function SupportAdminCard() {
     if (!password || !selected || !body.trim()) return;
     const { error } = await supabase.rpc("admin_support_send_message", { _password: password, _thread_id: selected.id, _body: body.trim() });
     if (error) { toast.error("Não foi possível enviar."); return; }
-    void notifyUsers(password, "reply", { targetKey: selected.key });
+    alertUser(selected, body.trim());
     setBody("");
     loadMessages();
     loadThreads();

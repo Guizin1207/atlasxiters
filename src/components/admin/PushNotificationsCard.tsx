@@ -70,6 +70,12 @@ export function PushNotificationsCard() {
     if (!password || busy) return;
     setBusy(true);
     await notifyUsers(password, "update");
+    await supabase.rpc("admin_send_message", {
+      _password: password,
+      _title: "Atualização disponível",
+      _body: "O Atlas VIP foi atualizado. Feche e abra o app novamente para usar a versão mais nova.",
+      _target_key_id: null,
+    });
     setBusy(false);
     toast.success("Aviso de atualização enviado aos usuários.");
   };
