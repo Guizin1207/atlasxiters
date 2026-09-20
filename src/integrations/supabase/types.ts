@@ -250,6 +250,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           id: string
           sender_type: string
           thread_id: string
@@ -257,6 +258,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           sender_type: string
           thread_id: string
@@ -264,6 +266,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           sender_type?: string
           thread_id?: string
@@ -280,18 +283,21 @@ export type Database = {
       }
       support_threads: {
         Row: {
+          closed_at: string | null
           created_at: string
           id: string
           key_id: string
           updated_at: string
         }
         Insert: {
+          closed_at?: string | null
           created_at?: string
           id?: string
           key_id: string
           updated_at?: string
         }
         Update: {
+          closed_at?: string | null
           created_at?: string
           id?: string
           key_id?: string
@@ -620,11 +626,45 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_support_close_chat: {
+        Args: { _password: string; _thread_id: string }
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          key_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "support_threads"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_support_edit_message: {
+        Args: { _body: string; _message_id: string; _password: string }
+        Returns: {
+          body: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          sender_type: string
+          thread_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "support_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_support_list_messages: {
         Args: { _password: string; _thread_id: string }
         Returns: {
           body: string
           created_at: string
+          edited_at: string | null
           id: string
           sender_type: string
           thread_id: string
@@ -650,6 +690,7 @@ export type Database = {
         Returns: {
           body: string
           created_at: string
+          edited_at: string | null
           id: string
           sender_type: string
           thread_id: string
@@ -733,11 +774,45 @@ export type Database = {
         Returns: Json
       }
       save_settings: { Args: { _key: string; _settings: Json }; Returns: Json }
+      support_close_chat: {
+        Args: { _key: string }
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          key_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "support_threads"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      support_edit_message: {
+        Args: { _body: string; _key: string; _message_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          sender_type: string
+          thread_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "support_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       support_list_messages: {
         Args: { _key: string }
         Returns: {
           body: string
           created_at: string
+          edited_at: string | null
           id: string
           sender_type: string
           thread_id: string
@@ -754,6 +829,7 @@ export type Database = {
         Returns: {
           body: string
           created_at: string
+          edited_at: string | null
           id: string
           sender_type: string
           thread_id: string
