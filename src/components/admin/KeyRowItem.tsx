@@ -79,7 +79,7 @@ export function KeyRowItem({
   const status = getKeyStatus(data);
   const DeviceIcon = getDeviceIcon(data.device);
 
-  const remaining = data.is_master ? Infinity : msUntil(data.expires_at);
+  const isDemo = data.plan === "demo";\n  const remaining = data.is_master || isDemo ? Infinity : msUntil(data.expires_at);
   const warn = isFinite(remaining) && remaining > 0 && remaining < 86_400_000;
   const expired = isFinite(remaining) && remaining <= 0 && !!data.activated_at;
 
@@ -157,7 +157,7 @@ export function KeyRowItem({
               {data.device ?? "Não registrado"}
             </span>
             <span className="text-muted-foreground/40">•</span>
-            <span>{data.is_master ? "Vitalícia" : `${data.duration_days}d`}</span>
+            <span>{data.is_master || isDemo ? "Ilimitada" : `${data.duration_days}d`}</span>
             {data.note && (
               <>
                 <span className="text-muted-foreground/40">•</span>
@@ -179,7 +179,7 @@ export function KeyRowItem({
               )}
             >
               {formatCountdown(remaining)}
-              {data.expires_at && !data.is_master && (
+              {data.expires_at && !data.is_master && !isDemo && (
                 <span className="text-muted-foreground/60 ml-2">
                   · até{" "}
                   {new Date(data.expires_at).toLocaleString("pt-BR", {
