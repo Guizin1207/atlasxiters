@@ -55,7 +55,39 @@ export default function PainelPage() {
         </div>
       </div>
 
-      {tab === "funcoes" && <InjectButton />}\n\n      <button\n        type="button"\n        onClick={() => setSupportOpen(true)}\n        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-2xl ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"\n        aria-label="Abrir suporte"\n      >\n        <MessageCircle className="h-5 w-5" />\n      </button>\n\n      {supportOpen && (\n        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-3 sm:items-center" onClick={() => setSupportOpen(false)}>\n          <div className="w-full max-w-md max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>\n            <div className="mb-2 flex justify-end">\n              <button type="button" onClick={() => setSupportOpen(false)} className="rounded-full bg-black/70 px-3 py-1 text-xs text-white">Fechar</button>\n            </div>\n            <SupportChat />\n          </div>\n        </div>\n      )}
+      {tab === "funcoes" && <InjectButton />}
+
+      <button
+        type="button"
+        onClick={() => setSupportOpen(true)}
+        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-2xl ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"
+        aria-label="Abrir suporte"
+      >
+        <MessageCircle className="h-5 w-5" />
+      </button>
+
+      {supportOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-3 sm:items-center"
+          onClick={() => setSupportOpen(false)}
+        >
+          <div
+            className="w-full max-w-md max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSupportOpen(false)}
+                className="rounded-full bg-black/70 px-3 py-1 text-xs text-white"
+              >
+                Fechar
+              </button>
+            </div>
+            <SupportChat />
+          </div>
+        </div>
+      )}
 
       {blockMaintenance && (
         <MaintenanceModal message={maintenance.message} />
