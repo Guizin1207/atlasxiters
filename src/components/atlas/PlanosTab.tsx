@@ -4,6 +4,7 @@
  */
 
 import { Check, Crown, Copy, FlaskConical, QrCode, Sparkles, Zap } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useKey } from "@/lib/key-context";
 import { PLANS, getPlan, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
@@ -21,12 +22,26 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const { keyData } = useKey();
   const [paying, setPaying] = useState<PlanId | null>(null);
   const [pixPlan, setPixPlan] = useState<PlanId | null>(null);
+  const [pixQr, setPixQr] = useState<{ encoded_image: string; payload: string } | null>(null);
 
-  const startPayment = (plan: PlanId) => {
-    if (plan === "demo") return;
+  const startPayment = async (plan: PlanId) => {
+    if (!keyData || plan === "demo") return;
     setPaying(plan);
-    setPixPlan(plan);
-    setPaying(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
+        body: { key: keyData.key, plan },
+      });
+      if (error) throw error;
+      if (!data?.payload || !data?.encoded_image) throw new Error(data?.error || "Não foi possível gerar o Pix.");
+      setPixPlan(plan);
+      setPixQr({ encoded_image: data.encoded_image, payload: data.payload });
+    } catch (error) {
+      toast.error("Pagamento Pix", {
+        description: error instanceof Error ? error.message : "Não foi possível gerar o Pix.",
+      });
+    } finally {
+      setPaying(null);
+    }
   };
 
   const pixKey = "38998816357";
@@ -148,7 +163,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
           </div>
           <div className="rounded-xl border border-white/10 p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"><QrCode className="w-4 h-4" /> Pix Copia e Cola</div>
-            <p className="text-[11px] text-muted-foreground break-all">Chave Pix: {pixKey}</p>
+            <p className="text-[11px] text-muted-foreground break-all">{pixQr?.payload || pixKey}</p>
             <button type="button" onClick={copyPixCode} className="w-full h-10 rounded-lg bg-white text-black text-xs font-bold">Copiar Pix Copia e Cola</button>
           </div>
           <div className="rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3">
