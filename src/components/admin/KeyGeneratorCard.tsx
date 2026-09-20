@@ -26,6 +26,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
     if (!password) return;
     setBusy(true);
     const effectiveDays = mode === "normal" ? days : mode === "demo" ? 0 : 1;
+    const effectivePlan: PlanId = mode === "demo" ? "demo" : plan;
     const effectiveNote = mode === "demo"
       ? ["DEMO", note.trim()].filter(Boolean).join(" — ")
       : note;
