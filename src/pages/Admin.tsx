@@ -14,7 +14,6 @@ import { KeyGeneratorCard } from "@/components/admin/KeyGeneratorCard";
 import { KeysListCard } from "@/components/admin/KeysListCard";
 import { MessagesCard } from "@/components/admin/MessagesCard";
 import { UpgradeRequestsCard } from "@/components/admin/UpgradeRequestsCard";
-import { AdminAICard } from "@/components/admin/AdminAICard";
 
 export default function AdminPage() {
   const { password, loading, signOut } = useAdmin();
@@ -78,7 +77,6 @@ export default function AdminPage() {
 
         <DeviceStatsCard />
 
-        <AdminAICard />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <MaintenanceCard />
