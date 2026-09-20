@@ -56,6 +56,7 @@ export function SupportChat() {
       return;
     }
     setBody("");
+    void notifyAdmin("message", keyData.key);
     load();
   };
 
@@ -98,6 +99,7 @@ export function SupportChat() {
       return;
     }
     toast.success("Comprovante enviado.");
+    void notifyAdmin("receipt", keyData.key);
     load();
   };
 
