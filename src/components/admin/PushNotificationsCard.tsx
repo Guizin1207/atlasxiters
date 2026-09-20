@@ -5,16 +5,18 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
-import { currentPushStatus, enableAdminPush, disableAdminPush, notifyUsers, type PushStatus } from "@/lib/push";
+import { adminPushState, enableAdminPush, disableAdminPush, testAdminPush, notifyUsers, type PushStatus, type PushSubscriptionRecord } from "@/lib/push";
 
-type Sub = { id: string; endpoint: string; device: string | null; created_at: string; scope?: string | null };
+type Sub = PushSubscriptionRecord;
 
 const STATUS_TEXT: Record<PushStatus, string> = {
   unsupported: "Este navegador não aceita notificações.",
   "ios-needs-install": "No iPhone, adicione o app à Tela de Início e abra por lá para ativar.",
   denied: "As notificações foram bloqueadas. Libere nas configurações do navegador.",
-  ready: "Este aparelho ainda não recebe notificações.",
-  enabled: "Este aparelho está recebendo notificações.",
+  unknown: "Não foi possível conferir o cadastro. Atualize ou tente ativar novamente.",
+  "admin-device": "Este aparelho está vinculado ao ADM.",
+  ready: "Este aparelho ainda não está vinculado às notificações do ADM.",
+  enabled: "Este aparelho está cadastrado como ADM chefe para receber mensagens e comprovantes.",
 };
 
 export function PushNotificationsCard() {
@@ -23,66 +25,88 @@ export function PushNotificationsCard() {
   const [subs, setSubs] = useState<Sub[]>([]);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentEndpoint, setCurrentEndpoint] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!password) return;
-    const [nextStatus, listed] = await Promise.all([
-      currentPushStatus(),
-      supabase.rpc("admin_list_push_subscriptions", { _password: password }),
-    ]);
-    setStatus(nextStatus);
-    if (!listed.error) setSubs((listed.data ?? []) as Sub[]);
-    setLoading(false);
+    if (!password) { setLoading(false); return; }
+    try {
+      const state = await adminPushState(password);
+      setStatus(state.status);
+      setSubs(state.subscriptions);
+      setCurrentEndpoint(state.endpoint);
+    } catch {
+      setStatus("unknown");
+    } finally { setLoading(false); }
   }, [password]);
 
   useEffect(() => {
     void load();
+    const onFocus = () => { void load(); };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [load]);
 
   const activate = async () => {
     if (!password || busy) return;
     setBusy(true);
+    setTestResult(null);
     try {
       const next = await enableAdminPush(password);
       setStatus(next);
-      if (next === "enabled") toast.success("Notificações ativadas neste aparelho.");
+      if (next === "enabled") toast.success("Este aparelho foi vinculado às notificações do ADM.");
       else toast.error(STATUS_TEXT[next]);
     } catch (err) {
-      toast.error("Não foi possível ativar as notificações.");
-      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Não foi possível ativar as notificações.");
     }
     setBusy(false);
     void load();
   };
 
   const remove = async (sub: Sub) => {
-    if (!password) return;
+    if (!password || busy) return;
+    setBusy(true);
     try {
-      await disableAdminPush(password, sub.id);
+      await disableAdminPush(password, sub.id, sub.endpoint);
       toast.success("Aparelho removido.");
     } catch {
       toast.error("Não foi possível remover o aparelho.");
-    }
+    } finally { setBusy(false); }
     void load();
+  };
+
+  const sendTest = async () => {
+    if (!password || busy) return;
+    setBusy(true);
+    try {
+      const result = await testAdminPush(password);
+      setTestResult(result.message);
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+    } catch {
+      setTestResult("Falha ao conferir o aparelho. Tente ativar novamente.");
+    } finally { setBusy(false); }
   };
 
   const announceUpdate = async () => {
     if (!password || busy) return;
     setBusy(true);
-    await notifyUsers(password, "update");
-    await supabase.rpc("admin_send_message", {
+    const pushResult = await notifyUsers(password, "update");
+    const { error } = await supabase.rpc("admin_send_message", {
       _password: password,
       _title: "Atualização disponível",
       _body: "O Atlas VIP foi atualizado. Feche e abra o app novamente para usar a versão mais nova.",
       _target_key_id: null,
     });
     setBusy(false);
-    toast.success("Aviso de atualização enviado aos usuários.");
+    if (error) toast.error("Não foi possível salvar o aviso no aplicativo.");
+    else if (pushResult.ok) toast.success("Aviso salvo e envio push aceito pelo serviço.");
+    else toast.warning(`Aviso salvo no aplicativo. ${pushResult.message}`);
   };
 
   const adminSubs = subs.filter((s) => (s.scope ?? "admin") === "admin");
   const userSubs = subs.filter((s) => s.scope === "user");
-  const canActivate = status === "ready" || status === "enabled";
+  const canActivate = status === "ready" || status === "enabled" || status === "unknown";
 
   return (
     <section className="glass-strong rounded-3xl p-5 space-y-4">
@@ -92,16 +116,25 @@ export function PushNotificationsCard() {
         </div>
         <div>
           <p className="vip-eyebrow">Alertas</p>
-          <h2 className="font-bold">Notificações no celular</h2>
+          <h2 className="font-bold">Notificações do ADM chefe</h2>
         </div>
       </header>
 
       <p className="text-xs text-muted-foreground">{STATUS_TEXT[status]}</p>
 
-      <Button onClick={activate} disabled={!canActivate || busy} className="w-full rounded-2xl">
+      <Button onClick={activate} disabled={!canActivate || busy || loading} className="w-full rounded-2xl">
         {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : status === "enabled" ? <Bell className="mr-2 h-4 w-4" /> : <BellOff className="mr-2 h-4 w-4" />}
-        {status === "enabled" ? "Reativar neste aparelho" : "Ativar neste aparelho"}
+        {status === "enabled" ? "Reativar vínculo de ADM" : "Vincular este aparelho ao ADM"}
       </Button>
+
+      <p className="text-[11px] text-muted-foreground">
+        O vínculo vale só para notificações: o login de ADM continua obrigatório.
+        Ao ativar aqui, os avisos de cliente neste aparelho são substituídos pelos do ADM.
+      </p>
+      <Button onClick={sendTest} disabled={busy || status !== "enabled" || loading} variant="outline" className="w-full rounded-2xl">
+        <Bell className="mr-2 h-4 w-4" /> Testar neste aparelho
+      </Button>
+      {testResult && <p role="status" className="text-xs text-muted-foreground">{testResult}</p>}
 
       <Button
         onClick={announceUpdate}
@@ -133,11 +166,12 @@ export function PushNotificationsCard() {
               <Smartphone className="w-3.5 h-3.5 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium truncate">{sub.device ?? "Aparelho"}</p>
+                {sub.endpoint === currentEndpoint && <p className="text-xs text-status-active">Este aparelho · ADM chefe</p>}
                 <p className="text-[10px] text-muted-foreground">
                   {new Date(sub.created_at).toLocaleString("pt-BR")}
                 </p>
               </div>
-              <Button size="icon" variant="ghost" onClick={() => remove(sub)} className="h-7 w-7 rounded-xl">
+              <Button size="icon" variant="ghost" disabled={busy} aria-label={`Remover ${sub.endpoint === currentEndpoint ? "este aparelho" : sub.device ?? "aparelho"}`} onClick={() => remove(sub)} className="h-7 w-7 rounded-xl">
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>

@@ -16,7 +16,6 @@ import { InjectButton } from "@/components/atlas/InjectButton";
 import { MaintenanceModal } from "@/components/MaintenanceModal";
 import { ExpiredKeyModal } from "@/components/ExpiredKeyModal";
 import { SupportChat } from "@/components/atlas/SupportChat";
-import { MessageCircle } from "lucide-react";
 
 export default function PainelPage() {
   const navigate = useNavigate();
@@ -29,8 +28,18 @@ export default function PainelPage() {
   );
 
   useEffect(() => {
-    if (!loading && !keyData) navigate("/login", { replace: true });
-  }, [keyData, loading, navigate]);
+    if (!loading && !keyData && !expired) navigate(`/login${window.location.search}`, { replace: true });
+  }, [keyData, loading, expired, navigate]);
+
+  // Tela limitada: sino e suporte continuam acessíveis, funções pagas não são montadas.
+  if (!loading && expired) {
+    return (
+      <main className="min-h-screen mx-auto max-w-md px-5 pt-6 pb-12">
+        <PanelHeader />
+        <ExpiredKeyModal />
+      </main>
+    );
+  }
 
   if (loading || !keyData) {
     return (
@@ -85,7 +94,6 @@ export default function PainelPage() {
       {blockMaintenance && (
         <MaintenanceModal message={maintenance.message} />
       )}
-      {expired && <ExpiredKeyModal />}
     </main>
   );
 }

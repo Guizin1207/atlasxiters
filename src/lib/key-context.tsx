@@ -15,6 +15,11 @@ import {
   useState,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { detectDevice } from "@/lib/device";
+import { notifyExpired, resetExpiryNotification } from "@/lib/push";
+import { withTimeout } from "@/lib/request-timeout";
+
+export { detectDevice } from "@/lib/device";
 
 export type KeyData = {
   id: string;
@@ -41,6 +46,8 @@ type RedeemError =
 
 type Ctx = {
   keyData: KeyData | null;
+  /** Somente para aviso/atendimento: nunca autoriza o painel. */
+  expiredKey: string | null;
   loading: boolean;
   device: string;
   deviceId: string;
@@ -60,23 +67,6 @@ const ADMIN_PREVIEW_KEY = "atlas_admin_panel_preview";
 const ADMIN_PASSWORD_KEY = "atlas_vip_admin_pwd";
 
 const KeyContext = createContext<Ctx | null>(null);
-
-export function detectDevice(): string {
-  if (typeof navigator === "undefined") return "Desconhecido";
-  const ua = navigator.userAgent || "";
-  const platform = navigator.platform || "";
-  const touchPoints = navigator.maxTouchPoints || 0;
-  if (/android/i.test(ua)) return "Android";
-  // iPads recentes podem se apresentar como Mac quando o navegador está em modo desktop.
-  if (/iphone|ipad|ipod/i.test(ua) || (/mac/i.test(platform) && touchPoints > 1))
-    return "iOS";
-  if (/windows phone/i.test(ua)) return "Windows";
-  if (/cros/i.test(ua)) return "Linux";
-  if (/windows/i.test(ua) || /win/i.test(platform)) return "Windows";
-  if (/macintosh|mac os x/i.test(ua)) return "Mac";
-  if (/linux/i.test(ua)) return "Linux";
-  return "Desconhecido";
-}
 
 function getOrCreateDeviceId(): string {
   if (typeof window === "undefined") return "";
@@ -100,12 +90,33 @@ function parseError(msg: string | undefined): RedeemError {
 
 export function KeyProvider({ children }: { children: React.ReactNode }) {
   const [keyData, setKeyData] = useState<KeyData | null>(null);
+  const [expiredKey, setExpiredKey] = useState<string | null>(() =>
+    sessionStorage.getItem(AUTH_ERROR_KEY) === "expired_key"
+      ? sessionStorage.getItem(AUTH_SUPPORT_KEY)
+      : null
+  );
   const [loading, setLoading] = useState(true);
   const [adminPreview, setAdminPreview] = useState(
     () => sessionStorage.getItem(ADMIN_PREVIEW_KEY) === "true"
   );
   const deviceRef = useRef<string>(detectDevice());
   const deviceIdRef = useRef<string>(getOrCreateDeviceId());
+  const requestVersion = useRef(0);
+  const changingKey = useRef(false);
+  const invalidateRequests = useCallback(() => { requestVersion.current++; }, []);
+
+  const clearExpiry = useCallback(() => {
+    sessionStorage.removeItem(AUTH_ERROR_KEY);
+    sessionStorage.removeItem(AUTH_SUPPORT_KEY);
+    setExpiredKey(null);
+  }, []);
+
+  const expireKey = useCallback((key: string) => {
+    sessionStorage.setItem(AUTH_ERROR_KEY, "expired_key");
+    sessionStorage.setItem(AUTH_SUPPORT_KEY, key);
+    setExpiredKey(key);
+    setKeyData(null);
+  }, []);
 
   const persist = (data: KeyData | null) => {
     if (data) localStorage.setItem(STORAGE_KEY, data.key);
@@ -114,121 +125,160 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refresh = useCallback(async () => {
-    const previewPassword = sessionStorage.getItem(ADMIN_PASSWORD_KEY);
-    if (sessionStorage.getItem(ADMIN_PREVIEW_KEY) === "true" && previewPassword) {
-      const { data, error } = await supabase.rpc("admin_open_panel", {
-        _password: previewPassword,
-      });
-      if (!error && data) {
-        setKeyData(data as unknown as KeyData);
-        setAdminPreview(true);
+    if (changingKey.current) return;
+    const version = ++requestVersion.current;
+    try {
+      const previewPassword = sessionStorage.getItem(ADMIN_PASSWORD_KEY);
+      if (sessionStorage.getItem(ADMIN_PREVIEW_KEY) === "true" && previewPassword) {
+        const { data, error } = await withTimeout(supabase.rpc("admin_open_panel", {
+          _password: previewPassword,
+        }));
+        if (version !== requestVersion.current) return;
+        if (!error && data) {
+          clearExpiry();
+          setKeyData(data as unknown as KeyData);
+          setAdminPreview(true);
+          setLoading(false);
+          return;
+        }
+        sessionStorage.removeItem(ADMIN_PREVIEW_KEY);
+        setAdminPreview(false);
+      }
+      const stored = localStorage.getItem(STORAGE_KEY) ?? sessionStorage.getItem(AUTH_SUPPORT_KEY);
+      if (!stored) {
+        setKeyData(null);
         setLoading(false);
         return;
       }
-      sessionStorage.removeItem(ADMIN_PREVIEW_KEY);
-      setAdminPreview(false);
-    }
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      setKeyData(null);
-      setLoading(false);
-      return;
-    }
-    try {
-      const { data, error } = await supabase.rpc("validate_key", {
+      const { data, error } = await withTimeout(supabase.rpc("validate_key", {
         _key: stored,
         _device_id: deviceIdRef.current,
-      });
+      }));
+      if (version !== requestVersion.current) return;
       if (error) {
         const reason = parseError(error.message);
         if (reason === "expired_key") {
-          sessionStorage.setItem(AUTH_ERROR_KEY, reason);
-          sessionStorage.setItem(AUTH_SUPPORT_KEY, stored);
+          expireKey(stored);
+          void notifyExpired(stored);
+        } else if (["invalid_key", "revoked_key", "device_mismatch"].includes(reason)) {
+          localStorage.removeItem(STORAGE_KEY);
+          clearExpiry();
+          setKeyData(null);
         }
-        // chave inválida/expirada/device errado → limpa
-        localStorage.removeItem(STORAGE_KEY);
-        setKeyData(null);
-      } else {
+        // Falha de rede não é expiração e não apaga a identidade do aparelho.
+      } else if (data) {
+        clearExpiry();
+        resetExpiryNotification(stored);
+        localStorage.setItem(STORAGE_KEY, stored);
         setKeyData(data as unknown as KeyData);
       }
     } catch {
-      // erro de rede: mantém a chave em memória mas sem dados
-      setKeyData(null);
+      // A expiração local continua bloqueando o acesso mesmo sem rede.
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
-  }, []);
+  }, [clearExpiry, expireKey]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
+    return invalidateRequests;
+  }, [refresh, invalidateRequests]);
 
-    const clearLoginOnExit = () => {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(DEVICE_ID_KEY);
-    };
-
-    window.addEventListener("pagehide", clearLoginOnExit);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") clearLoginOnExit();
-    });
-
+  // Uma única validação por intervalo, independente da identidade do objeto keyData.
+  const currentKey = keyData?.key ?? expiredKey;
+  useEffect(() => {
+    if (!currentKey || adminPreview) return;
+    const recheck = () => { if (document.visibilityState !== "hidden") void refresh(); };
+    const timer = window.setInterval(recheck, 15_000);
+    window.addEventListener("focus", recheck);
+    document.addEventListener("visibilitychange", recheck);
     return () => {
-      window.removeEventListener("pagehide", clearLoginOnExit);
+      window.clearInterval(timer);
+      window.removeEventListener("focus", recheck);
+      document.removeEventListener("visibilitychange", recheck);
     };
-  }, [refresh]);
+  }, [currentKey, adminPreview, refresh]);
+
+  const deadline = keyData?.is_master ? null : keyData?.expires_at;
+  useEffect(() => {
+    if (!currentKey || !deadline || adminPreview) return;
+    const remaining = Date.parse(deadline) - Date.now();
+    if (!Number.isFinite(remaining)) return;
+    const timer = window.setTimeout(() => {
+      if (Date.parse(deadline) <= Date.now()) expireKey(currentKey);
+      void refresh();
+    // Se o relógio do aparelho estiver adiantado, uma validação aceita pelo servidor
+    // não pode disparar um ciclo infinito de validações imediatas.
+    }, Math.min(remaining > 0 ? remaining : 15_000, 2_147_483_647));
+    return () => window.clearTimeout(timer);
+  }, [currentKey, deadline, adminPreview, expireKey, refresh]);
 
   const redeem = useCallback<Ctx["redeem"]>(async (rawKey) => {
     const key = rawKey.trim().toUpperCase();
     if (!key) return { ok: false, error: "invalid_key" };
+    const version = ++requestVersion.current;
+    changingKey.current = true;
     try {
-      const { data, error } = await supabase.rpc("redeem_key", {
+      const { data, error } = await withTimeout(supabase.rpc("redeem_key", {
         _key: key,
         _device: deviceRef.current,
         _device_id: deviceIdRef.current,
-      });
+      }));
+      if (version !== requestVersion.current) return { ok: false, error: "network_error" };
       if (error) {
         const reason = parseError(error.message);
         if (reason === "expired_key") {
-          sessionStorage.setItem(AUTH_ERROR_KEY, reason);
-          sessionStorage.setItem(AUTH_SUPPORT_KEY, key);
+          localStorage.removeItem(STORAGE_KEY);
+          expireKey(key);
+          void notifyExpired(key);
         }
         return { ok: false, error: reason };
       }
-      sessionStorage.removeItem(AUTH_ERROR_KEY);
-      sessionStorage.removeItem(AUTH_SUPPORT_KEY);
+      clearExpiry();
+      resetExpiryNotification(key);
       persist(data as unknown as KeyData);
       return { ok: true };
     } catch {
       return { ok: false, error: "network_error" };
+    } finally {
+      changingKey.current = false;
+      if (version === requestVersion.current) setLoading(false);
     }
-  }, []);
+  }, [clearExpiry, expireKey]);
 
   const openAdminPanel = useCallback<Ctx["openAdminPanel"]>(async (password) => {
+    const version = ++requestVersion.current;
     const { data, error } = await supabase.rpc("admin_open_panel", {
       _password: password,
     });
-    if (error || !data) return false;
+    if (version !== requestVersion.current || error || !data) return false;
+    clearExpiry();
     sessionStorage.setItem(ADMIN_PREVIEW_KEY, "true");
     setAdminPreview(true);
     setKeyData(data as unknown as KeyData);
     return true;
-  }, []);
+  }, [clearExpiry]);
 
   const closeAdminPanel = useCallback(() => {
+    requestVersion.current++;
     sessionStorage.removeItem(ADMIN_PREVIEW_KEY);
     setAdminPreview(false);
     setKeyData(null);
   }, []);
 
   const signOut = useCallback(() => {
+    requestVersion.current++;
+    setLoading(false);
+    clearExpiry();
     sessionStorage.removeItem(ADMIN_PREVIEW_KEY);
     setAdminPreview(false);
     persist(null);
-  }, []);
+  }, [clearExpiry]);
 
   const value = useMemo<Ctx>(
     () => ({
       keyData,
+      expiredKey,
       loading,
       device: deviceRef.current,
       deviceId: deviceIdRef.current,
@@ -239,7 +289,7 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refresh,
     }),
-    [keyData, loading, adminPreview, redeem, openAdminPanel, closeAdminPanel, signOut, refresh]
+    [keyData, expiredKey, loading, adminPreview, redeem, openAdminPanel, closeAdminPanel, signOut, refresh]
   );
 
   return <KeyContext.Provider value={value}>{children}</KeyContext.Provider>;

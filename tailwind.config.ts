@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -14,6 +15,12 @@ export default {
     },
     extend: {
       colors: {
+        status: {
+          active: "hsl(var(--status-active) / <alpha-value>)",
+          warning: "hsl(var(--status-warning) / <alpha-value>)",
+          danger: "hsl(var(--status-danger) / <alpha-value>)",
+          info: "hsl(var(--status-info) / <alpha-value>)",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -92,5 +99,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 } satisfies Config;

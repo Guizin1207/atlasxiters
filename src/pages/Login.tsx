@@ -7,9 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AUTH_ERROR_KEY, AUTH_SUPPORT_KEY, useKey } from "@/lib/key-context";
+import { useKey } from "@/lib/key-context";
 import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
+import { NotificationBell } from "@/components/atlas/NotificationBell";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_key: "Chave inválida. Verifique e tente novamente.",
@@ -23,22 +24,15 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { keyData, redeem, loading } = useKey();
+  const { keyData, expiredKey, redeem, loading } = useKey();
   const { signIn: adminSignIn } = useAdmin();
   const [value, setValue] = useState("");
-  const [error, setError] = useState<string | null>(() => {
-    const reason = sessionStorage.getItem(AUTH_ERROR_KEY);
-    sessionStorage.removeItem(AUTH_ERROR_KEY);
-    return reason ? ERROR_MESSAGES[reason] ?? null : null;
-  });
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [supportOpen, setSupportOpen] = useState(false);
-  const [supportKey, setSupportKey] = useState(() => {
-    const key = sessionStorage.getItem(AUTH_SUPPORT_KEY) ?? "";
-    sessionStorage.removeItem(AUTH_SUPPORT_KEY);
-    return key;
-  });
-  const isExpired = error === ERROR_MESSAGES.expired_key;
+  const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get("suporte") === "1");
+  const supportKey = expiredKey && (!value.trim() || value.trim() === expiredKey) ? expiredKey : value;
+  const isExpired = error === ERROR_MESSAGES.expired_key || Boolean(expiredKey && supportKey === expiredKey);
+  const displayError = error ?? (isExpired ? ERROR_MESSAGES.expired_key : null);
 
   useEffect(() => {
     if (!loading && keyData) navigate("/painel", { replace: true });
@@ -64,12 +58,12 @@ export default function LoginPage() {
       return;
     }
     setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
-    if (result.error === "expired_key") setSupportKey(attemptedKey);
   };
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
       <div className="w-full max-w-md animate-fade-in">
+        {isExpired && <div className="flex justify-end mb-4"><NotificationBell /></div>}
         {/* Brand */}
         <header className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl glass-strong mb-6">
@@ -99,7 +93,6 @@ export default function LoginPage() {
                 value={value}
                 onChange={(e) => {
                   setValue(e.target.value.toUpperCase());
-                  setSupportKey("");
                   if (error) setError(null);
                 }}
                 placeholder="XXXX-XXXX-XXXX"
@@ -113,7 +106,7 @@ export default function LoginPage() {
             </div>
           </label>
 
-          {error && (
+          {displayError && (
             <div
               role="alert"
               className="text-sm text-status-danger bg-status-danger/15 border border-status-danger/30 rounded-xl px-4 py-3"
@@ -121,19 +114,19 @@ export default function LoginPage() {
               <div className="flex items-start gap-2">
                 {isExpired && <TriangleAlert className="w-4 h-4 mt-0.5 shrink-0" />}
                 <div className="min-w-0">
-                  {isExpired && <strong className="block text-base uppercase">Expirado</strong>}
-                  <span>{isExpired ? "Seu acesso expirou. Procure o suporte para renovar." : error}</span>
+                  {isExpired && <strong className="block text-base">Sua key foi expirada</strong>}
+                  <span>{isExpired ? "Seu acesso está bloqueado. Fale com o suporte para renovar." : displayError}</span>
                 </div>
               </div>
               {isExpired && (
-                <a
+                <button
                   type="button"
                   onClick={() => setSupportOpen(true)}
-                  className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg border border-status-danger/30 font-semibold"
+                  className="mt-3 flex w-full h-10 items-center justify-center gap-2 rounded-lg border border-status-danger/30 font-semibold"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Falar com o suporte
-                </a>
+                </button>
               )}
             </div>
           )}

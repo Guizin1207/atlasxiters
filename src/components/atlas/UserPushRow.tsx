@@ -10,8 +10,10 @@ const STATUS_TEXT: Record<PushStatus, string> = {
   unsupported: "Este navegador não aceita notificações.",
   "ios-needs-install": "No iPhone, adicione o app à Tela de Início e abra por lá.",
   denied: "Notificações bloqueadas. Libere nas configurações do navegador.",
+  unknown: "Não foi possível conferir o cadastro. Tente ativar novamente.",
+  "admin-device": "Este aparelho recebe os avisos do ADM. Gerencie o vínculo no painel administrativo.",
   ready: "Ativar avisos do suporte, atualizações e manutenção.",
-  enabled: "Este aparelho está recebendo avisos.",
+  enabled: "Avisos ativados para esta key neste aparelho.",
 };
 
 export function UserPushRow() {
@@ -20,8 +22,11 @@ export function UserPushRow() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    void currentPushStatus().then(setStatus);
-  }, []);
+    let active = true;
+    setStatus("ready");
+    void currentPushStatus(keyData?.key).then((next) => { if (active) setStatus(next); });
+    return () => { active = false; };
+  }, [keyData?.key]);
 
   const toggle = async () => {
     if (!keyData?.key || busy) return;
@@ -43,7 +48,7 @@ export function UserPushRow() {
     setBusy(false);
   };
 
-  const canToggle = status === "ready" || status === "enabled";
+  const canToggle = status === "ready" || status === "enabled" || status === "unknown";
 
   return (
     <div className="flex items-center gap-3 px-4 py-4">
@@ -61,7 +66,7 @@ export function UserPushRow() {
         disabled={!canToggle || busy}
         className="rounded-xl shrink-0"
       >
-        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : status === "enabled" ? "Desativar" : "Ativar"}
+        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : status === "admin-device" ? "ADM" : status === "enabled" ? "Desativar" : "Ativar"}
       </Button>
     </div>
   );

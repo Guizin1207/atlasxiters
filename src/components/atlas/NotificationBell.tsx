@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -19,16 +20,19 @@ import { useKey } from "@/lib/key-context";
 import { cn } from "@/lib/utils";
 
 export function NotificationBell() {
-  const { messages, unread, markAllRead } = useMessages();
-  const { keyData } = useKey();
+  const { messages, unread, loading, loadError, markAllRead, reload } = useMessages();
+  const { keyData, expiredKey } = useKey();
   const [open, setOpen] = useState(false);
 
   const isExpiryMessage = (title: string) =>
     title.toLowerCase().includes("expirad");
-  const hasExpiryMessage = messages.some((m) => isExpiryMessage(m.title));
 
   const alert = (() => {
-    if (!keyData || hasExpiryMessage) return null;
+    if (expiredKey) return {
+      title: "Sua key foi expirada",
+      body: "Seu acesso está bloqueado. Fale com o suporte para renovar sua key.",
+    };
+    if (!keyData) return null;
     if (keyData.revoked)
       return {
         title: "Acesso encerrado",
@@ -40,7 +44,7 @@ export function NotificationBell() {
       new Date(keyData.expires_at).getTime() <= Date.now()
     )
       return {
-        title: "Acesso expirado",
+        title: "Sua key foi expirada",
         body: "Sua key expirou. Fale com o suporte para renovar o acesso.",
       };
     return null;
@@ -64,7 +68,7 @@ export function NotificationBell() {
         onClick={() => setOpen(true)}
         className="w-10 h-10 rounded-2xl glass relative hover:bg-white/10"
       >
-        <Bell className="w-4 h-4" />
+        <Bell className={cn("w-4 h-4", alert && "text-status-danger")} />
         {totalUnread > 0 ? (
           <span
             className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-status-danger text-white text-[10px] font-bold flex items-center justify-center animate-pulse-soft"
@@ -87,11 +91,12 @@ export function NotificationBell() {
               <Bell className="w-4 h-4" />
               Notificações
             </DialogTitle>
+            <DialogDescription className="sr-only">Avisos e mensagens da sua key.</DialogDescription>
           </DialogHeader>
 
           <ScrollArea className="max-h-[60vh] px-6 pb-6">
             {alert && (
-              <div className="mb-3 rounded-2xl border border-status-danger/40 bg-status-danger/10 p-4 space-y-1.5 animate-fade-in">
+              <div role="alert" className="mb-3 rounded-2xl border border-status-danger/40 bg-status-danger/10 p-4 space-y-1.5 animate-fade-in">
                 <p className="text-sm font-semibold text-status-danger leading-tight">
                   {alert.title}
                 </p>
@@ -100,7 +105,14 @@ export function NotificationBell() {
                 </p>
               </div>
             )}
-            {messages.length === 0 && !alert ? (
+            {loadError && (
+              <div className="mb-3 text-xs text-muted-foreground">
+                Não foi possível atualizar o histórico.
+                <button type="button" className="ml-2 underline" onClick={() => void reload()}>Tentar novamente</button>
+              </div>
+            )}
+            {loading && <p className="py-3 text-xs text-muted-foreground">Carregando histórico…</p>}
+            {!loading && !loadError && messages.length === 0 && !alert ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Inbox className="w-8 h-8 mb-3 opacity-50" />
                 <p className="text-sm">Nenhuma mensagem ainda.</p>
@@ -133,7 +145,7 @@ export function NotificationBell() {
                         />
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    <p className={cn("text-xs leading-relaxed whitespace-pre-wrap", isExpiryMessage(m.title) ? "text-status-danger/90" : "text-muted-foreground")}>
                       {m.body}
                     </p>
                     <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 pt-1">

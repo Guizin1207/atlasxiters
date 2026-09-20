@@ -69,7 +69,7 @@ export function SupportChat({ accessKey }: { accessKey?: string | null }) {
   const sendMessage = async (message: string) => {
     if (!supportKey || !message.trim() || sending) return;
     setSending(true);
-    const { error } = await supabase.rpc("support_send_message", {
+    const { data, error } = await supabase.rpc("support_send_message", {
       _key: supportKey,
       _body: message.trim(),
     });
@@ -79,7 +79,9 @@ export function SupportChat({ accessKey }: { accessKey?: string | null }) {
       return;
     }
     setBody("");
-    void notifyAdmin("message", supportKey);
+    void notifyAdmin("message", supportKey, data?.id).then((result) => {
+      if (!result.ok) toast.warning("Mensagem salva no chat, mas o aviso no celular do ADM não foi confirmado.");
+    });
     void load();
   };
 
@@ -111,7 +113,7 @@ export function SupportChat({ accessKey }: { accessKey?: string | null }) {
       return;
     }
 
-    const { error } = await supabase.rpc("support_send_message", {
+    const { data, error } = await supabase.rpc("support_send_message", {
       _key: supportKey,
       _body: `${RECEIPT_PREFIX}${path}`,
     });
@@ -122,7 +124,9 @@ export function SupportChat({ accessKey }: { accessKey?: string | null }) {
       return;
     }
     toast.success("Comprovante enviado.");
-    void notifyAdmin("receipt", supportKey);
+    void notifyAdmin("receipt", supportKey, data?.id).then((result) => {
+      if (!result.ok) toast.warning("Comprovante salvo no chat, mas o aviso no celular do ADM não foi confirmado.");
+    });
     void load();
   };
 

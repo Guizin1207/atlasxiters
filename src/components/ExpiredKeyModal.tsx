@@ -6,13 +6,12 @@ import { useKey } from "@/lib/key-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 
 /**
- * Mostra quando a chave expira/é revogada.
- * Mantém a key disponível para o usuário abrir o atendimento antes de sair.
+ * Tela de acesso expirado, sem cobrir o sino e sem montar funções do painel.
  */
 export function ExpiredKeyModal() {
-  const { keyData, signOut } = useKey();
+  const { expiredKey, signOut } = useKey();
   const navigate = useNavigate();
-  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get("suporte") === "1");
 
   const exit = () => {
     signOut();
@@ -21,23 +20,22 @@ export function ExpiredKeyModal() {
 
   return (
     <div
-      role="alertdialog"
-      aria-modal="true"
+      role="alert"
       aria-labelledby="expired-title"
-      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex items-center justify-center px-6 animate-fade-in"
+      className="flex items-center justify-center py-8 animate-fade-in"
     >
-      <div className="glass-strong rounded-3xl p-8 max-w-md w-full text-center space-y-5">
+      <div className="rounded-3xl border border-status-danger/40 bg-status-danger/10 p-6 max-w-md w-full text-center space-y-5">
         <div className="inline-flex w-16 h-16 rounded-2xl bg-status-danger/15 items-center justify-center mx-auto">
           <TimerOff className="w-7 h-7 text-status-danger" />
         </div>
         <div>
           <p className="vip-eyebrow mb-2 text-status-danger">Acesso encerrado</p>
-          <h2 id="expired-title" className="vip-title text-3xl text-status-danger">
-            Expirado
+          <h2 id="expired-title" className="vip-title text-2xl text-status-danger">
+            Sua key foi expirada
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Sua chave não é mais válida. Procure o suporte para renovar seu acesso.
+        <p className="text-sm text-status-danger">
+          Seu acesso está bloqueado. Fale com o suporte para renovar sua key.
         </p>
         <Button onClick={() => setSupportOpen(true)} className="w-full h-12 rounded-2xl bg-status-danger/15 text-status-danger border border-status-danger/30 hover:bg-status-danger/20">
           <MessageCircle className="w-4 h-4 mr-2" />
@@ -60,7 +58,7 @@ export function ExpiredKeyModal() {
                 Fechar
               </button>
             </div>
-            <SupportChat accessKey={keyData?.key} />
+            <SupportChat accessKey={expiredKey} />
           </div>
         </div>
       )}

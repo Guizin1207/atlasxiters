@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useKey } from "@/lib/key-context";
+import { withTimeout } from "@/lib/request-timeout";
 
 export type UserMessage = {
   id: string;
@@ -17,46 +18,71 @@ export type UserMessage = {
 };
 
 export function useMessages() {
-  const { keyData } = useKey();
-  const key = keyData?.key ?? null;
+  const { keyData, expiredKey } = useKey();
+  const key = keyData?.key ?? expiredKey ?? null;
   const keyId = keyData?.id ?? null;
 
-  const [messages, setMessages] = useState<UserMessage[]>([]);
+  const [result, setResult] = useState<{ key: string | null; messages: UserMessage[] }>({ key: null, messages: [] });
+  const messages = useMemo(() => result.key === key ? result.messages : [], [result, key]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const activeKey = useRef(key);
+  activeKey.current = key;
+  const requestVersion = useRef(0);
+  const invalidateRequests = useCallback(() => { requestVersion.current++; }, []);
   const knownIds = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
 
   const load = useCallback(async () => {
-    if (!key) return;
-    const { data, error } = await supabase.rpc("list_my_messages", {
-      _key: key,
-    });
-    if (error) return;
-    const list = (data ?? []) as UserMessage[];
-    setMessages(list);
+    const version = ++requestVersion.current;
+    if (!key) { setLoading(false); return; }
+    try {
+      const { data, error } = await withTimeout(supabase.rpc("list_my_messages", { _key: key }));
+      if (activeKey.current !== key || version !== requestVersion.current) return;
+      if (error) throw error;
+      const list = (data ?? []) as UserMessage[];
+      setResult({ key, messages: list });
+      setLoadError(false);
 
-    if (initialized.current) {
-      // Detecta novas mensagens
-      list.forEach((m) => {
-        if (!knownIds.current.has(m.id) && !m.is_read) {
-          toast(m.title, {
-            description:
-              m.body.length > 120 ? m.body.slice(0, 120) + "…" : m.body,
-          });
-        }
-      });
+      if (initialized.current) {
+        // Detecta novas mensagens
+        list.forEach((m) => {
+          if (!knownIds.current.has(m.id) && !m.is_read) {
+            const showToast = m.title.toLowerCase().includes("expirad") ? toast.error : toast;
+            showToast(m.title, {
+              description:
+                m.body.length > 120 ? m.body.slice(0, 120) + "…" : m.body,
+            });
+          }
+        });
+      }
+      knownIds.current = new Set(list.map((m) => m.id));
+      initialized.current = true;
+    } catch {
+      if (activeKey.current === key && version === requestVersion.current) setLoadError(true);
+    } finally {
+      if (activeKey.current === key && version === requestVersion.current) setLoading(false);
     }
-    knownIds.current = new Set(list.map((m) => m.id));
-    initialized.current = true;
-    setLoading(false);
   }, [key]);
 
   useEffect(() => {
     setLoading(true);
+    setLoadError(false);
+    setResult({ key, messages: [] });
     initialized.current = false;
     knownIds.current = new Set();
-    load();
-  }, [load]);
+    void load();
+    const recheck = () => { if (document.visibilityState !== "hidden") void load(); };
+    const timer = key ? window.setInterval(recheck, 15_000) : undefined;
+    window.addEventListener("focus", recheck);
+    document.addEventListener("visibilitychange", recheck);
+    return () => {
+      invalidateRequests();
+      window.clearInterval(timer);
+      window.removeEventListener("focus", recheck);
+      document.removeEventListener("visibilitychange", recheck);
+    };
+  }, [key, load, invalidateRequests]);
 
   // Realtime: nova mensagem (broadcast ou para esta chave) recarrega
   useEffect(() => {
@@ -93,9 +119,14 @@ export function useMessages() {
     if (!key) return;
     const ids = messages.filter((m) => !m.is_read).map((m) => m.id);
     if (ids.length === 0) return;
-    await supabase.rpc("mark_messages_read", { _key: key, _ids: ids });
-    setMessages((prev) => prev.map((m) => ({ ...m, is_read: true })));
+    try {
+      const { error } = await withTimeout(supabase.rpc("mark_messages_read", { _key: key, _ids: ids }));
+      if (error || activeKey.current !== key) return;
+      setResult((prev) => prev.key === key
+        ? { key, messages: prev.messages.map((m) => ids.includes(m.id) ? { ...m, is_read: true } : m) }
+        : prev);
+    } catch { /* Mantém as mensagens não lidas se o servidor não confirmou. */ }
   }, [key, messages]);
 
-  return { messages, unread, loading, markAllRead, reload: load };
+  return { messages, unread, loading, loadError, markAllRead, reload: load };
 }
