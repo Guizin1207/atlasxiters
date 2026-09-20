@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, Loader2, Copy, Check, Smartphone, Crosshair, Gauge, Zap, ShieldCheck } from "lucide-react";
+import { Sparkles, Loader2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,12 +63,12 @@ export function SensiTab() {
       const { data, error } = await supabase.functions.invoke("sensi-ai", {
         body: { device: inferredDevice || device || "aparelho não informado", dpi, fingers, style, refreshRate, ram, deviceAge, chat: next.slice(-8), question },
       });
-      if (error || !isSensiResult(data)) throw error ?? new Error("Resposta inválida");
+      if (error || !isSensiResult(data)) {\n        const message = (data as { error?: string } | null)?.error || error?.message || "Resposta inválida da IA.";\n        throw new Error(message);\n      }
       setResult(data);
       setMessages((current) => [...current, { role: "ai", text: "Ajustei sua sensi para " + (inferredDevice || device || "seu aparelho") + ".\n\nGeral " + data.geral + " • Red Dot " + data.pontoVermelho + " • 2x " + data.mira2x + " • 4x " + data.mira4x + " • AWM " + data.miraAwm + " • Olhar Livre " + data.olharLivre + (data.notas?.length ? "\n\n" + data.notas.slice(0, 3).join("\n") : "") }]);
     } catch (error) {
       console.error("sensi-ai", error);
-      setMessages((current) => [...current, { role: "ai", text: "Não consegui gerar agora. Tente novamente em alguns segundos." }]);
+      const message = error instanceof Error ? error.message : "Erro desconhecido.";\n      setMessages((current) => [...current, { role: "ai", text: `Não consegui gerar agora. ${message}` }]);
     } finally {
       setBusy(false);
     }
