@@ -27,7 +27,6 @@ export function SupportChat() {
   const [sending, setSending] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
-  const [closed, setClosed] = useState(false);
 
   const load = useCallback(async () => {
     if (!keyData?.key) return;
@@ -69,14 +68,6 @@ export function SupportChat() {
     load();
   };
 
-  const finishChat = async () => {
-    if (!keyData?.key) return;
-    const { error } = await supabase.rpc("support_close_chat", { _key: keyData.key });
-    if (error) { toast.error("Não foi possível finalizar o chat."); return; }
-    setClosed(true);
-    toast.success("Chat finalizado.");
-  };
-
   return (
     <section className="glass-strong rounded-3xl p-5 space-y-4">
       <header className="flex items-center gap-3">
@@ -103,13 +94,9 @@ export function SupportChat() {
 
       <div className="flex gap-2">
         <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem…" rows={2} maxLength={1000} className="rounded-2xl bg-white/5 border-white/10 resize-none" />
-        <Button onClick={send} disabled={sending || !body.trim() || closed} className="w-12 shrink-0 rounded-2xl bg-white text-black">
+        <Button onClick={send} disabled={sending || !body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black">
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={finishChat} disabled={closed} className="h-7 rounded-lg text-[10px] px-2">✅ Finalizar chat</Button>
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
@@ -117,7 +104,7 @@ export function SupportChat() {
           <Button
             key={label}
             variant="outline"
-            disabled={sending || closed}
+            disabled={sending}
             onClick={() => sendMessage(message)}
             className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2"
           >
