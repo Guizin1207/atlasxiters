@@ -80,6 +80,7 @@ export function SupportAdminCard() {
     if (!password || !selected || !body.trim()) return;
     const { error } = await supabase.rpc("admin_support_send_message", { _password: password, _thread_id: selected.id, _body: body.trim() });
     if (error) { toast.error("Não foi possível enviar."); return; }
+    void notifyUsers(password, "reply", { targetKey: selected.key });
     setBody("");
     loadMessages();
     loadThreads();
