@@ -26,7 +26,6 @@ export type Database = {
           is_master: boolean
           key: string
           note: string | null
-          plan: string
           revoked: boolean
         }
         Insert: {
@@ -40,7 +39,6 @@ export type Database = {
           is_master?: boolean
           key: string
           note?: string | null
-          plan?: string
           revoked?: boolean
         }
         Update: {
@@ -54,368 +52,75 @@ export type Database = {
           is_master?: boolean
           key?: string
           note?: string | null
-          plan?: string
           revoked?: boolean
         }
         Relationships: []
       }
-      admin_ai_audit: {
+      atlas_reward_claims: {
         Row: {
-          after_state: Json | null
-          before_state: Json | null
+          claim_date: string
+          coins: number
           created_at: string
           id: string
-          proposal: Json
+          key_id: string
         }
         Insert: {
-          after_state?: Json | null
-          before_state?: Json | null
+          claim_date: string
+          coins?: number
           created_at?: string
           id?: string
-          proposal: Json
+          key_id: string
         }
         Update: {
-          after_state?: Json | null
-          before_state?: Json | null
+          claim_date?: string
+          coins?: number
           created_at?: string
           id?: string
-          proposal?: Json
-        }
-        Relationships: []
-      }
-      admin_ai_conversation: {
-        Row: {
-          messages: Json
-          singleton: boolean
-          updated_at: string
-        }
-        Insert: {
-          messages?: Json
-          singleton?: boolean
-          updated_at?: string
-        }
-        Update: {
-          messages?: Json
-          singleton?: boolean
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      admin_messages: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          target_key_id: string | null
-          title: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          target_key_id?: string | null
-          title: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          target_key_id?: string | null
-          title?: string
+          key_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "admin_messages_target_key_id_fkey"
-            columns: ["target_key_id"]
+            foreignKeyName: "atlas_reward_claims_key_id_fkey"
+            columns: ["key_id"]
             isOneToOne: false
             referencedRelation: "access_keys"
             referencedColumns: ["id"]
           },
         ]
       }
-      app_config: {
+      atlas_rewards: {
         Row: {
-          key: string
+          best_streak: number
+          coins: number
+          current_streak: number
+          key_id: string
+          last_daily_claim: string | null
+          total_claims: number
           updated_at: string
-          value: Json
         }
         Insert: {
-          key: string
+          best_streak?: number
+          coins?: number
+          current_streak?: number
+          key_id: string
+          last_daily_claim?: string | null
+          total_claims?: number
           updated_at?: string
-          value: Json
         }
         Update: {
-          key?: string
-          updated_at?: string
-          value?: Json
-        }
-        Relationships: []
-      }
-      key_expiry_notices: {
-        Row: {
-          expires_at: string
-          key_id: string
-          notified_at: string
-        }
-        Insert: {
-          expires_at: string
-          key_id: string
-          notified_at?: string
-        }
-        Update: {
-          expires_at?: string
+          best_streak?: number
+          coins?: number
+          current_streak?: number
           key_id?: string
-          notified_at?: string
+          last_daily_claim?: string | null
+          total_claims?: number
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "key_expiry_notices_key_id_fkey"
+            foreignKeyName: "atlas_rewards_key_id_fkey"
             columns: ["key_id"]
             isOneToOne: true
-            referencedRelation: "access_keys"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      key_settings: {
-        Row: {
-          key_id: string
-          settings: Json
-          updated_at: string
-        }
-        Insert: {
-          key_id: string
-          settings?: Json
-          updated_at?: string
-        }
-        Update: {
-          key_id?: string
-          settings?: Json
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "key_settings_key_id_fkey"
-            columns: ["key_id"]
-            isOneToOne: true
-            referencedRelation: "access_keys"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      message_reads: {
-        Row: {
-          key_id: string
-          message_id: string
-          read_at: string
-        }
-        Insert: {
-          key_id: string
-          message_id: string
-          read_at?: string
-        }
-        Update: {
-          key_id?: string
-          message_id?: string
-          read_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "message_reads_key_id_fkey"
-            columns: ["key_id"]
-            isOneToOne: false
-            referencedRelation: "access_keys"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "message_reads_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "admin_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      panel_functions: {
-        Row: {
-          created_at: string
-          icon: string
-          id: string
-          min_plan: string
-          name: string
-          sort_order: number
-          tag: string
-          updated_at: string
-          visible: boolean
-        }
-        Insert: {
-          created_at?: string
-          icon?: string
-          id: string
-          min_plan?: string
-          name: string
-          sort_order?: number
-          tag: string
-          updated_at?: string
-          visible?: boolean
-        }
-        Update: {
-          created_at?: string
-          icon?: string
-          id?: string
-          min_plan?: string
-          name?: string
-          sort_order?: number
-          tag?: string
-          updated_at?: string
-          visible?: boolean
-        }
-        Relationships: []
-      }
-      push_subscriptions: {
-        Row: {
-          auth: string
-          created_at: string
-          device: string | null
-          endpoint: string
-          id: string
-          key_id: string | null
-          last_seen_at: string
-          p256dh: string
-          scope: string
-        }
-        Insert: {
-          auth: string
-          created_at?: string
-          device?: string | null
-          endpoint: string
-          id?: string
-          key_id?: string | null
-          last_seen_at?: string
-          p256dh: string
-          scope?: string
-        }
-        Update: {
-          auth?: string
-          created_at?: string
-          device?: string | null
-          endpoint?: string
-          id?: string
-          key_id?: string | null
-          last_seen_at?: string
-          p256dh?: string
-          scope?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_key_id_fkey"
-            columns: ["key_id"]
-            isOneToOne: false
-            referencedRelation: "access_keys"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      support_messages: {
-        Row: {
-          body: string
-          created_at: string
-          edited_at: string | null
-          id: string
-          sender_type: string
-          thread_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          edited_at?: string | null
-          id?: string
-          sender_type: string
-          thread_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          edited_at?: string | null
-          id?: string
-          sender_type?: string
-          thread_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "support_messages_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "support_threads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      support_threads: {
-        Row: {
-          closed_at: string | null
-          created_at: string
-          id: string
-          key_id: string
-          updated_at: string
-        }
-        Insert: {
-          closed_at?: string | null
-          created_at?: string
-          id?: string
-          key_id: string
-          updated_at?: string
-        }
-        Update: {
-          closed_at?: string | null
-          created_at?: string
-          id?: string
-          key_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "support_threads_key_id_fkey"
-            columns: ["key_id"]
-            isOneToOne: true
-            referencedRelation: "access_keys"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      upgrade_requests: {
-        Row: {
-          created_at: string
-          id: string
-          key_id: string
-          message: string | null
-          requested_plan: string
-          resolved_at: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          key_id: string
-          message?: string | null
-          requested_plan: string
-          resolved_at?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          key_id?: string
-          message?: string | null
-          requested_plan?: string
-          resolved_at?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "upgrade_requests_key_id_fkey"
-            columns: ["key_id"]
-            isOneToOne: false
             referencedRelation: "access_keys"
             referencedColumns: ["id"]
           },
@@ -426,580 +131,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      _cfg_bool: { Args: { _k: string }; Returns: boolean }
-      _cfg_text: { Args: { _k: string }; Returns: string }
-      _check_admin: { Args: { _password: string }; Returns: boolean }
-      _gen_key: { Args: never; Returns: string }
-      _plan_days: { Args: { _plan: string }; Returns: number }
-      _require_admin: { Args: { _password: string }; Returns: undefined }
-      _valid_access_key: { Args: { _key: string }; Returns: boolean }
-      admin_activate_key: {
-        Args: { _id: string; _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_apply_panel_proposal: {
-        Args: { _password: string; _proposal: Json }
+      claim_daily_reward: { Args: { _key: string }; Returns: Json }
+      get_daily_reward: { Args: { _key: string }; Returns: Json }
+      get_reward_calendar: {
+        Args: { _key: string; _month?: number; _year?: number }
         Returns: Json
       }
-      admin_create_keys: {
-        Args: {
-          _count: number
-          _duration_days: number
-          _note: string
-          _password: string
-          _plan?: string
-        }
-        Returns: Json
-      }
-      admin_delete_key: {
-        Args: { _id: string; _password: string }
-        Returns: boolean
-      }
-      admin_delete_message: {
-        Args: { _id: string; _password: string }
-        Returns: boolean
-      }
-      admin_delete_push_subscription: {
-        Args: { _id: string; _password: string }
-        Returns: boolean
-      }
-      admin_device_stats: { Args: { _password: string }; Returns: Json }
-      admin_end_access_session: {
-        Args: { _password: string; _session_id: string }
-        Returns: boolean
-      }
-      admin_extend_key: {
-        Args: { _days: number; _id: string; _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_get_ai_messages: { Args: { _password: string }; Returns: Json }
-      admin_list_access_sessions: { Args: { _password: string }; Returns: Json }
-      admin_list_keys: {
-        Args: { _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      admin_list_messages: { Args: { _password: string }; Returns: Json }
-      admin_list_panel_functions: { Args: { _password: string }; Returns: Json }
-      admin_list_push_subscriptions: {
-        Args: { _password: string }
-        Returns: {
-          auth: string
-          created_at: string
-          device: string | null
-          endpoint: string
-          id: string
-          key_id: string | null
-          last_seen_at: string
-          p256dh: string
-          scope: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "push_subscriptions"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      admin_list_upgrade_requests: {
-        Args: { _password: string }
-        Returns: Json
-      }
-      admin_open_panel: {
-        Args: { _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_reset_device: {
-        Args: { _id: string; _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_resolve_upgrade_request: {
-        Args: { _approve: boolean; _id: string; _password: string }
-        Returns: Json
-      }
-      admin_revoke_key: {
-        Args: { _id: string; _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_save_ai_messages: {
-        Args: { _messages: Json; _password: string }
-        Returns: boolean
-      }
-      admin_save_push_subscription: {
-        Args: {
-          _auth: string
-          _device?: string
-          _endpoint: string
-          _p256dh: string
-          _password: string
-        }
-        Returns: {
-          auth: string
-          created_at: string
-          device: string | null
-          endpoint: string
-          id: string
-          key_id: string | null
-          last_seen_at: string
-          p256dh: string
-          scope: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "push_subscriptions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_send_message: {
-        Args: {
-          _body: string
-          _password: string
-          _target_key_id?: string
-          _title: string
-        }
-        Returns: Json
-      }
-      admin_set_device: {
-        Args: { _device: string; _id: string; _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_set_expiration: {
-        Args: { _expires_at: string; _id: string; _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_set_maintenance: {
-        Args: { _enabled: boolean; _message: string; _password: string }
-        Returns: Json
-      }
-      admin_set_plan: {
-        Args: {
-          _apply_duration?: boolean
-          _id: string
-          _password: string
-          _plan: string
-        }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_support_close_chat: {
-        Args: { _password: string; _thread_id: string }
-        Returns: {
-          closed_at: string | null
-          created_at: string
-          id: string
-          key_id: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "support_threads"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_support_delete_chat: {
-        Args: { _password: string; _thread_id: string }
-        Returns: boolean
-      }
-      admin_support_edit_message: {
-        Args: { _body: string; _message_id: string; _password: string }
-        Returns: {
-          body: string
-          created_at: string
-          edited_at: string | null
-          id: string
-          sender_type: string
-          thread_id: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "support_messages"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_support_list_messages: {
-        Args: { _password: string; _thread_id: string }
-        Returns: {
-          body: string
-          created_at: string
-          edited_at: string | null
-          id: string
-          sender_type: string
-          thread_id: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "support_messages"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      admin_support_list_threads: {
-        Args: { _password: string }
-        Returns: {
-          id: string
-          key: string
-          key_id: string
-          updated_at: string
-        }[]
-      }
-      admin_support_send_message: {
-        Args: { _body: string; _password: string; _thread_id: string }
-        Returns: {
-          body: string
-          created_at: string
-          edited_at: string | null
-          id: string
-          sender_type: string
-          thread_id: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "support_messages"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_touch_access_session: {
-        Args: {
-          _device_id: string
-          _device_label: string
-          _password: string
-          _session_id: string
-        }
-        Returns: boolean
-      }
-      admin_unrevoke_key: {
-        Args: { _id: string; _password: string }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_update_key_access: {
-        Args: {
-          _duration_days: number
-          _id: string
-          _key: string
-          _password: string
-          _plan: string
-        }
-        Returns: {
-          activated_at: string | null
-          created_at: string
-          device: string | null
-          device_id: string | null
-          duration_days: number
-          expires_at: string | null
-          id: string
-          is_master: boolean
-          key: string
-          note: string | null
-          plan: string
-          revoked: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "access_keys"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      count_unread_messages: { Args: { _key: string }; Returns: number }
-      get_maintenance: { Args: never; Returns: Json }
-      get_settings: { Args: { _key: string }; Returns: Json }
-      is_master_key: { Args: { _key: string }; Returns: boolean }
-      list_my_messages: { Args: { _key: string }; Returns: Json }
-      list_my_upgrade_requests: { Args: { _key: string }; Returns: Json }
-      list_panel_functions: { Args: { _key: string }; Returns: Json }
-      mark_messages_read: {
-        Args: { _ids: string[]; _key: string }
-        Returns: number
-      }
-      notify_expired_keys: { Args: never; Returns: number }
-      redeem_key: {
-        Args: { _device: string; _device_id: string; _key: string }
-        Returns: Json
-      }
-      request_upgrade: {
-        Args: { _key: string; _message?: string; _plan: string }
-        Returns: Json
-      }
-      save_settings: { Args: { _key: string; _settings: Json }; Returns: Json }
-      support_close_chat: {
-        Args: { _key: string }
-        Returns: {
-          closed_at: string | null
-          created_at: string
-          id: string
-          key_id: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "support_threads"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      support_delete_chat: { Args: { _key: string }; Returns: boolean }
-      support_edit_message: {
-        Args: { _body: string; _key: string; _message_id: string }
-        Returns: {
-          body: string
-          created_at: string
-          edited_at: string | null
-          id: string
-          sender_type: string
-          thread_id: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "support_messages"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      support_list_messages: {
-        Args: { _key: string }
-        Returns: {
-          body: string
-          created_at: string
-          edited_at: string | null
-          id: string
-          sender_type: string
-          thread_id: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "support_messages"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      support_send_message: {
-        Args: { _body: string; _key: string }
-        Returns: {
-          body: string
-          created_at: string
-          edited_at: string | null
-          id: string
-          sender_type: string
-          thread_id: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "support_messages"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      user_delete_push_subscription: {
-        Args: { _endpoint: string; _key: string }
-        Returns: boolean
-      }
-      user_push_status: { Args: { _key: string }; Returns: boolean }
-      user_save_push_subscription: {
-        Args: {
-          _auth: string
-          _device: string
-          _endpoint: string
-          _key: string
-          _p256dh: string
-        }
-        Returns: boolean
-      }
-      validate_key: {
-        Args: { _device_id: string; _key: string }
-        Returns: Json
-      }
+      redeem_atlas_coins: { Args: { _key: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
