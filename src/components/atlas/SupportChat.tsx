@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { MessageCircle, Send, Loader2, Pencil, Check, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MessageCircle, Send, Loader2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { useKey } from "@/lib/key-context";
 
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
 
+const RECEIPT_PREFIX = "[[receipt]]";
 const QUICK_OPTIONS = [
   ["🔑 Não recebi minha key.", "🔑 Não recebi minha key."],
   ["💰 Enviei o Pix.", "💰 Enviei o Pix."],
@@ -25,8 +26,8 @@ export function SupportChat() {
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editBody, setEditBody] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     if (!keyData?.key) return;
@@ -57,14 +58,43 @@ export function SupportChat() {
     load();
   };
 
-  const send = () => sendMessage(body);
+  const sendReceipt = async (file: File) => {
+    if (!keyData?.key || uploading) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione uma imagem do comprovante.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 8 MB.");
+      return;
+    }
 
-  const editMessage = async (id: string) => {
-    if (!keyData?.key || !editBody.trim()) return;
-    const { error } = await supabase.rpc("support_edit_message", { _key: keyData.key, _message_id: id, _body: editBody.trim() });
-    if (error) { toast.error("Não foi possível editar."); return; }
-    setEditingId(null);
-    setEditBody("");
+    setUploading(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const safeKey = keyData.key.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
+    const path = `${safeKey}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("support-receipts")
+      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+
+    if (uploadError) {
+      setUploading(false);
+      toast.error("Não foi possível enviar o comprovante.");
+      return;
+    }
+
+    const { data } = supabase.storage.from("support-receipts").getPublicUrl(path);
+    const { error } = await supabase.rpc("support_send_message", {
+      _key: keyData.key,
+      _body: `${RECEIPT_PREFIX}${data.publicUrl}`,
+    });
+    setUploading(false);
+
+    if (error) {
+      toast.error("Imagem enviada, mas não foi possível anexar ao chat.");
+      return;
+    }
+    toast.success("Comprovante enviado.");
     load();
   };
 
@@ -80,34 +110,60 @@ export function SupportChat() {
         </div>
       </header>
 
-            <div className="h-80 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
+      <div className="h-80 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
         {loading ? <div className="flex justify-center py-10"><Loader2 className="w-4 h-4 animate-spin" /></div> :
           messages.length === 0 ? <p className="text-xs text-muted-foreground text-center py-10">Nenhuma mensagem ainda. Envie sua dúvida abaixo.</p> :
-          messages.map((m) => (
-            <div key={m.id} className={`flex ${m.sender_type === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "user" ? "bg-white text-black" : "glass"}`}>
-                {m.body}
+          messages.map((m) => {
+            const isReceipt = m.body.startsWith(RECEIPT_PREFIX);
+            const receiptUrl = isReceipt ? m.body.slice(RECEIPT_PREFIX.length) : "";
+            return (
+              <div key={m.id} className={`flex ${m.sender_type === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "user" ? "bg-white text-black" : "glass"}`}>
+                  {isReceipt ? (
+                    <a href={receiptUrl} target="_blank" rel="noreferrer" className="block">
+                      <img src={receiptUrl} alt="Comprovante" className="max-h-56 w-auto rounded-xl object-contain" />
+                      <span className="mt-1 block text-[10px] opacity-60">Comprovante enviado</span>
+                    </a>
+                  ) : m.body}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void sendReceipt(file);
+          e.currentTarget.value = "";
+        }}
+      />
+
+      <Button
+        type="button"
+        variant="outline"
+        disabled={uploading}
+        onClick={() => fileRef.current?.click()}
+        className="w-full rounded-2xl border-white/10 bg-white/5"
+      >
+        {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImagePlus className="mr-2 h-4 w-4" />}
+        {uploading ? "Enviando comprovante..." : "Enviar comprovante"}
+      </Button>
 
       <div className="flex gap-2">
         <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem…" rows={2} maxLength={1000} className="rounded-2xl bg-white/5 border-white/10 resize-none" />
-        <Button onClick={send} disabled={sending || !body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black">
+        <Button onClick={() => sendMessage(body)} disabled={sending || !body.trim()} className="w-12 shrink-0 rounded-2xl bg-white text-black">
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {QUICK_OPTIONS.map(([label, message]) => (
-          <Button
-            key={label}
-            variant="outline"
-            disabled={sending}
-            onClick={() => sendMessage(message)}
-            className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2"
-          >
+          <Button key={label} variant="outline" disabled={sending} onClick={() => sendMessage(message)} className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2">
             {label}
           </Button>
         ))}
