@@ -69,16 +69,16 @@ export function SupportChat() {
         </div>
       </header>
 
-      <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
-        <p className="text-sm mb-3">👋 Como podemos ajudar?</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="rounded-2xl border border-white/10 bg-black/15 p-2">
+        <p className="text-xs mb-2">👋 Como podemos ajudar?</p>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
           {QUICK_OPTIONS.map(([label, message]) => (
             <Button
               key={label}
               variant="outline"
               disabled={sending}
               onClick={() => sendMessage(message)}
-              className="justify-start text-left rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-xs h-auto min-h-10 py-2"
+              className="shrink-0 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 text-[10px] h-7 px-2"
             >
               {label}
             </Button>
