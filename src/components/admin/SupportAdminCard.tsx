@@ -68,15 +68,15 @@ export function SupportAdminCard() {
     <section className="glass-strong rounded-3xl p-6 space-y-5">
       <header><p className="vip-eyebrow">Atendimento</p><h2 className="vip-title text-base">Chat de suporte</h2></header>
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> :
-        <div className="grid lg:grid-cols-[220px_1fr] gap-4">
+        <div className="grid min-w-0 lg:grid-cols-[220px_minmax(0,1fr)] gap-4">
           <div className="space-y-2">
             {threads.length === 0 ? <p className="text-xs text-muted-foreground">Nenhuma conversa.</p> :
               threads.map((t) => <button key={t.id} onClick={() => setSelected(t)} className={`w-full text-left rounded-2xl p-3 text-xs ${selected?.id === t.id ? "bg-white text-black" : "glass"}`}>{t.key}</button>)}
           </div>
-          <div className="space-y-3">
-            <div className="h-72 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
+          <div className="min-w-0 space-y-3">
+            <div className="h-72 min-w-0 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">
               {!selected ? <p className="text-xs text-muted-foreground text-center py-10">Selecione uma conversa.</p> :
-                messages.map((m) => <div key={m.id} className={`flex ${m.sender_type === "admin" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] min-w-0 rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words overflow-hidden ${m.sender_type === "admin" ? "bg-white text-black" : "glass"}`}>{m.body}</div></div>)}
+                messages.map((m) => <div key={m.id} className={`flex min-w-0 ${m.sender_type === "admin" ? "justify-end" : "justify-start"}`}><div className={`w-fit max-w-[85%] min-w-0 rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-all overflow-hidden ${m.sender_type === "admin" ? "bg-white text-black" : "glass"}`}>{m.body}</div></div>)}
             </div>
             {selected && <>
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
