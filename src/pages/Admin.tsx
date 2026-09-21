@@ -102,6 +102,16 @@ export default function AdminPage() {
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl glass-strong">
               <ShieldAlert className="h-4 w-4" />
             </div>
+            <div className="min-w-0">
+              <p className="vip-eyebrow">Admin</p>
+              <h1 className="vip-title text-lg leading-none">Atlas Control</h1>
+              <p className="mt-1 truncate text-xs text-muted-foreground">
+                {selected?.title ?? "Central de administração"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
@@ -111,13 +121,6 @@ export default function AdminPage() {
             >
               <span className="text-lg leading-none">☰</span>
             </Button>
-            <div className="min-w-0">
-              <p className="vip-eyebrow">Admin</p>
-              <h1 className="vip-title text-lg leading-none">Atlas Control</h1>
-              <p className="mt-1 truncate text-xs text-muted-foreground">
-                {selected?.title ?? "Central de administração"}
-              </p>
-            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
