@@ -94,12 +94,6 @@ export default function AdminPage() {
     };
   }, [adminDrawerOpen]);
 
-  return () => {
-      window.removeEventListener("touchstart", start);
-      window.removeEventListener("touchend", end);
-    };
-  }, [adminDrawerOpen]);
-
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
