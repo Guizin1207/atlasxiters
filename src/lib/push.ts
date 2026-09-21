@@ -36,14 +36,28 @@ export function isPushPreviewEnvironment() {
 /** Remove inscrições criadas em uma prévia antiga. Não executa no domínio real. */
 export async function cleanupPreviewPushRegistrations() {
   if (!isPushPreviewEnvironment() || !("serviceWorker" in navigator)) return;
-  const registrations = await navigator.serviceWorker.getRegistrations();
-  await Promise.all(registrations.filter((r) => r.scope.includes("/push/admin/") || r.scope.includes("/push/user/")).map(async (r) => {
-    try {
-      const sub = await r.pushManager.getSubscription();
-      if (sub) await sub.unsubscribe();
-    } catch { /* limpeza preventiva */ }
-    await r.unregister();
-  }));
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(
+      registrations
+        .filter((r) => r.scope.includes("/push/admin/") || r.scope.includes("/push/user/"))
+        .map(async (r) => {
+          try {
+            const sub = r.pushManager ? await r.pushManager.getSubscription() : null;
+            if (sub) await sub.unsubscribe();
+          } catch {
+            // limpeza preventiva
+          }
+          try {
+            await r.unregister();
+          } catch {
+            // a prévia nunca deve quebrar por causa de um service worker antigo
+          }
+        })
+    );
+  } catch {
+    // falhas de service worker na prévia são ignoradas
+  }
 }
 
 void cleanupPreviewPushRegistrations();
