@@ -120,6 +120,13 @@
       "when": 1789993744707,
       "tag": "0016_admin_clear_access_devices",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790017089308,
+      "tag": "0017_admin_reward_management",
+      "breakpoints": true
     }
   ]
 }
