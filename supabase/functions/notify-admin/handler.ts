@@ -216,9 +216,10 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         const stale: string[] = [];
         let sent = 0;
         let failed = 0;
+        let dailyNext = 0;
         await Promise.all(Array.from({ length: Math.min(8, eligibleSubs.length) }, async () => {
-          while (next < eligibleSubs.length) {
-            const sub = eligibleSubs[next++];
+          while (dailyNext < eligibleSubs.length) {
+            const sub = eligibleSubs[dailyNext++];
             try {
               await sendNotification(
                 { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
