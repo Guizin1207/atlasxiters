@@ -131,28 +131,57 @@ export default function AdminPage() {
         </header>
 
         <nav aria-label="Funções administrativas" className="py-2">
-          <div className="grid grid-cols-3 gap-x-5 gap-y-2 sm:grid-cols-9">
-            {adminFunctions.map(({ id, title }) => {
-              const active = selectedFunction === id;
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {[
+              { id: "overview", title: "Geral", items: ["overview", "devices", "security"] },
+              { id: "keys", title: "Keys", items: ["keys", "rewards"] },
+              { id: "notifications", title: "Comunicação", items: ["notifications", "messages", "support"] },
+              { id: "maintenance", title: "Sistema", items: ["maintenance"] },
+            ].map((group) => {
+              const active = group.items.includes(selectedFunction);
 
               return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setSelectedFunction(id)}
-                  aria-current={active ? "page" : undefined}
-                  className={[
-                    "relative py-2 text-center text-xs sm:text-sm font-medium transition-all",
-                    active
-                      ? "text-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground",
-                  ].join(" ")}
-                >
-                  {title}
-                  {active && (
-                    <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-foreground" />
+                <div key={group.id} className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFunction(group.items[0] as AdminFunction["id"])}
+                    className={[
+                      "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
+                      active
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                    ].join(" ")}
+                  >
+                    {group.title}
+                  </button>
+
+                  {active && group.items.length > 1 && (
+                    <div className="ml-1 flex items-center gap-0.5 rounded-md bg-white/[0.03] p-0.5">
+                      {group.items.map((itemId) => {
+                        const item = adminFunctions.find((item) => item.id === itemId);
+                        if (!item) return null;
+
+                        const itemActive = selectedFunction === itemId;
+
+                        return (
+                          <button
+                            key={itemId}
+                            type="button"
+                            onClick={() => setSelectedFunction(itemId as AdminFunction["id"])}
+                            className={[
+                              "rounded px-2 py-1 text-[11px] transition-colors",
+                              itemActive
+                                ? "bg-white/10 text-foreground"
+                                : "text-muted-foreground hover:text-foreground",
+                            ].join(" ")}
+                          >
+                            {item.title}
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
