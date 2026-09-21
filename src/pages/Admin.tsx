@@ -124,6 +124,15 @@ export default function AdminPage() {
               Acesso usuário
             </Button>
             <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden h-9 w-9 rounded-xl border border-primary/40 bg-primary/15 text-primary shadow-lg shadow-primary/10 hover:bg-primary/25"
+              onClick={() => setAdminDrawerOpen(true)}
+              aria-label="Abrir funções ADM"
+            >
+              <span className="text-lg leading-none">☰</span>
+            </Button>
+            <Button
               size="sm"
               className="rounded-xl"
               onClick={async () => {
@@ -141,15 +150,6 @@ export default function AdminPage() {
                 <LayoutGrid className="mr-1.5 h-4 w-4" />
               )}
               <span className="hidden sm:inline">Painel</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden h-9 w-9 rounded-xl border border-primary/40 bg-primary/15 text-primary shadow-lg shadow-primary/10 hover:bg-primary/25"
-              onClick={() => setAdminDrawerOpen(true)}
-              aria-label="Abrir funções ADM"
-            >
-              <span className="text-lg leading-none">☰</span>
             </Button>
             <Button
               variant="ghost"
