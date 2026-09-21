@@ -164,12 +164,12 @@ export default function LoginPage() {
                 Validando…
               </>
             ) : (
-              isAdminEntry ? "Entrar como ADM" : "Entrar"
+              "Entrar"
             )}
           </Button>
 
           <p className="text-[11px] text-center text-muted-foreground/70 pt-2">
-            {isAdminEntry ? "Confirme para abrir seu painel." : "Sua chave fica vinculada a este dispositivo."}
+            Sua chave fica vinculada a este dispositivo.
           </p>
         </form>
 
