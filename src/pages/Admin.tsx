@@ -130,59 +130,57 @@ export default function AdminPage() {
           </div>
         </header>
 
-                <nav aria-label="Funções administrativas" className="py-3">
-          <div className="grid grid-cols-3 gap-2">
+                        <nav aria-label="Funções administrativas" className="py-3">
+          <div className="grid grid-cols-3 gap-3">
             {[
-              { id: "admin", title: "Admin", items: ["overview", "keys", "devices", "rewards"] },
-              { id: "comms", title: "Comunicação", items: ["notifications", "messages", "support"] },
-              { id: "system", title: "Sistema", items: ["maintenance", "security"] },
-            ].map((group) => {
-              const active = group.items.includes(selectedFunction);
-
-              return (
-                <button
-                  key={group.id}
-                  type="button"
-                  onClick={() => setSelectedFunction(group.items[0] as AdminFunction["id"])}
-                  className={[
-                    "rounded-lg py-2 text-xs font-semibold transition-all",
-                    active
-                      ? "bg-foreground text-background"
-                      : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.07] hover:text-foreground",
-                  ].join(" ")}
-                >
+              {
+                title: "Controle",
+                items: [
+                  { id: "overview", title: "Resumo" },
+                  { id: "keys", title: "Chaves" },
+                  { id: "devices", title: "Acessos" },
+                ],
+              },
+              {
+                title: "Atendimento",
+                items: [
+                  { id: "rewards", title: "Benefícios" },
+                  { id: "notifications", title: "Avisos" },
+                  { id: "messages", title: "Conversas" },
+                ],
+              },
+              {
+                title: "Sistema",
+                items: [
+                  { id: "support", title: "Suporte" },
+                  { id: "maintenance", title: "Manutenção" },
+                  { id: "security", title: "Segurança" },
+                ],
+              },
+            ].map((group) => (
+              <div key={group.title} className="min-w-0">
+                <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {group.title}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-2">
-            <label htmlFor="admin-function" className="sr-only">
-              Função
-            </label>
-            <select
-              id="admin-function"
-              value={selectedFunction}
-              onChange={(event) => setSelectedFunction(event.target.value as AdminFunction["id"])}
-              className="h-9 w-full rounded-lg border border-white/10 bg-background px-3 text-xs text-foreground outline-none"
-            >
-              {[
-                { label: "Visão geral", value: "overview" },
-                { label: "Keys", value: "keys" },
-                { label: "Dispositivos", value: "devices" },
-                { label: "Recompensas", value: "rewards" },
-                { label: "Notificações", value: "notifications" },
-                { label: "Mensagens", value: "messages" },
-                { label: "Suporte", value: "support" },
-                { label: "Manutenção", value: "maintenance" },
-                { label: "Segurança", value: "security" },
-              ].map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
+                </p>
+                <div className="flex flex-col gap-0.5">
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSelectedFunction(item.id as AdminFunction["id"])}
+                      className={[
+                        "w-full truncate rounded-md px-2 py-1.5 text-left text-xs transition-colors",
+                        selectedFunction === item.id
+                          ? "bg-foreground text-background font-semibold"
+                          : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+                      ].join(" ")}
+                    >
+                      {item.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </nav>
 
