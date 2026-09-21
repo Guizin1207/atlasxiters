@@ -119,27 +119,17 @@ export default function AdminPage() {
         </header>
 
         {!selectedFunction ? (
-          <section aria-label="Funções administrativas" className="space-y-5">
-            <div>
-              <p className="vip-eyebrow mb-1">Admin</p>
-              <h2 className="text-xl font-bold">Funções</h2>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+          <section aria-label="Funções administrativas" className="space-y-3">
+            <div className="flex items-center gap-5 overflow-x-auto pb-1 scrollbar-none">
               {adminFunctions.map(({ id, title, icon: Icon }) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => setSelectedFunction(id)}
-                  className="group relative text-left rounded-2xl p-4 h-32 flex flex-col justify-between transition-all overflow-hidden glass hover:bg-white/[0.07] active:scale-[0.98]"
+                  className="shrink-0 inline-flex items-center gap-2 px-1 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/10">
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.2em] mb-1 text-muted-foreground">ADM</p>
-                    <p className="font-bold text-sm leading-tight">{title}</p>
-                  </div>
+                  <Icon className="w-4 h-4" />
+                  <span>{title}</span>
                 </button>
               ))}
             </div>
