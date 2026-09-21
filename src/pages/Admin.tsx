@@ -1,13 +1,22 @@
 /**
- * Página /admin — dashboard protegido.
- * Login de administrador separado do acesso de usuário por key.
+ * Página /admin — central administrativa protegida.
+ * Navegação direta por funções, mantendo a ordem operacional do ADM.
  */
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
-  Loader2, ShieldAlert, LogOut, LayoutGrid, UserRound, KeyRound,
-  Smartphone, Coins, Bell, MessageSquare, LifeBuoy, Wrench, ShieldCheck,
-  ArrowLeft,
+  Loader2,
+  ShieldAlert,
+  LogOut,
+  LayoutGrid,
+  KeyRound,
+  Smartphone,
+  Coins,
+  Bell,
+  MessageSquare,
+  LifeBuoy,
+  Wrench,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAdmin } from "@/lib/admin-context";
@@ -44,7 +53,7 @@ export default function AdminPage() {
   const { openAdminPanel, closeAdminPanel, adminPreview } = useKey();
   const navigate = useNavigate();
   const [openingPanel, setOpeningPanel] = useState(false);
-  const [selectedFunction, setSelectedFunction] = useState<string | null>(null);
+  const [selectedFunction, setSelectedFunction] = useState("overview");
 
   if (loading) {
     return (
@@ -60,33 +69,36 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen pb-16">
-      <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-8 space-y-5">
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl glass-strong flex items-center justify-center">
-              <ShieldAlert className="w-4 h-4" />
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-5 sm:pt-7 space-y-5">
+        <header className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl glass-strong">
+              <ShieldAlert className="h-4 w-4" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="vip-eyebrow">Admin</p>
               <h1 className="vip-title text-lg leading-none">Atlas Control</h1>
-              <p className="text-xs text-muted-foreground mt-1">
-                {selected ? selected.title : "Central de administração"}
+              <p className="mt-1 truncate text-xs text-muted-foreground">
+                {selected?.title ?? "Central de administração"}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5">
             <Button
               variant="outline"
-              className="rounded-2xl"
+              size="sm"
+              className="hidden rounded-xl sm:inline-flex"
               onClick={() => {
                 if (adminPreview) closeAdminPanel();
                 navigate("/login?trocar=1");
               }}
             >
-              Acesso de usuário
+              Acesso usuário
             </Button>
             <Button
+              size="sm"
+              className="rounded-xl"
               onClick={async () => {
                 if (!password || openingPanel) return;
                 setOpeningPanel(true);
@@ -95,84 +107,157 @@ export default function AdminPage() {
                 if (opened) navigate("/painel");
               }}
               disabled={openingPanel}
-              className="rounded-2xl"
             >
               {openingPanel ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : (
-                <LayoutGrid className="w-4 h-4 mr-2" />
+                <LayoutGrid className="mr-1.5 h-4 w-4" />
               )}
-              Abrir painel
+              <span className="hidden sm:inline">Painel</span>
             </Button>
             <Button
               variant="ghost"
+              size="icon"
               onClick={() => {
                 if (adminPreview) closeAdminPanel();
                 signOut();
               }}
-              className="rounded-2xl glass hover:bg-white/10"
+              className="h-9 w-9 rounded-xl glass hover:bg-white/10"
               aria-label="Sair do admin"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </header>
 
-        {!selectedFunction ? (
-          <section aria-label="Funções administrativas" className="space-y-2">
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-1">
-              {adminFunctions.map(({ id, title, icon: Icon }) => (
+        <nav
+          aria-label="Funções administrativas"
+          className="border-y border-white/10 py-1"
+        >
+          <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
+            {adminFunctions.map(({ id, title, icon: Icon }) => {
+              const active = selectedFunction === id;
+
+              return (
                 <button
                   key={id}
                   type="button"
                   onClick={() => setSelectedFunction(id)}
-                  className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                  aria-current={active ? "page" : undefined}
+                  className={[
+                    "relative inline-flex items-center gap-1.5 px-2.5 py-2.5 text-xs font-semibold transition-colors",
+                    "after:absolute after:inset-x-2.5 after:bottom-0 after:h-0.5 after:rounded-full after:transition-opacity",
+                    active
+                      ? "text-foreground after:bg-foreground after:opacity-100"
+                      : "text-muted-foreground hover:text-foreground after:opacity-0",
+                  ].join(" ")}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="h-3.5 w-3.5" />
                   <span>{title}</span>
                 </button>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <div className="space-y-4">
-            {selectedFunction === "overview" && <DeviceStatsCard />}
+              );
+            })}
+          </div>
+        </nav>
 
-            {selectedFunction === "keys" && (
+        <section
+          key={selectedFunction}
+          aria-label={selected?.title ?? "Função administrativa"}
+          className="animate-fade-in"
+        >
+          {selectedFunction === "overview" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Painel</p>
+                <h2 className="text-xl font-bold">Visão geral</h2>
+              </div>
+              <DeviceStatsCard />
+            </div>
+          )}
+
+          {selectedFunction === "keys" && (
+            <div className="space-y-5">
+              <div>
+                <p className="vip-eyebrow">Gerenciamento</p>
+                <h2 className="text-xl font-bold">Keys</h2>
+              </div>
               <div className="space-y-6">
                 <KeysListCard />
                 <KeyGeneratorCard />
               </div>
-            )}
+            </div>
+          )}
 
-            {selectedFunction === "devices" && <AdminDevicesCard />}
+          {selectedFunction === "devices" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Acesso administrativo</p>
+                <h2 className="text-xl font-bold">Dispositivos ADM</h2>
+              </div>
+              <AdminDevicesCard />
+            </div>
+          )}
 
-            {selectedFunction === "rewards" && (
-              <section className="glass-strong rounded-3xl p-6">
-                <p className="vip-eyebrow mb-1">Atlas Coins</p>
-                <h2 className="text-xl font-bold">Recompensas</h2>
-                <p className="text-sm text-muted-foreground mt-2">
-                  As funções de recompensa existentes continuam disponíveis.
-                </p>
-              </section>
-            )}
+          {selectedFunction === "rewards" && (
+            <section className="glass-strong rounded-3xl p-6">
+              <p className="vip-eyebrow mb-1">Atlas Coins</p>
+              <h2 className="text-xl font-bold">Recompensas</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                As funções de recompensa existentes continuam disponíveis.
+              </p>
+            </section>
+          )}
 
-            {selectedFunction === "notifications" && <PushNotificationsCard />}
-            {selectedFunction === "messages" && <MessagesCard />}
-            {selectedFunction === "support" && <SupportAdminCard />}
-            {selectedFunction === "maintenance" && <MaintenanceCard />}
+          {selectedFunction === "notifications" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Comunicação</p>
+                <h2 className="text-xl font-bold">Notificações</h2>
+              </div>
+              <PushNotificationsCard />
+            </div>
+          )}
 
-            {selectedFunction === "security" && (
-              <section className="glass-strong rounded-3xl p-6">
-                <p className="vip-eyebrow mb-1">Proteção</p>
-                <h2 className="text-xl font-bold">Segurança do ADM</h2>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Controle de acesso e sessões administrativas.
-                </p>
-              </section>
-            )}
-          </div>
-        )}
+          {selectedFunction === "messages" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Comunicação</p>
+                <h2 className="text-xl font-bold">Mensagens</h2>
+              </div>
+              <MessagesCard />
+            </div>
+          )}
+
+          {selectedFunction === "support" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Atendimento</p>
+                <h2 className="text-xl font-bold">Suporte</h2>
+              </div>
+              <SupportAdminCard />
+            </div>
+          )}
+
+          {selectedFunction === "maintenance" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Sistema</p>
+                <h2 className="text-xl font-bold">Manutenção</h2>
+              </div>
+              <MaintenanceCard />
+            </div>
+          )}
+
+          {selectedFunction === "security" && (
+            <section className="glass-strong rounded-3xl p-6">
+              <p className="vip-eyebrow mb-1">Proteção</p>
+              <h2 className="text-xl font-bold">Segurança do ADM</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Controle de acesso e sessões administrativas.
+              </p>
+            </section>
+          )}
+        </section>
       </div>
     </main>
   );
