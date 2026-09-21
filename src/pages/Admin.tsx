@@ -99,22 +99,22 @@ export default function AdminPage() {
           <DeviceStatsCard />
         </AdminSection>
 
-        <AdminSection title="Segurança e acessos">
+        <AdminSection title="Keys — prioridade">
+          <KeysListCard />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <KeyGeneratorCard />
+            <MaintenanceCard />
+          </div>
+        </AdminSection>
+
+        <AdminSection title="Acessos administrativos">
           <AdminDevicesCard />
         </AdminSection>
 
-        <AdminSection title="Keys e manutenção">
+        <AdminSection title="Notificações">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <MaintenanceCard />
-            <KeyGeneratorCard />
-          </div>
-          <KeysListCard />
-        </AdminSection>
-
-        <AdminSection title="Mensagens e notificações">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <MessagesCard />
             <PushNotificationsCard />
+            <MessagesCard />
           </div>
         </AdminSection>
 
