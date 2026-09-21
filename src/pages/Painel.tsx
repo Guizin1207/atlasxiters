@@ -36,7 +36,6 @@ type RecentConversation = {
   id: string;
   title: string;
   subtitle: string;
-  updatedAt: string;
 };
 
 function formatRecentTime(value: string) {
@@ -127,7 +126,6 @@ export default function PainelPage() {
         id: last.thread_id,
         title: summarizeMessage(last.body),
         subtitle: `${last.sender_type === "admin" ? "ADM" : "Você"} • ${formatRecentTime(last.created_at)}`,
-        updatedAt: last.created_at,
       },
     ]);
   }, [keyData?.key]);
@@ -139,11 +137,6 @@ export default function PainelPage() {
   useEffect(() => {
     if (!supportOpen) void loadRecentConversations();
   }, [supportOpen, loadRecentConversations]);
-
-  const openDrawer = () => {
-    setDrawerOpen(true);
-    setDrawerProgress(1);
-  };
 
   const closeDrawer = () => {
     setDrawerOpen(false);
@@ -194,7 +187,7 @@ export default function PainelPage() {
   if (!loading && expired) {
     return (
       <main className="min-h-screen mx-auto max-w-md px-5 pt-6 pb-12">
-        <PanelHeader onOpenRecentes={() => setDrawerOpen(true)} />
+        <PanelHeader />
         <ExpiredKeyModal />
       </main>
     );
