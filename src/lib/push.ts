@@ -25,6 +25,27 @@ export type PushSubscriptionRecord = {
 };
 
 type PushRole = "admin" | "user";
+
+/** A prévia/desenvolvimento nunca registra push para não conflitar com o aparelho real. */
+function isPreviewEnvironment() {
+  if (import.meta.env.DEV) return true;
+  const host = window.location.hostname.toLowerCase();
+  return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host.includes("preview") || host.includes("lovableproject.com");
+}
+
+/** Remove inscrições criadas em uma prévia antiga. Não executa no domínio real. */
+export async function cleanupPreviewPushRegistrations() {
+  if (!isPreviewEnvironment() || !("serviceWorker" in navigator)) return;
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(registrations.filter((r) => r.scope.includes("/push/admin/") || r.scope.includes("/push/user/")).map(async (r) => {
+    try {
+      const sub = await r.pushManager.getSubscription();
+      if (sub) await sub.unsubscribe();
+    } catch { /* limpeza preventiva */ }
+    await r.unregister();
+  }));
+}
+
 const BINDING_PREFIX = "atlas_push_binding_v2";
 const LEGACY_BINDING_KEY = "atlas_push_binding_v1";
 const ROLE_SCOPES: Record<PushRole, string> = { admin: "/push/admin/", user: "/push/user/" };
@@ -69,6 +90,7 @@ export function pushSupported() {
 }
 
 function pushAvailability(): PushStatus {
+  if (isPreviewEnvironment()) return "unsupported";
   if (!pushSupported()) return isIOS() && !isStandalone() ? "ios-needs-install" : "unsupported";
   if (isIOS() && !isStandalone()) return "ios-needs-install";
   if (Notification.permission === "denied") return "denied";
@@ -124,6 +146,7 @@ function urlBase64ToUint8Array(base64: string) {
 }
 
 export async function registerPushServiceWorker(role: PushRole) {
+  if (isPreviewEnvironment()) throw new Error("Notificações desativadas na prévia. Use a versão publicada.");
   const workerUrl = role === "admin" ? "/push-admin-sw.js" : "/push-user-sw.js";
   const registration = await navigator.serviceWorker.register(workerUrl, { scope: ROLE_SCOPES[role] });
   if (registration.active) return registration;
