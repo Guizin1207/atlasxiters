@@ -262,7 +262,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <div className="rounded-2xl bg-white/[0.03] p-4">
                     <p className="text-xs text-muted-foreground">Versão atual</p>
-                    <p className="mt-1 text-lg font-bold">0.0.0</p>
+                    <p className="mt-1 text-lg font-bold">1.0.0</p>
                     <p className="text-[11px] text-muted-foreground">versão do projeto</p>
                   </div>
                   <div className="rounded-2xl bg-white/[0.03] p-4">
