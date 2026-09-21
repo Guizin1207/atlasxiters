@@ -2,7 +2,7 @@
  * Página /admin — central administrativa protegida.
  * Navegação direta por funções, mantendo a ordem operacional do ADM.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
   Loader2,
