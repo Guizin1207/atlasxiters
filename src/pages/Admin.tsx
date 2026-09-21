@@ -17,6 +17,8 @@ import {
   LifeBuoy,
   Wrench,
   ShieldCheck,
+  Menu,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAdmin } from "@/lib/admin-context";
@@ -54,6 +56,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const [openingPanel, setOpeningPanel] = useState(false);
   const [selectedFunction, setSelectedFunction] = useState("overview");
+  const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
 
   if (loading) {
     return (
@@ -66,6 +69,35 @@ export default function AdminPage() {
   if (!password) return <Navigate to="/admin/login" replace />;
 
   const selected = adminFunctions.find((item) => item.id === selectedFunction);
+
+  const adminGroups = [
+    { title: "Controle", functions: [
+      { id: "overview", title: "Visão geral", icon: LayoutGrid },
+      { id: "keys", title: "Keys", icon: KeyRound },
+      { id: "devices", title: "Dispositivos", icon: Smartphone },
+      { id: "rewards", title: "Recompensas", icon: Coins },
+      { id: "security", title: "Segurança", icon: ShieldCheck },
+    ]},
+    { title: "Atendimento", functions: [
+      { id: "notifications", title: "Notificações", icon: Bell },
+      { id: "messages", title: "Mensagens", icon: MessageSquare },
+      { id: "support", title: "Suporte", icon: LifeBuoy },
+    ]},
+    { title: "Sistema", functions: [
+      { id: "maintenance", title: "Manutenção", icon: Wrench },
+    ]},
+  ];
+
+  useState(() => {
+    let startX = 0;
+    let startY = 0;
+    const start = (e: TouchEvent) => { const t = e.touches[0]; if (t) { startX=t.clientX; startY=t.clientY; } };
+    const end = (e: TouchEvent) => { const t=e.changedTouches[0]; if (!t) return; const dx=t.clientX-startX, dy=t.clientY-startY; if (Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.15) return; if (!adminDrawerOpen && startX<70 && dx>0) setAdminDrawerOpen(true); if (adminDrawerOpen && dx<0) setAdminDrawerOpen(false); };
+    window.addEventListener("touchstart", start, {passive:true}); window.addEventListener("touchend", end, {passive:true});
+    return () => { window.removeEventListener("touchstart", start); window.removeEventListener("touchend", end); };
+  });
+
+
 
   return (
     <main className="min-h-screen pb-16">
@@ -130,160 +162,39 @@ export default function AdminPage() {
           </div>
         </header>
 
-                                                                        <nav aria-label="Funções administrativas" className="py-4">
-          <div className="space-y-3">
-            {[
-              {
-                title: "Controle",
-                functions: [
-                  { id: "overview", title: "Visão geral" },
-                  { id: "keys", title: "Keys" },
-                  { id: "devices", title: "Dispositivos" },
-                  { id: "rewards", title: "Recompensas" },
-                  { id: "security", title: "Segurança" },
-                ],
-              },
-              {
-                title: "Atendimento",
-                functions: [
-                  { id: "notifications", title: "Notificações" },
-                  { id: "messages", title: "Mensagens" },
-                  { id: "support", title: "Suporte" },
-                ],
-              },
-              {
-                title: "Sistema",
-                functions: [{ id: "maintenance", title: "Manutenção" }],
-              },
-            ].map((group) => (
-              <div key={group.title} className="flex min-h-14 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
-                <div className="flex w-12 shrink-0 items-center justify-center bg-white/[0.04]">
-                  <span className="[writing-mode:vertical-rl] rotate-180 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    {group.title}
-                  </span>
-                </div>
-
-                <div className="flex flex-1 flex-wrap items-center gap-2 p-3">
-                  {group.functions.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedFunction(item.id as AdminFunction["id"])}
-                      className={[
-                        "rounded-lg px-3 py-2 text-sm transition-colors",
-                        selectedFunction === item.id
-                          ? "bg-foreground text-background font-semibold"
-                          : "text-muted-foreground hover:bg-white/[0.06] hover:text-foreground",
-                      ].join(" ")}
-                    >
-                      {item.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </nav>
-
-        <section
-          key={selectedFunction}
-          aria-label={selected?.title ?? "Função administrativa"}
-          className="animate-fade-in"
+                                                                        <button
+          type="button"
+          aria-label="Abrir menu administrativo"
+          onClick={() => setAdminDrawerOpen(true)}
+          className="fixed left-0 top-1/2 z-40 -translate-y-1/2 rounded-r-2xl border border-l-0 border-white/10 bg-background/95 px-2 py-4 shadow-xl backdrop-blur-xl md:hidden"
         >
-          {selectedFunction === "overview" && (
-            <div className="space-y-4">
-              <div>
-                <p className="vip-eyebrow">Painel</p>
-                <h2 className="text-xl font-bold">Visão geral</h2>
-              </div>
-              <DeviceStatsCard />
-            </div>
-          )}
+          <Menu className="h-5 w-5" />
+        </button>
 
-          {selectedFunction === "keys" && (
-            <div className="space-y-5">
-              <div>
-                <p className="vip-eyebrow">Gerenciamento</p>
-                <h2 className="text-xl font-bold">Keys</h2>
+        {adminDrawerOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setAdminDrawerOpen(false)}>
+            <aside className="h-full w-[82%] max-w-sm overflow-y-auto border-r border-white/10 bg-background p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <p className="vip-eyebrow">Atlas</p>
+                  <h2 className="text-2xl font-black">Admin</h2>
+                </div>
+                <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setAdminDrawerOpen(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button>
               </div>
-              <div className="space-y-6">
-                <KeysListCard />
-                <KeyGeneratorCard />
-              </div>
-            </div>
-          )}
+              {adminGroups.map((group) => (
+                <div key={group.title} className="mb-6">
+                  <p className="mb-2 px-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{group.title}</p>
+                  <div className="space-y-1">
+                    {group.functions.map((item) => {
+                      const Icon = item.icon;
+                      const active = selectedFunction === item.id;
+                      return <button key={item.id} type="button" onClick={() => { setSelectedFunction(item.id); setAdminDrawerOpen(false); }} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-colors ${active ? "bg-white/10 text-foreground" : "text-muted-foreground hover:bg-white/5"}`}><Icon className="h-5 w-5 shrink-0" /><span className="text-base font-medium">{item.title}</span></button>;
+                    })}
+                  </div>
+                </div>
+              ))}
+            </aside>
+          </div>
+        )}
 
-          {selectedFunction === "devices" && (
-            <div className="space-y-4">
-              <div>
-                <p className="vip-eyebrow">Acesso administrativo</p>
-                <h2 className="text-xl font-bold">Dispositivos ADM</h2>
-              </div>
-              <AdminDevicesCard />
-            </div>
-          )}
 
-          {selectedFunction === "rewards" && (
-            <section className="glass-strong rounded-3xl p-6">
-              <p className="vip-eyebrow mb-1">Atlas Coins</p>
-              <h2 className="text-xl font-bold">Recompensas</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                As funções de recompensa existentes continuam disponíveis.
-              </p>
-            </section>
-          )}
-
-          {selectedFunction === "notifications" && (
-            <div className="space-y-4">
-              <div>
-                <p className="vip-eyebrow">Comunicação</p>
-                <h2 className="text-xl font-bold">Notificações</h2>
-              </div>
-              <PushNotificationsCard />
-            </div>
-          )}
-
-          {selectedFunction === "messages" && (
-            <div className="space-y-4">
-              <div>
-                <p className="vip-eyebrow">Comunicação</p>
-                <h2 className="text-xl font-bold">Mensagens</h2>
-              </div>
-              <MessagesCard />
-            </div>
-          )}
-
-          {selectedFunction === "support" && (
-            <div className="space-y-4">
-              <div>
-                <p className="vip-eyebrow">Atendimento</p>
-                <h2 className="text-xl font-bold">Suporte</h2>
-              </div>
-              <SupportAdminCard />
-            </div>
-          )}
-
-          {selectedFunction === "maintenance" && (
-            <div className="space-y-4">
-              <div>
-                <p className="vip-eyebrow">Sistema</p>
-                <h2 className="text-xl font-bold">Manutenção</h2>
-              </div>
-              <MaintenanceCard />
-            </div>
-          )}
-
-          {selectedFunction === "security" && (
-            <section className="glass-strong rounded-3xl p-6">
-              <p className="vip-eyebrow mb-1">Proteção</p>
-              <h2 className="text-xl font-bold">Segurança do ADM</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Controle de acesso e sessões administrativas.
-              </p>
-            </section>
-          )}
-        </section>
-      </div>
-    </main>
-  );
-}
