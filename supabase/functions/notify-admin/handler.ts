@@ -140,11 +140,11 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
 
       if (kind === "admin_test") {
-        if (!password || !targetEndpoint) return json({ error: "Autenticação e aparelho de destino obrigatórios." }, 400);
+        if (!password) return json({ error: "Autenticação obrigatória." }, 400);
         const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
         if (adminError || isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Acesso negado." }, 403);
         // Nunca faz broadcast de um teste e nunca envia para endpoints fora do cadastro ADM.
-        query = query.eq("scope", "admin").eq("endpoint", targetEndpoint);
+        query = query.eq("scope", "admin");
       } else if (kind === "user_test") {
         if (!key || !targetEndpoint) return json({ error: "Key e aparelho de destino obrigatórios." }, 400);
         const { data: validKey, error: validError } = await admin.rpc("_valid_access_key", { _key: key });
