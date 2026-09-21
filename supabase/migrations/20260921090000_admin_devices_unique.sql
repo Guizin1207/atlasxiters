@@ -93,14 +93,20 @@ DECLARE removed integer;
 BEGIN
   PERFORM public._require_admin(_password);
 
+  IF _current_device_id IS NULL THEN
+    RAISE EXCEPTION 'current_device_id_required';
+  END IF;
+
   DELETE FROM atlas_private.admin_access_sessions
-  WHERE _current_device_id IS NOT NULL
-    AND device_id IS DISTINCT FROM _current_device_id;
+  WHERE device_id IS DISTINCT FROM _current_device_id;
 
   GET DIAGNOSTICS removed = ROW_COUNT;
   RETURN removed;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.admin_clear_access_devices(text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_clear_access_devices(text, uuid) TO anon, authenticated, service_role;
 
 REVOKE ALL ON FUNCTION public.admin_clear_access_devices(text, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_clear_access_devices(text, uuid) TO anon, authenticated, service_role;
