@@ -195,62 +195,7 @@ export default function AdminPage() {
           )}
         </div>
 
-                                                                        <nav aria-label="Funções administrativas" className="py-4">
-          <div className="space-y-3">
-            {[
-              {
-                title: "Controle",
-                functions: [
-                  { id: "overview", title: "Visão geral" },
-                  { id: "keys", title: "Keys" },
-                  { id: "devices", title: "Dispositivos" },
-                  { id: "rewards", title: "Recompensas" },
-                  { id: "security", title: "Segurança" },
-                ],
-              },
-              {
-                title: "Atendimento",
-                functions: [
-                  { id: "notifications", title: "Notificações" },
-                  { id: "messages", title: "Mensagens" },
-                  { id: "support", title: "Suporte" },
-                ],
-              },
-              {
-                title: "Sistema",
-                functions: [{ id: "maintenance", title: "Manutenção" }],
-              },
-            ].map((group) => (
-              <div key={group.title} className="flex min-h-14 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
-                <div className="flex w-12 shrink-0 items-center justify-center bg-white/[0.04]">
-                  <span className="[writing-mode:vertical-rl] rotate-180 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    {group.title}
-                  </span>
-                </div>
-
-                <div className="flex flex-1 flex-wrap items-center gap-2 p-3">
-                  {group.functions.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedFunction(item.id as AdminFunction["id"])}
-                      className={[
-                        "rounded-lg px-3 py-2 text-sm transition-colors",
-                        selectedFunction === item.id
-                          ? "bg-foreground text-background font-semibold"
-                          : "text-muted-foreground hover:bg-white/[0.06] hover:text-foreground",
-                      ].join(" ")}
-                    >
-                      {item.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </nav>
-
-        <section
+                                                                        <section
           key={selectedFunction}
           aria-label={selected?.title ?? "Função administrativa"}
           className="animate-fade-in"
