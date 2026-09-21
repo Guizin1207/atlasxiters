@@ -293,6 +293,15 @@ const EXPIRED_NOTIFY_FLAG = "atlas_expired_delivered_v2";
 const expiryPending = new Set<string>();
 const expiryLastAttempt = new Map<string, number>();
 
+export async function notifyCoinsAdded(key: string, amount: number, total: number) {
+  if (isPushPreviewEnvironment()) return;
+  const normalizedKey = key.trim().toUpperCase();
+  const added = Number(amount);
+  const currentTotal = Number(total);
+  if (!normalizedKey || !Number.isFinite(added) || added <= 0 || !Number.isFinite(currentTotal)) return;
+  await deliver({ kind: "coins_added", key: normalizedKey, body: `Você recebeu +${added} Atlas Coins. Saldo atual: ${currentTotal} coins.` });
+}
+
 export async function notifyRewardReady(key: string, redeemCost: number) {
   // A prévia nunca chama a Edge Function de push. A recompensa pode continuar
   // sendo consultada/coletada normalmente, mas o aviso push fica exclusivo da versão publicada.
