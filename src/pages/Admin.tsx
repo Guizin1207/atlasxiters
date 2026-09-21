@@ -135,8 +135,7 @@ export default function AdminPage() {
             {[
               { id: "overview", title: "Geral", items: ["overview", "devices", "security"] },
               { id: "keys", title: "Keys", items: ["keys", "rewards"] },
-              { id: "notifications", title: "Comunicação", items: ["notifications", "messages", "support"] },
-              { id: "maintenance", title: "Sistema", items: ["maintenance"] },
+              { id: "notifications", title: "Comunicação", items: ["notifications", "messages", "support", "maintenance"] },
             ].map((group) => {
               const active = group.items.includes(selectedFunction);
 
@@ -161,8 +160,6 @@ export default function AdminPage() {
                         const item = adminFunctions.find((item) => item.id === itemId);
                         if (!item) return null;
 
-                        const itemActive = selectedFunction === itemId;
-
                         return (
                           <button
                             key={itemId}
@@ -170,7 +167,7 @@ export default function AdminPage() {
                             onClick={() => setSelectedFunction(itemId as AdminFunction["id"])}
                             className={[
                               "rounded px-2 py-1 text-[11px] transition-colors",
-                              itemActive
+                              selectedFunction === itemId
                                 ? "bg-white/10 text-foreground"
                                 : "text-muted-foreground hover:text-foreground",
                             ].join(" ")}
