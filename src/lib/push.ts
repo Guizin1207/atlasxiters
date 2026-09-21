@@ -138,7 +138,7 @@ function urlBase64ToUint8Array(base64: string) {
 
 export async function registerPushServiceWorker(role: PushRole) {
   if (isPushPreviewEnvironment()) throw new Error("Notificações desativadas na prévia. Use a versão publicada.");
-  const workerUrl = role === "admin" ? "/push/admin/push-admin-sw.js" : "/push/user/push-user-sw.js";
+  const workerUrl = role === "admin" ? "/push/admin/push-admin-sw.js?v=3" : "/push/user/push-user-sw.js?v=3";
   const registration = await navigator.serviceWorker.register(workerUrl, { scope: ROLE_SCOPES[role] });
   if (registration.active) return registration;
   // navigator.serviceWorker.ready refere-se ao worker que controla a página,
