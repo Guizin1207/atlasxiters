@@ -130,41 +130,82 @@ export default function AdminPage() {
           </div>
         </header>
 
-                                        <nav aria-label="Funções administrativas" className="py-3">
-          <div className="grid grid-cols-3 gap-3">
-            {[
+                                                <nav aria-label="Funções administrativas" className="py-3">
+          {(() => {
+            const groups = [
               {
                 title: "Controle",
-                functions: ["overview", "keys", "devices", "rewards", "security"],
+                functions: [
+                  { id: "overview", title: "Visão geral" },
+                  { id: "keys", title: "Keys" },
+                  { id: "devices", title: "Dispositivos" },
+                  { id: "rewards", title: "Recompensas" },
+                  { id: "security", title: "Segurança" },
+                ],
               },
               {
                 title: "Atendimento",
-                functions: ["notifications", "messages", "support"],
+                functions: [
+                  { id: "notifications", title: "Notificações" },
+                  { id: "messages", title: "Mensagens" },
+                  { id: "support", title: "Suporte" },
+                ],
               },
               {
                 title: "Sistema",
-                functions: ["maintenance"],
+                functions: [
+                  { id: "maintenance", title: "Manutenção" },
+                ],
               },
-            ].map((group) => {
-              const active = group.functions.includes(selectedFunction);
+            ];
 
-              return (
-                <button
-                  key={group.title}
-                  type="button"
-                  onClick={() => setSelectedFunction(group.functions[0] as AdminFunction["id"])}
-                  className={[
-                    "rounded-lg px-2 py-2.5 text-center text-xs font-semibold transition-all",
-                    active
-                      ? "bg-foreground text-background"
-                      : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.07] hover:text-foreground",
-                  ].join(" ")}
-                >
-                  {group.title}
-                </button>
-              );
-            })}
-          </div>
+            const activeGroup =
+              groups.find((group) =>
+                group.functions.some((item) => item.id === selectedFunction)
+              ) ?? groups[0];
+
+            return (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  {groups.map((group) => (
+                    <button
+                      key={group.title}
+                      type="button"
+                      onClick={() =>
+                        setSelectedFunction(group.functions[0].id as AdminFunction["id"])
+                      }
+                      className={[
+                        "rounded-lg px-2 py-2.5 text-xs font-semibold transition-all",
+                        activeGroup.title === group.title
+                          ? "bg-foreground text-background"
+                          : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.07] hover:text-foreground",
+                      ].join(" ")}
+                    >
+                      {group.title}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {activeGroup.functions.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSelectedFunction(item.id as AdminFunction["id"])}
+                      className={[
+                        "rounded-md px-2.5 py-1 text-[11px] transition-colors",
+                        selectedFunction === item.id
+                          ? "bg-white/10 text-foreground font-semibold"
+                          : "text-muted-foreground hover:text-foreground",
+                      ].join(" ")}
+                    >
+                      {item.title}
+                    </button>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </nav>
 
         <section
