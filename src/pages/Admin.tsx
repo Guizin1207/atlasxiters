@@ -223,12 +223,40 @@ export default function AdminPage() {
           className="animate-fade-in"
         >
           {selectedFunction === "overview" && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <p className="vip-eyebrow">Painel</p>
-                <h2 className="text-xl font-bold">Visão geral</h2>
+                <p className="vip-eyebrow">Atlas Control</p>
+                <h2 className="text-xl font-bold">Resumo do aplicativo</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Visão rápida dos principais recursos e áreas do Atlas.
+                </p>
               </div>
+
               <DeviceStatsCard />
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {[
+                  { title: "Keys", description: "Criação e gerenciamento de acessos", icon: KeyRound, id: "keys" },
+                  { title: "Dispositivos", description: "Acessos e dispositivos conectados", icon: Smartphone, id: "devices" },
+                  { title: "Recompensas", description: "Atlas Coins e benefícios", icon: Coins, id: "rewards" },
+                  { title: "Notificações", description: "Comunicação com os usuários", icon: Bell, id: "notifications" },
+                  { title: "Suporte", description: "Atendimento e solicitações", icon: LifeBuoy, id: "support" },
+                  { title: "Segurança", description: "Controle e proteção do ADM", icon: ShieldCheck, id: "security" },
+                ].map(({ title, description, icon: Icon, id }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setSelectedFunction(id)}
+                    className="glass-strong rounded-2xl p-4 text-left transition hover:bg-white/[0.06] active:scale-[0.98]"
+                  >
+                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <p className="font-semibold">{title}</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
