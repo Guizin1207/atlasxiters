@@ -177,6 +177,44 @@ export type Database = {
           },
         ]
       }
+      key_rewards: {
+        Row: {
+          best_streak: number
+          coins: number
+          current_streak: number
+          key_id: string
+          last_daily_claim: string | null
+          total_claims: number
+          updated_at: string
+        }
+        Insert: {
+          best_streak?: number
+          coins?: number
+          current_streak?: number
+          key_id: string
+          last_daily_claim?: string | null
+          total_claims?: number
+          updated_at?: string
+        }
+        Update: {
+          best_streak?: number
+          coins?: number
+          current_streak?: number
+          key_id?: string
+          last_daily_claim?: string | null
+          total_claims?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_rewards_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: true
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       key_settings: {
         Row: {
           key_id: string
@@ -316,6 +354,35 @@ export type Database = {
           },
         ]
       }
+      reward_claims: {
+        Row: {
+          claimed_on: string
+          coins: number
+          created_at: string
+          key_id: string
+        }
+        Insert: {
+          claimed_on: string
+          coins?: number
+          created_at?: string
+          key_id: string
+        }
+        Update: {
+          claimed_on?: string
+          coins?: number
+          created_at?: string
+          key_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_claims_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_messages: {
         Row: {
           body: string
@@ -432,6 +499,8 @@ export type Database = {
       _gen_key: { Args: never; Returns: string }
       _plan_days: { Args: { _plan: string }; Returns: number }
       _require_admin: { Args: { _password: string }; Returns: undefined }
+      _reward_key_id: { Args: { _key: string }; Returns: string }
+      _reward_state: { Args: { _key_id: string }; Returns: Json }
       _valid_access_key: { Args: { _key: string }; Returns: boolean }
       admin_activate_key: {
         Args: { _id: string; _password: string }
@@ -892,7 +961,9 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      claim_daily_reward: { Args: { _key: string }; Returns: Json }
       count_unread_messages: { Args: { _key: string }; Returns: number }
+      get_daily_reward: { Args: { _key: string }; Returns: Json }
       get_maintenance: { Args: never; Returns: Json }
       get_settings: { Args: { _key: string }; Returns: Json }
       is_master_key: { Args: { _key: string }; Returns: boolean }
@@ -904,6 +975,7 @@ export type Database = {
         Returns: number
       }
       notify_expired_keys: { Args: never; Returns: number }
+      redeem_atlas_coins: { Args: { _key: string }; Returns: Json }
       redeem_key: {
         Args: { _device: string; _device_id: string; _key: string }
         Returns: Json
