@@ -2,7 +2,7 @@
  * Página /admin — central administrativa protegida.
  * Navegação direta por funções, mantendo a ordem operacional do ADM.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
   Loader2,
@@ -17,7 +17,6 @@ import {
   LifeBuoy,
   Wrench,
   ShieldCheck,
-  Menu,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,6 +56,44 @@ export default function AdminPage() {
   const [openingPanel, setOpeningPanel] = useState(false);
   const [selectedFunction, setSelectedFunction] = useState("overview");
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+
+      if (Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+
+      if (!adminDrawerOpen && startX <= 45 && deltaX > 0) {
+        setAdminDrawerOpen(true);
+      }
+
+      if (adminDrawerOpen && deltaX < 0) {
+        setAdminDrawerOpen(false);
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [adminDrawerOpen]);
+
 
   if (loading) {
     return (
@@ -140,15 +177,10 @@ export default function AdminPage() {
         </header>
 
         <div className="md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="fixed left-0 top-1/2 z-40 h-12 w-9 -translate-y-1/2 rounded-l-none rounded-r-2xl border border-l-0 border-white/10 bg-background/95 shadow-xl"
-            onClick={() => setAdminDrawerOpen(true)}
-            aria-label="Abrir menu ADM"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+          <div
+            aria-hidden="true"
+            className="fixed inset-y-0 left-0 z-30 w-8"
+          />
 
           {adminDrawerOpen && (
             <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setAdminDrawerOpen(false)}>
