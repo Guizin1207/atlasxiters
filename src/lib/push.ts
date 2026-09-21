@@ -139,30 +139,36 @@ function urlBase64ToUint8Array(base64: string) {
 export async function registerPushServiceWorker(role: PushRole) {
   if (isPushPreviewEnvironment()) throw new Error("Notificações desativadas na prévia. Use a versão publicada.");
 
-  // Migra automaticamente qualquer Service Worker antigo da raiz.
-  // Isso evita que a push antiga continue recebendo os mesmos eventos.
-  try {
-    const legacyRegistrations = await navigator.serviceWorker.getRegistrations();
-    for (const legacy of legacyRegistrations) {
-      const script = legacy.active?.scriptURL ?? legacy.waiting?.scriptURL ?? legacy.installing?.scriptURL ?? "";
-      const isLegacyPush =
-        legacy.scope === new URL("/", location.origin).href &&
-        (script.endsWith("/push-admin-sw.js") || script.endsWith("/push-user-sw.js"));
-      if (isLegacyPush) {
-        const oldSubscription = await legacy.pushManager.getSubscription();
-        if (oldSubscription) {
-          try { await oldSubscription.unsubscribe(); } catch { /* segue para o unregister */ }
-        }
-        await legacy.unregister();
-      }
-    }
-  } catch { /* a inscrição nova continua sendo registrada normalmente */ }
+  const workerUrl = role === "admin"
+    ? "/push/admin/push-admin-sw.js?v=5"
+    : "/push/user/push-user-sw.js?v=5";
 
-  const workerUrl = role === "admin" ? "/push/admin/push-admin-sw.js?v=4" : "/push/user/push-user-sw.js?v=4";
-  const registration = await navigator.serviceWorker.register(workerUrl, { scope: ROLE_SCOPES[role] });
+  // Registra o worker novo primeiro. Uma falha ao limpar o legado nunca bloqueia a push nova.
+  const registration = await navigator.serviceWorker.register(workerUrl, {
+    scope: ROLE_SCOPES[role],
+    updateViaCache: "none",
+  });
+
+  // Limpeza do worker antigo em segundo plano.
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const legacy of registrations) {
+      if (legacy === registration) continue;
+      const script = legacy.active?.scriptURL ?? legacy.waiting?.scriptURL ?? legacy.installing?.scriptURL ?? "";
+      const isLegacy =
+        legacy.scope === new URL("/", location.origin).href &&
+        (script.includes("/push-admin-sw.js") || script.includes("/push-user-sw.js"));
+      if (!isLegacy) continue;
+      try {
+        const oldSub = await legacy.pushManager.getSubscription();
+        if (oldSub) await oldSub.unsubscribe();
+      } catch {}
+      try { await legacy.unregister(); } catch {}
+    }
+  } catch {}
+
   if (registration.active) return registration;
-  // navigator.serviceWorker.ready refere-se ao worker que controla a página,
-  // não necessariamente ao worker deste papel. Espera o registro correto.
+
   let timer: ReturnType<typeof setTimeout> | undefined;
   let worker: ServiceWorker | null = null;
   let onStateChange = () => {};
@@ -191,7 +197,6 @@ export async function registerPushServiceWorker(role: PushRole) {
   }
 }
 
-/** Cadastra um único aparelho para o admin. O servidor mantém somente 1 aparelho ADM geral. */
 export async function enableAdminPush(password: string): Promise<PushStatus> {
   const status = pushAvailability();
   if (status !== "ready") return status;
