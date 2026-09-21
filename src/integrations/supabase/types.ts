@@ -499,6 +499,7 @@ export type Database = {
       _gen_key: { Args: never; Returns: string }
       _plan_days: { Args: { _plan: string }; Returns: number }
       _require_admin: { Args: { _password: string }; Returns: undefined }
+      _reward_cfg: { Args: never; Returns: Json }
       _reward_key_id: { Args: { _key: string }; Returns: string }
       _reward_state: { Args: { _key_id: string }; Returns: Json }
       _valid_access_key: { Args: { _key: string }; Returns: boolean }
@@ -706,6 +707,38 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_reward_add_coins: {
+        Args: { _amount: number; _key_id: string; _password: string }
+        Returns: Json
+      }
+      admin_reward_clear_claims: {
+        Args: { _key_id: string; _password: string }
+        Returns: Json
+      }
+      admin_reward_config: { Args: { _password: string }; Returns: Json }
+      admin_reward_list: { Args: { _password: string }; Returns: Json }
+      admin_reward_reset: {
+        Args: { _clear_history?: boolean; _key_id: string; _password: string }
+        Returns: Json
+      }
+      admin_reward_set_coins: {
+        Args: { _coins: number; _key_id: string; _password: string }
+        Returns: Json
+      }
+      admin_reward_set_config: {
+        Args: {
+          _daily_amount: number
+          _max_coins: number
+          _password: string
+          _redeem_cost: number
+          _redeem_days: number
+        }
+        Returns: Json
+      }
+      admin_reward_set_streak: {
+        Args: { _key_id: string; _password: string; _streak: number }
+        Returns: Json
       }
       admin_save_ai_messages: {
         Args: { _messages: Json; _password: string }

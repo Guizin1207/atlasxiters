@@ -46,7 +46,13 @@ export function AdminRewardsCard() {
   const saveConfig=async()=>{
     if(!password)return; setSaving(true);
     try{
-      const data=await call("admin_reward_set_config",{...config,_password:password});
+      const data=await call("admin_reward_set_config",{
+        _password:password,
+        _daily_amount:config.daily_amount,
+        _max_coins:config.max_coins,
+        _redeem_cost:config.redeem_cost,
+        _redeem_days:config.redeem_days,
+      });
       if(data)setConfig(data as Config);
       toast.success("Configuração de recompensas salva.");
       await load();
