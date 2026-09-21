@@ -126,6 +126,7 @@ export function RecompensaTab() {
       })
       .map((c) => c.day)
   );
+  const monthLabel = now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   return (
     <section aria-label="Recompensa" className="space-y-5">
@@ -173,7 +174,10 @@ export function RecompensaTab() {
         <div className="rounded-2xl bg-white/5 p-4">
           <div className="flex items-center gap-2 mb-3">
             <CalendarDays className="w-4 h-4" />
-            <p className="font-bold text-sm">Calendário de recompensas</p>
+            <div>
+              <p className="font-bold text-sm">Calendário de recompensas</p>
+              <p className="text-[10px] text-muted-foreground capitalize">{monthLabel}</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-7 gap-1.5 mb-2">
@@ -193,25 +197,41 @@ export function RecompensaTab() {
               const day = i + 1;
               const isClaimed = claimed.has(day);
               const isToday = day === now.getDate();
+              const isPastOrToday = day <= now.getDate();
 
               return (
                 <div
                   key={day}
-                  title={isClaimed ? "+10 Atlas Coins" : "Não coletado"}
-                  className={`aspect-square rounded-lg flex items-center justify-center text-xs font-bold border ${
+                  title={
+                    isClaimed
+                      ? "+10 Atlas Coins"
+                      : isPastOrToday
+                        ? "Não coletado"
+                        : "Disponível no dia " + day
+                  }
+                  className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold border ${
                     isClaimed
                       ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40"
-                      : "bg-red-500/10 text-red-400 border-red-500/30"
-                  }`}
+                      : isPastOrToday
+                        ? "bg-red-500/10 text-red-400 border-red-500/30"
+                        : "bg-white/5 text-muted-foreground border-white/10 opacity-50"
+                  }${isToday ? " ring-1 ring-white/40" : ""}`}
                 >
-                  {isClaimed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                  <span>{day}</span>
+                  {isClaimed ? (
+                    <CheckCircle2 className="w-3 h-3" />
+                  ) : isPastOrToday ? (
+                    <XCircle className="w-3 h-3" />
+                  ) : (
+                    <span className="text-[9px]">•</span>
+                  )}
                 </div>
               );
             })}
           </div>
 
           <p className="mt-3 text-[10px] text-muted-foreground">
-            ✓ verde = coletado • ✕ vermelho = não coletado • O calendário reinicia automaticamente no dia 1 de cada mês.
+            ✓ verde = coletado • ✕ vermelho = não coletado • dias futuros ficam bloqueados • no dia 1 o calendário passa para o novo mês.
           </p>
         </div>
 
