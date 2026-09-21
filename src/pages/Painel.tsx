@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { rewardApi } from "@/lib/reward-api";
 import { supabase } from "@/integrations/supabase/client";
 import { isReceiptBody } from "@/lib/receipts";
-import { enableUserPush, notifyRewardReady } from "@/lib/push";
+import { enableUserPush, notifyRewardReady, notifyCoinsAdded } from "@/lib/push";
 
 type SupportMessage = {
   id: string;
@@ -138,6 +138,7 @@ export default function PainelPage() {
       toast.success("+10 Atlas Coins recebidos!");
       setDailyReward(data);
       setRewardOpen(false);
+      void notifyCoinsAdded(keyData.key, 10, Number(data?.coins ?? 0));
       const redeemCost = Number(data?.goal ?? 0);
       const coins = Number(data?.coins ?? 0);
       if (redeemCost > 0 && coins >= redeemCost) {
