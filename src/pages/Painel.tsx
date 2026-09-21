@@ -111,6 +111,20 @@ export default function PainelPage() {
 
       {tab === "funcoes" && <InjectButton />}
 
+      {/* Gaveta lateral estilo ChatGPT: sempre existe uma alça visível para abrir. */}
+      {!drawerOpen && (
+        <button
+          type="button"
+          aria-label="Abrir Recentes"
+          onClick={() => setDrawerOpen(true)}
+          className="fixed left-0 top-1/2 z-[76] -translate-y-1/2 rounded-r-2xl border border-l-0 border-white/10 bg-background/95 px-2 py-4 shadow-2xl backdrop-blur-xl"
+        >
+          <span className="[writing-mode:vertical-rl] text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            Recentes
+          </span>
+        </button>
+      )}
+
       {/* Área de gesto estilo ChatGPT: puxe da borda esquerda para abrir. */}
       {!drawerOpen && (
         <div
