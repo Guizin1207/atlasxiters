@@ -70,19 +70,48 @@ export default function PainelPage() {
   const [supportOpen, setSupportOpen] = useState(
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
+  const [userPushReady, setUserPushReady] = useState(false);
+  const pushAttemptedRef = useRef(false);
   const drawerProgressRef = useRef(0);
   const drawerDeltaRef = useRef(0);
   const sidebarWidthRef = useRef(1);
 
-  useEffect(() => {
-    if (loading || !keyData?.key || keyData.is_master) return;
-    void enableUserPush(keyData.key).catch(() => {
-      // A sincronização é silenciosa; o restante do painel continua funcionando.
-    });
+  const tryEnableUserPush = useCallback(() => {
+    if (loading || !keyData?.key || keyData.is_master || pushAttemptedRef.current) return;
+    pushAttemptedRef.current = true;
+    void enableUserPush(keyData.key)
+      .then((status) => {
+        setUserPushReady(status === "enabled");
+        // Se o navegador exigir gesto do usuário, a primeira interação já
+        // disparou esta tentativa sem precisar mostrar um botão de ativação.
+        if (status !== "enabled") pushAttemptedRef.current = false;
+      })
+      .catch(() => {
+        pushAttemptedRef.current = false;
+      });
   }, [loading, keyData?.key, keyData?.is_master]);
 
   useEffect(() => {
-    if (!loading && keyData && !keyData.is_master) {
+    if (loading || !keyData?.key || keyData.is_master) return;
+    tryEnableUserPush();
+
+    // Fallback invisível para navegadores que só permitem a permissão
+    // durante uma interação do usuário.
+    const onFirstInteraction = () => {
+      tryEnableUserPush();
+      window.removeEventListener("pointerdown", onFirstInteraction);
+      window.removeEventListener("touchstart", onFirstInteraction);
+    };
+    window.addEventListener("pointerdown", onFirstInteraction, { once: true });
+    window.addEventListener("touchstart", onFirstInteraction, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", onFirstInteraction);
+      window.removeEventListener("touchstart", onFirstInteraction);
+    };
+  }, [loading, keyData?.key, keyData?.is_master, tryEnableUserPush]);
+
+  useEffect(() => {
+    if (!loading && keyData && !keyData.is_master && userPushReady) {
       void (async () => {
         const { data } = await rewardApi("get", keyData.key);
         if (data?.ok) {
@@ -96,7 +125,7 @@ export default function PainelPage() {
         }
       })();
     }
-  }, [loading, keyData?.key, keyData?.is_master]);
+  }, [loading, keyData?.key, keyData?.is_master, userPushReady]);
 
   const collectDailyReward = async () => {
     if (!keyData?.key || rewardBusy) return;
