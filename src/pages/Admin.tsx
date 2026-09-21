@@ -2,7 +2,7 @@
  * Página /admin — central administrativa protegida.
  * Navegação direta por funções, mantendo a ordem operacional do ADM.
  */
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
   Loader2,
@@ -56,43 +56,7 @@ export default function AdminPage() {
   const [openingPanel, setOpeningPanel] = useState(false);
   const [selectedFunction, setSelectedFunction] = useState("overview");
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
-  useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-
-    const handleTouchStart = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch) return;
-      startX = touch.clientX;
-      startY = touch.clientY;
-    };
-
-    const handleTouchEnd = (event: TouchEvent) => {
-      const touch = event.changedTouches[0];
-      if (!touch) return;
-
-      const deltaX = touch.clientX - startX;
-      const deltaY = touch.clientY - startY;
-
-      if (Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
-
-      if (!adminDrawerOpen && startX <= 45 && deltaX > 0) {
-        setAdminDrawerOpen(true);
-      }
-
-      if (adminDrawerOpen && deltaX < 0) {
-        setAdminDrawerOpen(false);
-      }
-    };
-
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-    return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [adminDrawerOpen]);
+  const touchStartRef = useRef({ x: 0, y: 0 });
 
 
   if (loading) {
@@ -114,7 +78,24 @@ export default function AdminPage() {
 
 
   return (
-    <main className="min-h-screen pb-16">
+    <main
+      className="min-h-screen pb-16"
+      onTouchStart={(event) => {
+        const touch = event.touches[0];
+        if (!touch) return;
+        touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+      }}
+      onTouchEnd={(event) => {
+        const touch = event.changedTouches[0];
+        if (!touch) return;
+        const start = touchStartRef.current;
+        const deltaX = touch.clientX - start.x;
+        const deltaY = touch.clientY - start.y;
+        if (Math.abs(deltaX) < 70 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+        if (!adminDrawerOpen && start.x <= 80 && deltaX > 0) setAdminDrawerOpen(true);
+        if (adminDrawerOpen && deltaX < 0) setAdminDrawerOpen(false);
+      }}
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-5 sm:pt-7 space-y-5">
         <header className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
