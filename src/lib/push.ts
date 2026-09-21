@@ -30,7 +30,7 @@ type PushRole = "admin" | "user";
 export function isPushPreviewEnvironment() {
   if (import.meta.env.DEV) return true;
   const host = window.location.hostname.toLowerCase();
-  return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host.includes("preview") || host.includes("lovableproject.com");
+  return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host.includes("preview") || host.includes("lovableproject.com") || host.includes("lovable.app") || host.includes("lovable.dev");
 }
 
 /** Remove inscrições criadas em uma prévia antiga. Não executa no domínio real. */
