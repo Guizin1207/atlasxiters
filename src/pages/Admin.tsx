@@ -61,22 +61,40 @@ export default function AdminPage() {
   useEffect(() => {
     let startX = 0;
     let startY = 0;
-    const start = (e: globalThis.TouchEvent) => {
-      const t = e.touches[0];
-      if (t) { startX = t.clientX; startY = t.clientY; }
+
+    const handleTouchStart = (event: globalThis.TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
     };
-    const end = (e: globalThis.TouchEvent) => {
-      const t = e.changedTouches[0];
-      if (!t) return;
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
+
+    const handleTouchEnd = (event: globalThis.TouchEvent) => {
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+
       if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
-      if (!adminDrawerOpen && startX < 70 && dx > 0) setAdminDrawerOpen(true);
-      if (adminDrawerOpen && dx < 0) setAdminDrawerOpen(false);
+
+      if (!adminDrawerOpen && startX <= 70 && dx > 0) {
+        setAdminDrawerOpen(true);
+      } else if (adminDrawerOpen && dx < 0) {
+        setAdminDrawerOpen(false);
+      }
     };
-    window.addEventListener("touchstart", start, { passive: true });
-    window.addEventListener("touchend", end, { passive: true });
+
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
     return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [adminDrawerOpen]);
+
+  return () => {
       window.removeEventListener("touchstart", start);
       window.removeEventListener("touchend", end);
     };
