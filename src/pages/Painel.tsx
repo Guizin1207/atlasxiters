@@ -95,6 +95,14 @@ export default function PainelPage() {
     }
   }, [loading, keyData?.key, keyData?.is_master]);
 
+  // Com a permissão já concedida, cadastra o aparelho automaticamente.
+  useEffect(() => {
+    if (loading || !keyData?.key || keyData.is_master || typeof Notification === "undefined") return;
+    if (Notification.permission !== "granted") return;
+    void enableUserPush(keyData.key)
+      .then((status) => setUserPushReady(status === "enabled"))
+      .catch(() => setUserPushReady(false));
+  }, [loading, keyData?.key, keyData?.is_master]);
 
   const collectDailyReward = async () => {
     if (!keyData?.key || rewardBusy) return;
