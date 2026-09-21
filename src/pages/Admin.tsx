@@ -99,29 +99,51 @@ export default function AdminPage() {
           <DeviceStatsCard />
         </AdminSection>
 
-        <AdminSection title="2 · Keys e acessos">
+        <AdminSection title="2 · Keys">
           <div className="space-y-6">
             <KeysListCard />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <KeyGeneratorCard />
-              <MaintenanceCard />
-            </div>
+            <KeyGeneratorCard />
           </div>
         </AdminSection>
 
-        <AdminSection title="3 · Segurança do ADM">
+        <AdminSection title="3 · Dispositivos ADM">
           <AdminDevicesCard />
         </AdminSection>
 
-        <AdminSection title="4 · Comunicação">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <PushNotificationsCard />
-            <MessagesCard />
-          </div>
+        <AdminSection title="4 · Recompensas">
+          <section className="glass-strong rounded-3xl p-6">
+            <p className="vip-eyebrow mb-1">Atlas Coins</p>
+            <h2 className="text-xl font-bold">Recompensas</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              As funções de recompensa existentes continuam disponíveis sem alterar sua lógica.
+            </p>
+          </section>
         </AdminSection>
 
-        <AdminSection title="5 · Suporte">
+        <AdminSection title="5 · Notificações">
+          <PushNotificationsCard />
+        </AdminSection>
+
+        <AdminSection title="6 · Mensagens">
+          <MessagesCard />
+        </AdminSection>
+
+        <AdminSection title="7 · Suporte">
           <SupportAdminCard />
+        </AdminSection>
+
+        <AdminSection title="8 · Manutenção">
+          <MaintenanceCard />
+        </AdminSection>
+
+        <AdminSection title="9 · Segurança">
+          <section className="glass-strong rounded-3xl p-6">
+            <p className="vip-eyebrow mb-1">Proteção</p>
+            <h2 className="text-xl font-bold">Segurança do ADM</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              O controle de dispositivos e sessões administrativas permanece separado e protegido.
+            </p>
+          </section>
         </AdminSection>
       </div>
     </main>
