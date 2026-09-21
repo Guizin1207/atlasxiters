@@ -2,8 +2,8 @@
  * Painel principal — protegido por chave.
  * Layout mobile-first com tabs Funções / Ajustes / Perfil.
  */
-import { useEffect, useRef, useState, type TouchEvent } from "react";
-import { Gift, Flame, Coins, Plus, Clock3, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
+import { Gift, Flame, Coins, Plus, MessageCircle, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useKey } from "@/lib/key-context";
@@ -21,6 +21,35 @@ import { SupportChat } from "@/components/atlas/SupportChat";
 import { RecompensaTab } from "@/components/atlas/RecompensaTab";
 import { Button } from "@/components/ui/button";
 import { rewardApi } from "@/lib/reward-api";
+import { supabase } from "@/integrations/supabase/client";
+import { isReceiptBody } from "@/lib/receipts";
+
+type SupportMessage = {
+  id: string;
+  thread_id: string;
+  sender_type: string;
+  body: string;
+  created_at: string;
+};
+
+type RecentConversation = {
+  id: string;
+  title: string;
+  subtitle: string;
+};
+
+function formatRecentTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Agora";
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
+function summarizeMessage(body: string) {
+  if (isReceiptBody(body)) return "Comprovante enviado";
+  const text = body.replace(/\s+/g, " ").trim();
+  if (!text) return "Nova conversa";
+  return text.length > 42 ? `${text.slice(0, 42)}…` : text;
+}
 
 export default function PainelPage() {
   const navigate = useNavigate();
@@ -32,10 +61,17 @@ export default function PainelPage() {
   const [rewardBusy, setRewardBusy] = useState(false);
   const [dailyReward, setDailyReward] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const [drawerProgress, setDrawerProgress] = useState(0);
+  const [draggingDrawer, setDraggingDrawer] = useState(false);
+  const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number; mode: "open" | "close" } | null>(null);
   const [supportOpen, setSupportOpen] = useState(
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
+  const drawerProgressRef = useRef(0);
+  const drawerDeltaRef = useRef(0);
+  const sidebarWidthRef = useRef(1);
 
   useEffect(() => {
     if (!loading && keyData && !keyData.is_master) {
@@ -68,11 +104,109 @@ export default function PainelPage() {
     if (!loading && !keyData && !expired) navigate(`/login${window.location.search}`, { replace: true });
   }, [keyData, loading, expired, navigate]);
 
+  const loadRecentConversations = useCallback(async () => {
+    if (!keyData?.key) {
+      setRecentConversations([]);
+      return;
+    }
+
+    setRecentLoading(true);
+    const { data, error } = await supabase.rpc("support_list_messages", { _key: keyData.key });
+    setRecentLoading(false);
+    if (error) return;
+
+    const messages = (data ?? []) as SupportMessage[];
+    if (messages.length === 0) {
+      setRecentConversations([]);
+      return;
+    }
+
+    const last = messages[messages.length - 1];
+    if (!last) return;
+    setRecentConversations([
+      {
+        id: last.thread_id,
+        title: summarizeMessage(last.body),
+        subtitle: `${last.sender_type === "admin" ? "ADM" : "Você"} • ${formatRecentTime(last.created_at)}`,
+      },
+    ]);
+  }, [keyData?.key]);
+
+  useEffect(() => {
+    if (drawerOpen) void loadRecentConversations();
+  }, [drawerOpen, loadRecentConversations]);
+
+  useEffect(() => {
+    if (!supportOpen) void loadRecentConversations();
+  }, [supportOpen, loadRecentConversations]);
+
+  const setDrawerAmount = (value: number) => {
+    const next = Math.max(0, Math.min(1, value));
+    drawerProgressRef.current = next;
+    setDrawerProgress(next);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setDrawerAmount(0);
+    setDraggingDrawer(false);
+    touchStartRef.current = null;
+    drawerDeltaRef.current = 0;
+  };
+
+  const beginOpenGesture = (event: TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, mode: "open" };
+    sidebarWidthRef.current = Math.max(window.innerWidth * 0.82, 1);
+    setDraggingDrawer(true);
+    setDrawerAmount(0);
+    drawerDeltaRef.current = 0;
+  };
+
+  const beginCloseGesture = (event: TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, mode: "close" };
+    sidebarWidthRef.current = Math.max(window.innerWidth * 0.82, 1);
+    setDraggingDrawer(true);
+    setDrawerAmount(1);
+    drawerDeltaRef.current = 0;
+  };
+
+  const moveDrawerGesture = (event: TouchEvent<HTMLElement | HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.touches[0];
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    drawerDeltaRef.current = dx;
+    if (Math.abs(dy) > Math.abs(dx) * 1.25) return;
+    if (start.mode === "open") {
+      setDrawerAmount(dx / sidebarWidthRef.current);
+    } else {
+      setDrawerAmount(1 + dx / sidebarWidthRef.current);
+    }
+  };
+
+  const endDrawerGesture = () => {
+    const start = touchStartRef.current;
+    const dx = drawerDeltaRef.current;
+    const shouldOpen = start?.mode === "open"
+      ? drawerProgressRef.current >= 0.42 || dx >= 70
+      : drawerProgressRef.current >= 0.42 && dx > -70;
+    touchStartRef.current = null;
+    drawerDeltaRef.current = 0;
+    setDraggingDrawer(false);
+    setDrawerOpen(shouldOpen);
+    setDrawerAmount(shouldOpen ? 1 : 0);
+  };
+
   // Tela limitada: sino e suporte continuam acessíveis, funções pagas não são montadas.
   if (!loading && expired) {
     return (
       <main className="min-h-screen mx-auto max-w-md px-5 pt-6 pb-12">
-        <PanelHeader onOpenRecentes={() => setDrawerOpen(true)} />
+        <PanelHeader />
         <ExpiredKeyModal />
       </main>
     );
@@ -89,12 +223,12 @@ export default function PainelPage() {
   const blockMaintenance = maintenance.enabled && !keyData.is_master;
 
   const openNewChat = () => {
-    setDrawerOpen(false);
+    closeDrawer();
     setSupportOpen(true);
   };
 
   return (
-    <main className="min-h-screen pb-32">
+    <main className="min-h-screen pb-32 overflow-x-hidden">
       <div className="mx-auto max-w-md px-3.5 pt-4 min-[390px]:px-5 min-[390px]:pt-6">
         <PanelHeader />
 
@@ -111,113 +245,89 @@ export default function PainelPage() {
 
       {tab === "funcoes" && <InjectButton />}
 
-      {/* Gaveta lateral estilo ChatGPT: sempre existe uma alça visível para abrir. */}
-      {!drawerOpen && (
-        <button
-          type="button"
-          aria-label="Abrir Recentes"
-          onClick={() => setDrawerOpen(true)}
-          className="fixed left-0 top-1/2 z-[76] -translate-y-1/2 rounded-r-2xl border border-l-0 border-white/10 bg-background/95 px-2 py-4 shadow-2xl backdrop-blur-xl"
-        >
-          <span className="[writing-mode:vertical-rl] text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            Recentes
-          </span>
-        </button>
-      )}
-
-      {/* Área de gesto estilo ChatGPT: puxe da borda esquerda para abrir. */}
       {!drawerOpen && (
         <div
           aria-hidden="true"
-          className="fixed left-0 top-0 z-[75] h-full w-5 touch-pan-y"
-          onTouchStart={(event) => {
-            const touch = event.touches[0];
-            if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-          }}
-          onTouchEnd={(event) => {
-            const start = touchStartRef.current;
-            touchStartRef.current = null;
-            const touch = event.changedTouches[0];
-            if (!start || !touch) return;
-            const dx = touch.clientX - start.x;
-            const dy = touch.clientY - start.y;
-            if (dx >= 45 && Math.abs(dx) > Math.abs(dy) * 1.15) setDrawerOpen(true);
-          }}
+          className="fixed left-0 top-0 z-[75] h-full w-6 touch-pan-y"
+          onTouchStart={beginOpenGesture}
+          onTouchMove={moveDrawerGesture}
+          onTouchEnd={endDrawerGesture}
+          onTouchCancel={endDrawerGesture}
         />
       )}
 
-      {drawerOpen && (
+      {(drawerOpen || drawerProgress > 0) && (
         <div
-          className="fixed inset-0 z-[80] bg-black/55 backdrop-blur-[2px]"
-          onTouchStart={(event) => {
-            const touch = event.touches[0];
-            if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-          }}
-          onTouchEnd={(event) => {
-            const start = touchStartRef.current;
-            touchStartRef.current = null;
-            const touch = event.changedTouches[0];
-            if (!start || !touch) return;
-            const dx = touch.clientX - start.x;
-            const dy = touch.clientY - start.y;
-            if (dx <= -45 && Math.abs(dx) > Math.abs(dy) * 1.15) setDrawerOpen(false);
-          }}
-          onClick={() => setDrawerOpen(false)}
+          className="fixed inset-0 z-[80] bg-background/75 backdrop-blur-[2px]"
+          style={{ opacity: drawerProgress }}
+          onClick={closeDrawer}
         >
           <aside
-            className="h-full w-[82%] max-w-sm border-r border-white/10 bg-background/95 p-5 shadow-2xl backdrop-blur-xl animate-in slide-in-from-left duration-200"
+            className={`h-full w-[82%] max-w-sm border-r border-white/10 bg-background/95 p-4 shadow-2xl backdrop-blur-xl ${draggingDrawer ? "" : "transition-transform duration-300 ease-out"}`}
+            style={{ transform: `translateX(${(drawerProgress - 1) * 100}%)` }}
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={beginCloseGesture}
+            onTouchMove={moveDrawerGesture}
+            onTouchEnd={endDrawerGesture}
+            onTouchCancel={endDrawerGesture}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="vip-eyebrow">Atlas</p>
-                <h2 className="text-xl font-black">Recentes</h2>
-              </div>
-              <button
+            <div className="flex items-center justify-between pt-1">
+              <h2 className="text-xl font-semibold">Recentes</h2>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 aria-label="Fechar menu"
-                onClick={() => setDrawerOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-muted-foreground"
+                onClick={closeDrawer}
+                className="rounded-xl text-muted-foreground hover:bg-white/10"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={openNewChat}
-              className="mt-6 flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3.5 text-left text-black transition-transform active:scale-[0.98]"
+              className="mt-5 flex h-auto w-full justify-start gap-3 rounded-2xl bg-primary px-3.5 py-3.5 text-left text-primary-foreground hover:bg-primary/90 active:scale-[0.98]"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/10">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-background/10">
                 <Plus className="h-4 w-4" />
               </span>
-              <span>
+              <span className="min-w-0">
                 <span className="block text-sm font-bold">Novo chat</span>
-                <span className="block text-xs text-black/55">Abrir atendimento com o ADM</span>
+                <span className="block truncate text-xs opacity-60">Iniciar suporte</span>
               </span>
-            </button>
+            </Button>
 
             <div className="mt-7">
-              <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Conversas recentes
-              </p>
-              <button
-                type="button"
-                onClick={openNewChat}
-                className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-left hover:bg-white/[0.06]"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5">
-                  <Clock3 className="h-4 w-4 text-muted-foreground" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium">Atendimento com o ADM</span>
-                  <span className="block text-xs text-muted-foreground">Abrir conversa</span>
-                </span>
-              </button>
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-xs leading-5 text-muted-foreground">
-              Arraste da borda esquerda para a direita para abrir este menu.
+              {recentLoading ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              ) : recentConversations.length === 0 ? (
+                <p className="px-1 py-6 text-sm text-muted-foreground">Nenhuma conversa recente</p>
+              ) : (
+                <div className="space-y-1">
+                  {recentConversations.map((conversation) => (
+                    <Button
+                      key={conversation.id}
+                      type="button"
+                      variant="ghost"
+                      onClick={openNewChat}
+                      className="flex h-auto w-full justify-start gap-3 rounded-xl px-3 py-3 text-left hover:bg-white/10"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/5">
+                        <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{conversation.title}</span>
+                        <span className="block text-xs text-muted-foreground">{conversation.subtitle}</span>
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
           </aside>
         </div>

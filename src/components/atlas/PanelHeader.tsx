@@ -1,4 +1,4 @@
-import { ArrowLeft, ShieldCheck, Menu } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +7,7 @@ import { useKey } from "@/lib/key-context";
 /**
  * Cabeçalho fixo do painel.
  */
-export function PanelHeader({ onOpenRecentes }: { onOpenRecentes?: () => void }) {
+export function PanelHeader() {
   const navigate = useNavigate();
   const { adminPreview, closeAdminPanel } = useKey();
 
@@ -24,35 +24,22 @@ export function PanelHeader({ onOpenRecentes }: { onOpenRecentes?: () => void })
       </div>
 
       <div className="flex items-center gap-2">
-        {onOpenRecentes && (
+        {adminPreview ? (
           <Button
-            type="button"
             variant="ghost"
-            size="icon"
-            aria-label="Abrir conversas recentes"
-            onClick={onOpenRecentes}
-            className="h-10 w-10 rounded-2xl glass hover:bg-white/10"
+            size="sm"
+            onClick={() => {
+              closeAdminPanel();
+              navigate("/admin", { replace: true });
+            }}
+            className="rounded-xl glass hover:bg-white/10"
           >
-            <Menu className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Admin
           </Button>
+        ) : (
+          <NotificationBell />
         )}
-
-      {adminPreview ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            closeAdminPanel();
-            navigate("/admin", { replace: true });
-          }}
-          className="rounded-xl glass hover:bg-white/10"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Admin
-        </Button>
-      ) : (
-        <NotificationBell />
-      )}
       </div>
     </header>
   );
