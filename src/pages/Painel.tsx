@@ -76,7 +76,6 @@ export default function PainelPage() {
 
   useEffect(() => {
     if (loading || !keyData?.key || keyData.is_master) return;
-    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
     void enableUserPush(keyData.key).catch(() => {
       // A sincronização é silenciosa; o restante do painel continua funcionando.
     });
