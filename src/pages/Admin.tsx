@@ -130,56 +130,21 @@ export default function AdminPage() {
           </div>
         </header>
 
-                        <nav aria-label="Funções administrativas" className="py-3">
+                                <nav aria-label="Funções administrativas" className="py-3">
           <div className="grid grid-cols-3 gap-3">
             {[
-              {
-                title: "Controle",
-                items: [
-                  { id: "overview", title: "Resumo" },
-                  { id: "keys", title: "Chaves" },
-                  { id: "devices", title: "Acessos" },
-                ],
-              },
-              {
-                title: "Atendimento",
-                items: [
-                  { id: "rewards", title: "Benefícios" },
-                  { id: "notifications", title: "Avisos" },
-                  { id: "messages", title: "Conversas" },
-                ],
-              },
-              {
-                title: "Sistema",
-                items: [
-                  { id: "support", title: "Suporte" },
-                  { id: "maintenance", title: "Manutenção" },
-                  { id: "security", title: "Segurança" },
-                ],
-              },
+              { id: "control", title: "Controle", first: "overview" },
+              { id: "service", title: "Atendimento", first: "messages" },
+              { id: "system", title: "Sistema", first: "maintenance" },
             ].map((group) => (
-              <div key={group.title} className="min-w-0">
-                <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.title}
-                </p>
-                <div className="flex flex-col gap-0.5">
-                  {group.items.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedFunction(item.id as AdminFunction["id"])}
-                      className={[
-                        "w-full truncate rounded-md px-2 py-1.5 text-left text-xs transition-colors",
-                        selectedFunction === item.id
-                          ? "bg-foreground text-background font-semibold"
-                          : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
-                      ].join(" ")}
-                    >
-                      {item.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <button
+                key={group.id}
+                type="button"
+                onClick={() => setSelectedFunction(group.first as AdminFunction["id"])}
+                className="rounded-lg bg-white/[0.03] px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground"
+              >
+                {group.title}
+              </button>
             ))}
           </div>
         </nav>
