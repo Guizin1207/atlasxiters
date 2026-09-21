@@ -130,9 +130,9 @@ export default function AdminPage() {
           </div>
         </header>
 
-                                                <nav aria-label="Funções administrativas" className="py-3">
-          {(() => {
-            const groups = [
+                                                        <nav aria-label="Funções administrativas" className="py-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {[
               {
                 title: "Controle",
                 functions: [
@@ -157,55 +157,29 @@ export default function AdminPage() {
                   { id: "maintenance", title: "Manutenção" },
                 ],
               },
-            ];
-
-            const activeGroup =
-              groups.find((group) =>
-                group.functions.some((item) => item.id === selectedFunction)
-              ) ?? groups[0];
-
-            return (
-              <>
-                <div className="grid grid-cols-3 gap-3">
-                  {groups.map((group) => (
-                    <button
-                      key={group.title}
-                      type="button"
-                      onClick={() =>
-                        setSelectedFunction(group.functions[0].id as AdminFunction["id"])
-                      }
-                      className={[
-                        "rounded-lg px-2 py-2.5 text-xs font-semibold transition-all",
-                        activeGroup.title === group.title
-                          ? "bg-foreground text-background"
-                          : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.07] hover:text-foreground",
-                      ].join(" ")}
-                    >
-                      {group.title}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {activeGroup.functions.map((item) => (
+            ].map((group) => (
+              <div key={group.title} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                <h3 className="mb-2 text-sm font-semibold text-foreground">{group.title}</h3>
+                <div className="flex flex-col gap-1">
+                  {group.functions.map((item) => (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => setSelectedFunction(item.id as AdminFunction["id"])}
                       className={[
-                        "rounded-md px-2.5 py-1 text-[11px] transition-colors",
+                        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
                         selectedFunction === item.id
-                          ? "bg-white/10 text-foreground font-semibold"
-                          : "text-muted-foreground hover:text-foreground",
+                          ? "bg-foreground text-background font-semibold"
+                          : "text-muted-foreground hover:bg-white/[0.06] hover:text-foreground",
                       ].join(" ")}
                     >
                       {item.title}
                     </button>
                   ))}
                 </div>
-              </>
-            );
-          })()}
+              </div>
+            ))}
+          </div>
         </nav>
 
         <section
