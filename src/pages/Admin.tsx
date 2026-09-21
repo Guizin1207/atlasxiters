@@ -130,57 +130,59 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <nav aria-label="Funções administrativas" className="py-2">
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
+                <nav aria-label="Funções administrativas" className="py-3">
+          <div className="grid grid-cols-3 gap-2">
             {[
-              { id: "overview", title: "Geral", items: ["overview", "devices", "security"] },
-              { id: "keys", title: "Keys", items: ["keys", "rewards"] },
-              { id: "notifications", title: "Comunicação", items: ["notifications", "messages", "support", "maintenance"] },
+              { id: "admin", title: "Admin", items: ["overview", "keys", "devices", "rewards"] },
+              { id: "comms", title: "Comunicação", items: ["notifications", "messages", "support"] },
+              { id: "system", title: "Sistema", items: ["maintenance", "security"] },
             ].map((group) => {
               const active = group.items.includes(selectedFunction);
 
               return (
-                <div key={group.id} className="flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedFunction(group.items[0] as AdminFunction["id"])}
-                    className={[
-                      "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                      active
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
-                    ].join(" ")}
-                  >
-                    {group.title}
-                  </button>
-
-                  {active && group.items.length > 1 && (
-                    <div className="ml-1 flex items-center gap-0.5 rounded-md bg-white/[0.03] p-0.5">
-                      {group.items.map((itemId) => {
-                        const item = adminFunctions.find((item) => item.id === itemId);
-                        if (!item) return null;
-
-                        return (
-                          <button
-                            key={itemId}
-                            type="button"
-                            onClick={() => setSelectedFunction(itemId as AdminFunction["id"])}
-                            className={[
-                              "rounded px-2 py-1 text-[11px] transition-colors",
-                              selectedFunction === itemId
-                                ? "bg-white/10 text-foreground"
-                                : "text-muted-foreground hover:text-foreground",
-                            ].join(" ")}
-                          >
-                            {item.title}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => setSelectedFunction(group.items[0] as AdminFunction["id"])}
+                  className={[
+                    "rounded-lg py-2 text-xs font-semibold transition-all",
+                    active
+                      ? "bg-foreground text-background"
+                      : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.07] hover:text-foreground",
+                  ].join(" ")}
+                >
+                  {group.title}
+                </button>
               );
             })}
+          </div>
+
+          <div className="mt-2">
+            <label htmlFor="admin-function" className="sr-only">
+              Função
+            </label>
+            <select
+              id="admin-function"
+              value={selectedFunction}
+              onChange={(event) => setSelectedFunction(event.target.value as AdminFunction["id"])}
+              className="h-9 w-full rounded-lg border border-white/10 bg-background px-3 text-xs text-foreground outline-none"
+            >
+              {[
+                { label: "Visão geral", value: "overview" },
+                { label: "Keys", value: "keys" },
+                { label: "Dispositivos", value: "devices" },
+                { label: "Recompensas", value: "rewards" },
+                { label: "Notificações", value: "notifications" },
+                { label: "Mensagens", value: "messages" },
+                { label: "Suporte", value: "support" },
+                { label: "Manutenção", value: "maintenance" },
+                { label: "Segurança", value: "security" },
+              ].map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
           </div>
         </nav>
 
