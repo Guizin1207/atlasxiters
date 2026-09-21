@@ -130,8 +130,8 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <nav aria-label="Funções administrativas" className="overflow-x-auto scrollbar-none">
-          <div className="flex min-w-max items-center gap-6 border-b border-white/10">
+        <nav aria-label="Funções administrativas" className="py-2">
+          <div className="grid grid-cols-3 gap-x-5 gap-y-2 sm:grid-cols-9">
             {adminFunctions.map(({ id, title }) => {
               const active = selectedFunction === id;
 
@@ -140,15 +140,18 @@ export default function AdminPage() {
                   key={id}
                   type="button"
                   onClick={() => setSelectedFunction(id)}
+                  aria-current={active ? "page" : undefined}
                   className={[
-                    "relative shrink-0 py-3 text-sm font-medium transition-colors",
-                    "after:absolute after:inset-x-0 after:-bottom-px after:h-px after:transition-opacity",
+                    "relative py-2 text-center text-xs sm:text-sm font-medium transition-all",
                     active
-                      ? "text-foreground after:bg-foreground after:opacity-100"
-                      : "text-muted-foreground hover:text-foreground after:opacity-0",
+                      ? "text-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground",
                   ].join(" ")}
                 >
                   {title}
+                  {active && (
+                    <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-foreground" />
+                  )}
                 </button>
               );
             })}
