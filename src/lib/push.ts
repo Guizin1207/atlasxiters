@@ -60,7 +60,6 @@ export async function cleanupPreviewPushRegistrations() {
   }
 }
 
-void cleanupPreviewPushRegistrations();
 const BINDING_PREFIX = "atlas_push_binding_v2";
 const LEGACY_BINDING_KEY = "atlas_push_binding_v1";
 const ROLE_SCOPES: Record<PushRole, string> = { admin: "/push/admin/", user: "/push/user/" };
