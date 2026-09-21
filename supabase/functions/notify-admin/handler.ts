@@ -71,6 +71,12 @@ const CONTENT: Record<
     audience: "user",
     url: "/painel",
   },
+  daily_reward: {
+    title: "Atlas VIP — Coin diário disponível",
+    body: "Seu coin diário já está disponível para resgate!",
+    audience: "user",
+    url: "/painel",
+  },
   maintenance_end: {
     title: "Atlas VIP — Manutenção concluída",
     body: "Tudo normalizado. O painel já está liberado.",
@@ -109,12 +115,29 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       const targetEndpoint = typeof raw?.targetEndpoint === "string" ? raw.targetEndpoint.trim() : "";
       const messageId = typeof raw?.messageId === "string" ? raw.messageId : "";
       const customBody = typeof raw?.body === "string" ? raw.body.trim().slice(0, 180) : "";
+      const cronToken = typeof raw?.cronToken === "string" ? raw.cronToken : "";
 
       const content = Object.prototype.hasOwnProperty.call(CONTENT, kind) ? CONTENT[kind] : null;
       if (!content) return json({ error: "Tipo de notificação inválido." }, 400);
 
+      if (kind === "daily_reward") {
+        const { data: tokenRow, error: tokenError } = await admin
+          .from("app_config")
+          .select("value")
+          .eq("key", "reward_daily_cron_token")
+          .maybeSingle();
+        const expectedToken = typeof tokenRow?.value === "string"
+          ? tokenRow.value
+          : typeof tokenRow?.value === "object" && tokenRow?.value !== null
+            ? String(tokenRow.value)
+            : "";
+        if (tokenError || !cronToken || cronToken !== expectedToken) {
+          return json({ code: "CRON_AUTH_FAILED", error: "Agendamento não autorizado." }, 403);
+        }
+      }
 
-      let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth");
+
+      let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
 
       if (kind === "admin_test") {
         if (!password || !targetEndpoint) return json({ error: "Autenticação e aparelho de destino obrigatórios." }, 400);
@@ -157,6 +180,65 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           if (validKey !== true) return json({ error: "Chave inválida." }, 403);
         }
         query = query.eq("scope", "admin");
+      } else if (kind === "daily_reward") {
+        const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+        const { data: keys, error: keysError } = await admin
+          .from("access_keys")
+          .select("id, expires_at, revoked, is_master")
+          .eq("revoked", false)
+          .eq("is_master", false);
+        if (keysError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar keys." }, 500);
+
+        const { data: rewards, error: rewardsError } = await admin
+          .from("atlas_rewards")
+          .select("key_id, last_daily_claim");
+        if (rewardsError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar recompensas." }, 500);
+
+        const rewardByKey = new Map<string, string | null>(
+          (rewards ?? []).map((row) => [String(row.key_id), row.last_daily_claim ? String(row.last_daily_claim).slice(0, 10) : null]),
+        );
+        const eligible = new Set(
+          (keys ?? [])
+            .filter((row) => !row.expires_at || Date.parse(String(row.expires_at)) > Date.now())
+            .filter((row) => rewardByKey.get(String(row.id)) !== today)
+            .map((row) => String(row.id)),
+        );
+        query = query.eq("scope", "user");
+        const { data: candidateSubs, error: candidateError } = await query;
+        if (candidateError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar aparelhos." }, 500);
+        const eligibleSubs = (candidateSubs ?? []).filter((sub) => sub.key_id && eligible.has(String(sub.key_id)));
+        const payload = JSON.stringify({
+          title: content.title,
+          body: content.body,
+          url: content.url,
+          tag: "atlas-daily-reward",
+        });
+        const stale: string[] = [];
+        let sent = 0;
+        let failed = 0;
+        await Promise.all(Array.from({ length: Math.min(8, eligibleSubs.length) }, async () => {
+          while (next < eligibleSubs.length) {
+            const sub = eligibleSubs[next++];
+            try {
+              await sendNotification(
+                { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                payload,
+              );
+              sent++;
+            } catch (err) {
+              failed++;
+              const status = (err as { statusCode?: number })?.statusCode;
+              if (status === 404 || status === 410) stale.push(sub.id);
+            }
+          }
+        }));
+        if (stale.length) await admin.from("push_subscriptions").delete().in("id", stale);
+        return json({
+          sent,
+          failed,
+          removed: stale.length,
+          code: sent > 0 ? undefined : "NO_RECIPIENTS",
+        }, sent === 0 && failed > 0 ? 502 : 200);
       } else if (kind === "reward_ready") {
         // Aviso de recompensa: somente para o aparelho/keys do próprio usuário.
         if (!key) return json({ error: "Chave ausente." }, 400);
