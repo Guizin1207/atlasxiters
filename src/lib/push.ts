@@ -157,7 +157,7 @@ export async function registerPushServiceWorker(role: PushRole) {
   }
 }
 
-/** Cadastra este aparelho para o admin. Retorna o status final. */
+/** Cadastra um único aparelho para o admin. O servidor mantém somente 1 aparelho ADM geral. */
 export async function enableAdminPush(password: string): Promise<PushStatus> {
   const status = pushAvailability();
   if (status !== "ready") return status;
@@ -318,7 +318,7 @@ export async function notifyExpired(key: string) {
 
 /* ---------- Notificações do usuário (chave de acesso) ---------- */
 
-/** Cadastra este aparelho para receber avisos do suporte, atualizações e manutenção. */
+/** Cadastra um único aparelho por key para receber avisos do suporte, atualizações e manutenção. */
 export async function enableUserPush(key: string): Promise<PushStatus> {
   const status = pushAvailability();
   if (status !== "ready") return status;
