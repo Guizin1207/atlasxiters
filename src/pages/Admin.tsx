@@ -130,12 +130,9 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <nav
-          aria-label="Funções administrativas"
-          className="border-y border-white/10 py-1"
-        >
-          <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
-            {adminFunctions.map(({ id, title, icon: Icon }) => {
+        <nav aria-label="Funções administrativas" className="overflow-x-auto scrollbar-none">
+          <div className="flex min-w-max items-center gap-6 border-b border-white/10">
+            {adminFunctions.map(({ id, title }) => {
               const active = selectedFunction === id;
 
               return (
@@ -143,17 +140,15 @@ export default function AdminPage() {
                   key={id}
                   type="button"
                   onClick={() => setSelectedFunction(id)}
-                  aria-current={active ? "page" : undefined}
                   className={[
-                    "relative inline-flex items-center gap-1.5 px-2.5 py-2.5 text-xs font-semibold transition-colors",
-                    "after:absolute after:inset-x-2.5 after:bottom-0 after:h-0.5 after:rounded-full after:transition-opacity",
+                    "relative shrink-0 py-3 text-sm font-medium transition-colors",
+                    "after:absolute after:inset-x-0 after:-bottom-px after:h-px after:transition-opacity",
                     active
                       ? "text-foreground after:bg-foreground after:opacity-100"
                       : "text-muted-foreground hover:text-foreground after:opacity-0",
                   ].join(" ")}
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span>{title}</span>
+                  {title}
                 </button>
               );
             })}
