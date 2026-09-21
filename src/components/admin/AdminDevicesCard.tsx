@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
+import { CheckCircle2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useAdmin } from "@/lib/admin-context";
-import { currentAdminSessionId, listAdminSessions, type AdminAccessSession } from "@/lib/admin-devices";
+import {
+  clearAdminDevices,
+  currentAdminDeviceId,
+  currentAdminSessionId,
+  listAdminSessions,
+  type AdminAccessSession,
+} from "@/lib/admin-devices";
 import { Button } from "@/components/ui/button";
 
 export function AdminDevicesCard() {
@@ -8,34 +16,141 @@ export function AdminDevicesCard() {
   const [rows, setRows] = useState<AdminAccessSession[]>([]);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cleaning, setCleaning] = useState(false);
   const [refresh, setRefresh] = useState(0);
+
   useEffect(() => {
     if (!password) return;
     let live = true;
     let busy = false;
+
     const load = async () => {
       if (busy) return;
       busy = true;
-      try { const data = await listAdminSessions(password); if (live) { setRows(data); setError(false); } }
-      catch { if (live) setError(true); }
-      finally { busy = false; if (live) setLoading(false); }
+      try {
+        const data = await listAdminSessions(password);
+        if (live) {
+          setRows(data);
+          setError(false);
+        }
+      } catch {
+        if (live) setError(true);
+      } finally {
+        busy = false;
+        if (live) setLoading(false);
+      }
     };
+
     void load();
-    const timer = window.setInterval(() => { if (!document.hidden) void load(); }, 30_000);
-    return () => { live = false; window.clearInterval(timer); };
+    const timer = window.setInterval(() => {
+      if (!document.hidden) void load();
+    }, 30_000);
+
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
   }, [password, refresh]);
+
+  const clean = async () => {
+    if (!password || cleaning) return;
+    if (!window.confirm("Limpar os dispositivos antigos/inativos? O dispositivo atual será mantido.")) return;
+
+    setCleaning(true);
+    try {
+      const removed = await clearAdminDevices(password);
+      toast.success(removed ? `${removed} dispositivo(s) removido(s).` : "Nenhum dispositivo antigo para remover.");
+      setRefresh((value) => value + 1);
+    } catch {
+      toast.error("Não foi possível limpar os dispositivos.");
+    } finally {
+      setCleaning(false);
+    }
+  };
+
   const date = (value: string) => new Date(value).toLocaleString("pt-BR");
-  return <section className="glass-strong rounded-2xl p-4 space-y-3">
-    <div className="flex justify-between items-center gap-3"><h2 className="font-bold">Aparelhos com acesso ADM</h2><Button variant="outline" size="sm" onClick={() => setRefresh(n => n + 1)}>Atualizar</Button></div>
-    <p className="text-xs text-muted-foreground">Histórico dos últimos 100 acessos registrados. A mesma senha identifica o aparelho e o navegador, não o nome da pessoa. Registros começam após ativar este recurso.</p>
-    {(error || deviceRegistryError) && <p role="alert" className="text-sm text-status-warning">Não foi possível consultar ou registrar todos os acessos. A configuração de aparelhos ADM precisa estar aplicada no banco e a conexão disponível.</p>}
-    {loading ? <p>Carregando aparelhos…</p> : <div className="overflow-x-auto"><table className="w-full text-sm text-left">
-      <thead><tr className="border-b border-white/10"><th className="p-2">Aparelho</th><th className="p-2">Primeiro acesso</th><th className="p-2">Última atividade</th><th className="p-2">Situação</th></tr></thead>
-      <tbody>{rows.map(row => <tr key={row.session_id} className="border-b border-white/5">
-        <td className="p-2"><span className="block">{row.device_label}{row.session_id === currentAdminSessionId() ? " · Esta sessão" : ""}</span><span className="text-xs text-muted-foreground">Aparelho {row.device_id?.slice(0, 8) ?? "não informado"}</span></td>
-        <td className="p-2 whitespace-nowrap">{date(row.created_at)}</td><td className="p-2 whitespace-nowrap">{date(row.last_seen_at)}</td>
-        <td className="p-2 whitespace-nowrap">{row.ended_at ? "Saiu do ADM" : Date.now() - new Date(row.last_seen_at).getTime() < 120_000 ? "Atividade recente" : "Sem atividade recente"}</td>
-      </tr>)}</tbody>
-    </table>{!rows.length && !error && <p className="p-2 text-muted-foreground">Nenhum acesso registrado ainda.</p>}</div>}
-  </section>;
+  const currentDeviceId = currentAdminDeviceId();
+
+  return (
+    <section className="glass-strong rounded-2xl p-4 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <p className="vip-eyebrow">Segurança</p>
+          <h2 className="font-bold">Dispositivos ADM</h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Cada aparelho aparece uma única vez. Novos acessos apenas atualizam o registro.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setRefresh((value) => value + 1)}>
+            Atualizar
+          </Button>
+          <Button variant="outline" size="sm" onClick={clean} disabled={cleaning}>
+            <Trash2 className="w-4 h-4 mr-1" />
+            {cleaning ? "Limpando..." : "Limpar dispositivos"}
+          </Button>
+        </div>
+      </div>
+
+      {(error || deviceRegistryError) && (
+        <p role="alert" className="text-sm text-status-warning">
+          Não foi possível consultar todos os dispositivos.
+        </p>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Carregando dispositivos…</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="p-2">Dispositivo</th>
+                <th className="p-2">Primeiro registro</th>
+                <th className="p-2">Última atividade</th>
+                <th className="p-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const isCurrent = row.device_id === currentDeviceId;
+                const active = !row.ended_at && Date.now() - new Date(row.last_seen_at).getTime() < 120_000;
+
+                return (
+                  <tr key={row.device_id ?? row.session_id} className="border-b border-white/5">
+                    <td className="p-2">
+                      <span className="block font-medium">
+                        {row.device_label}
+                        {isCurrent ? " · Este dispositivo" : ""}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ID {row.device_id?.slice(0, 8) ?? "não informado"}
+                      </span>
+                    </td>
+                    <td className="p-2 whitespace-nowrap">{date(row.created_at)}</td>
+                    <td className="p-2 whitespace-nowrap">{date(row.last_seen_at)}</td>
+                    <td className="p-2 whitespace-nowrap">
+                      {active ? (
+                        <span className="inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Ativo
+                        </span>
+                      ) : row.ended_at ? (
+                        "Saiu do ADM"
+                      ) : (
+                        "Sem atividade recente"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {!rows.length && !error && (
+            <p className="p-2 text-muted-foreground">Nenhum dispositivo registrado.</p>
+          )}
+        </div>
+      )}
+    </section>
+  );
 }
