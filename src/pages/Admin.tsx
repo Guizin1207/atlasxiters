@@ -103,8 +103,32 @@ export default function AdminPage() {
               <ShieldAlert className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <p className="vip-eyebrow">Admin</p>
-              <h1 className="vip-title text-lg leading-none">Atlas Control</h1>
+              <div className="flex items-center gap-2">
+                <div className="min-w-0">
+                  <p className="vip-eyebrow">Admin</p>
+                  <h1 className="vip-title text-lg leading-none">Atlas Control</h1>
+                </div>
+                <Button
+                  size="sm"
+                  className="shrink-0 rounded-xl"
+                  onClick={async () => {
+                    if (!password || openingPanel) return;
+                    setOpeningPanel(true);
+                    const opened = await openAdminPanel(password);
+                    setOpeningPanel(false);
+                    if (opened) navigate("/painel");
+                  }}
+                  disabled={openingPanel}
+                  aria-label="Abrir painel ADM"
+                >
+                  {openingPanel ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LayoutGrid className="h-4 w-4" />
+                  )}
+                  <span className="ml-1.5">ADM</span>
+                </Button>
+              </div>
               <p className="mt-1 truncate text-xs text-muted-foreground">
                 {selected?.title ?? "Central de administração"}
               </p>
@@ -134,25 +158,6 @@ export default function AdminPage() {
               }}
             >
               Acesso usuário
-            </Button>
-            <Button
-              size="sm"
-              className="rounded-xl"
-              onClick={async () => {
-                if (!password || openingPanel) return;
-                setOpeningPanel(true);
-                const opened = await openAdminPanel(password);
-                setOpeningPanel(false);
-                if (opened) navigate("/painel");
-              }}
-              disabled={openingPanel}
-            >
-              {openingPanel ? (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              ) : (
-                <LayoutGrid className="mr-1.5 h-4 w-4" />
-              )}
-              <span className="hidden sm:inline">Painel</span>
             </Button>
             <Button
               variant="ghost"
