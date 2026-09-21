@@ -31,6 +31,7 @@ import { MessagesCard } from "@/components/admin/MessagesCard";
 import { SupportAdminCard } from "@/components/admin/SupportAdminCard";
 import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard";
 import { getKeyStatus } from "@/lib/key-status";
+import { supabase } from "@/integrations/supabase/client";
 
 type AdminFunction = {
   id: string;
