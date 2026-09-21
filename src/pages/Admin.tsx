@@ -98,7 +98,16 @@ export default function AdminPage() {
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-5 sm:pt-7 space-y-5">
         <header className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="relative flex min-w-0 items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden absolute -left-2 top-1/2 z-10 h-9 w-9 -translate-y-1/2 rounded-xl border border-primary/40 bg-primary/15 text-primary shadow-lg shadow-primary/10 hover:bg-primary/25"
+              onClick={() => setAdminDrawerOpen(true)}
+              aria-label="Abrir funções ADM"
+            >
+              <span className="text-lg leading-none">☰</span>
+            </Button>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl glass-strong">
               <ShieldAlert className="h-4 w-4" />
             </div>
@@ -109,18 +118,6 @@ export default function AdminPage() {
                 {selected?.title ?? "Central de administração"}
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden h-9 w-9 rounded-xl border border-primary/40 bg-primary/15 text-primary shadow-lg shadow-primary/10 hover:bg-primary/25"
-              onClick={() => setAdminDrawerOpen(true)}
-              aria-label="Abrir funções ADM"
-            >
-              <span className="text-lg leading-none">☰</span>
-            </Button>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
