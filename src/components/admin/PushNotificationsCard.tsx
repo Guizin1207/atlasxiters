@@ -78,12 +78,26 @@ export function PushNotificationsCard() {
     if (!password || busy) return;
     setBusy(true);
     try {
+      // Um único toque pode cadastrar o aparelho e, em seguida, testar.
+      let current = status;
+      if (current !== "enabled") {
+        current = await enableAdminPush(password);
+        setStatus(current);
+        if (current !== "enabled") {
+          setTestResult(STATUS_TEXT[current]);
+          toast.error(STATUS_TEXT[current]);
+          return;
+        }
+        await load();
+      }
       const result = await testAdminPush(password);
       setTestResult(result.code ? `${result.message} Código: ${result.code}${result.httpStatus ? ` · HTTP ${result.httpStatus}` : ""}.` : result.message);
       if (result.ok) toast.success(result.message);
       else toast.error(result.message);
-    } catch {
-      setTestResult("Falha ao conferir o aparelho. Tente ativar novamente.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Falha ao conferir o aparelho. Tente ativar novamente.";
+      setTestResult(message);
+      toast.error(message);
     } finally { setBusy(false); }
   };
 
@@ -131,7 +145,7 @@ export function PushNotificationsCard() {
         Você pode ativar vários aparelhos. Os avisos de ADM e de usuário ficam separados,
         mesmo quando os dois acessos são usados neste celular.
       </p>
-      <Button onClick={sendTest} disabled={busy || status !== "enabled" || loading} variant="outline" className="w-full rounded-2xl">
+      <Button onClick={sendTest} disabled={busy || status === "denied" || status === "unsupported" || status === "ios-needs-install" || loading} variant="outline" className="w-full rounded-2xl">
         <Bell className="mr-2 h-4 w-4" /> Testar neste aparelho
       </Button>
       {testResult && <p role="status" className="text-xs text-muted-foreground">{testResult}</p>}
