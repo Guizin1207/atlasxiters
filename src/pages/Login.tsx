@@ -179,7 +179,7 @@ export default function LoginPage() {
           </p>
           <Button
             type="button"
-            disabled={detecting || isAdminEntry}
+            disabled={detecting}
             onClick={() => setSupportOpen(true)}
             className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-white text-sm font-semibold hover:bg-white/10 transition-colors"
           >
