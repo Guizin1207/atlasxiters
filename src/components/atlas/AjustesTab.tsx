@@ -1,7 +1,6 @@
 import { Bell, Vibrate, Wand2, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePanelSettings } from "@/hooks/use-panel-settings";
-import { UserPushRow } from "@/components/atlas/UserPushRow";
 
 /**
  * Aba "Ajustes" — preferências persistidas em key_settings.
@@ -32,7 +31,6 @@ export function AjustesTab() {
       </div>
 
       <div className="glass-strong rounded-2xl divide-y divide-white/5">
-        <UserPushRow />
         <Row
           icon={<Bell className="w-4 h-4" />}
           title="Notificações"
