@@ -253,7 +253,6 @@ export default function AdminPage() {
                 <p className="vip-eyebrow">Atlas Control</p>
                 <h2 className="text-xl font-bold">Sobre o aplicativo</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Resumo somente para visualização do estado atual do Atlas.
                 </p>
               </div>
 
@@ -288,7 +287,6 @@ export default function AdminPage() {
                     <p className="vip-eyebrow">Status</p>
                     <h3 className="font-bold">Estado atual do Atlas</h3>
                   </div>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Somente leitura</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <div><p className="text-xs text-muted-foreground">Expiradas</p><p className="mt-1 text-xl font-bold">{overviewStats.loading ? "—" : overviewStats.expiredKeys}</p></div>
