@@ -62,7 +62,7 @@ export function AdminDevicesCard() {
       toast.success(removed ? `${removed} dispositivo(s) removido(s).` : "Nenhum dispositivo antigo para remover.");
       setRefresh((value) => value + 1);
     } catch {
-      toast.error("Não foi possível limpar os dispositivos.");
+      toast.error("Não foi possível limpar os dispositivos. Atualize o painel e tente novamente.");
     } finally {
       setCleaning(false);
     }
