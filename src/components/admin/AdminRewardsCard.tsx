@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
 import { toast } from "sonner";
+import { isPushPreviewEnvironment } from "@/lib/push";
 
 type RewardRow = {
   key_id: string; key: string; coins: number; last_daily_claim: string | null;
@@ -75,6 +76,10 @@ export function AdminRewardsCard() {
 
   const testNotify=async()=>{
     if(!password)return;
+    if(isPushPreviewEnvironment()){
+      toast.info("Teste de notificação desativado na prévia. Use a versão publicada.");
+      return;
+    }
     setTestingNotify(true);
     try{
       const {data,error}=await supabase.functions.invoke("notify-admin",{body:{kind:"admin_test",password}});
