@@ -89,7 +89,7 @@ export async function clearAdminDevices(password: string): Promise<number> {
   const { data, error } = await withTimeout(
     supabase.rpc("admin_clear_access_devices", {
       _password: password,
-      _current_device_id: currentAdminDeviceId(),
+      _current_device_id: getOrCreateDeviceId(),
     })
   );
 
