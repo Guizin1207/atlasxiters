@@ -71,6 +71,12 @@ const CONTENT: Record<
     audience: "user",
     url: "/painel",
   },
+  coins_added: {
+    title: "Atlas VIP — Coins recebidos",
+    body: "Você recebeu novos Atlas Coins!",
+    audience: "user",
+    url: "/painel",
+  },
   daily_reward: {
     title: "Atlas VIP — Coin diário disponível",
     body: "Seu coin diário já está disponível para resgate!",
@@ -249,6 +255,18 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           .eq("key", key.toUpperCase())
           .maybeSingle();
         if (keyError) return json({ error: "Falha ao validar recompensa." }, 500);
+        if (!keyRow?.id || keyRow.is_master || keyRow.revoked) {
+          return json({ error: "Chave inválida." }, 403);
+        }
+        query = query.eq("scope", "user").eq("key_id", keyRow.id);
+      } else if (kind === "coins_added") {
+        if (!key) return json({ error: "Chave ausente." }, 400);
+        const { data: keyRow, error: keyError } = await admin
+          .from("access_keys")
+          .select("id, is_master, revoked")
+          .eq("key", key.toUpperCase())
+          .maybeSingle();
+        if (keyError) return json({ error: "Falha ao validar coins." }, 500);
         if (!keyRow?.id || keyRow.is_master || keyRow.revoked) {
           return json({ error: "Chave inválida." }, 403);
         }
