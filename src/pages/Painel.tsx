@@ -69,6 +69,7 @@ export default function PainelPage() {
   const [supportOpen, setSupportOpen] = useState(
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
+  const drawerProgressRef = useRef(0);
   const sidebarWidthRef = useRef(1);
 
   useEffect(() => {
@@ -138,9 +139,15 @@ export default function PainelPage() {
     if (!supportOpen) void loadRecentConversations();
   }, [supportOpen, loadRecentConversations]);
 
+  const setDrawerAmount = (value: number) => {
+    const next = Math.max(0, Math.min(1, value));
+    drawerProgressRef.current = next;
+    setDrawerProgress(next);
+  };
+
   const closeDrawer = () => {
     setDrawerOpen(false);
-    setDrawerProgress(0);
+    setDrawerAmount(0);
     setDraggingDrawer(false);
     touchStartRef.current = null;
   };
@@ -151,6 +158,7 @@ export default function PainelPage() {
     touchStartRef.current = { x: touch.clientX, y: touch.clientY, mode: "open" };
     sidebarWidthRef.current = Math.max(window.innerWidth * 0.82, 1);
     setDraggingDrawer(true);
+    setDrawerAmount(0);
   };
 
   const beginCloseGesture = (event: TouchEvent<HTMLElement>) => {
@@ -159,6 +167,7 @@ export default function PainelPage() {
     touchStartRef.current = { x: touch.clientX, y: touch.clientY, mode: "close" };
     sidebarWidthRef.current = Math.max(window.innerWidth * 0.82, 1);
     setDraggingDrawer(true);
+    setDrawerAmount(1);
   };
 
   const moveDrawerGesture = (event: TouchEvent<HTMLElement | HTMLDivElement>) => {
@@ -169,18 +178,18 @@ export default function PainelPage() {
     const dy = touch.clientY - start.y;
     if (Math.abs(dy) > Math.abs(dx) * 1.25) return;
     if (start.mode === "open") {
-      setDrawerProgress(Math.max(0, Math.min(1, dx / sidebarWidthRef.current)));
+      setDrawerAmount(dx / sidebarWidthRef.current);
     } else {
-      setDrawerProgress(Math.max(0, Math.min(1, 1 + dx / sidebarWidthRef.current)));
+      setDrawerAmount(1 + dx / sidebarWidthRef.current);
     }
   };
 
   const endDrawerGesture = () => {
-    const shouldOpen = drawerProgress >= 0.42;
+    const shouldOpen = drawerProgressRef.current >= 0.42;
     touchStartRef.current = null;
     setDraggingDrawer(false);
     setDrawerOpen(shouldOpen);
-    setDrawerProgress(shouldOpen ? 1 : 0);
+    setDrawerAmount(shouldOpen ? 1 : 0);
   };
 
   // Tela limitada: sino e suporte continuam acessíveis, funções pagas não são montadas.
