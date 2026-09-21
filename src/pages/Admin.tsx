@@ -17,6 +17,18 @@ import { MessagesCard } from "@/components/admin/MessagesCard";
 import { SupportAdminCard } from "@/components/admin/SupportAdminCard";
 import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard";
 
+function AdminSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center gap-3">
+        <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-muted-foreground">{title}</h2>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export default function AdminPage() {
   const { password, loading, signOut } = useAdmin();
   const { openAdminPanel, closeAdminPanel, adminPreview } = useKey();
@@ -35,9 +47,8 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen pb-16">
-      <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-8 space-y-6">
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-8 space-y-8">
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl glass-strong flex items-center justify-center">
               <ShieldAlert className="w-4 h-4" />
@@ -45,13 +56,17 @@ export default function AdminPage() {
             <div>
               <p className="vip-eyebrow">Admin</p>
               <h1 className="vip-title text-lg leading-none">Atlas Control</h1>
+              <p className="text-xs text-muted-foreground mt-1">Central de administração</p>
             </div>
           </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" className="rounded-2xl" onClick={() => {
               if (adminPreview) closeAdminPanel();
               navigate("/login?trocar=1");
-            }}>Acesso de usuário</Button>
+            }}>
+              Acesso de usuário
+            </Button>
             <Button
               onClick={async () => {
                 if (!password || openingPanel) return;
@@ -63,12 +78,8 @@ export default function AdminPage() {
               disabled={openingPanel}
               className="rounded-2xl"
             >
-              {openingPanel ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <LayoutGrid className="w-4 h-4 mr-2" />
-              )}
-              Abrir painel de funções
+              {openingPanel ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LayoutGrid className="w-4 h-4 mr-2" />}
+              Abrir painel
             </Button>
             <Button
               variant="ghost"
@@ -84,23 +95,32 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <DeviceStatsCard />
-        <AdminDevicesCard />
+        <AdminSection title="Visão geral">
+          <DeviceStatsCard />
+        </AdminSection>
 
+        <AdminSection title="Segurança e acessos">
+          <AdminDevicesCard />
+        </AdminSection>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MaintenanceCard />
-          <KeyGeneratorCard />
-        </div>
+        <AdminSection title="Keys e manutenção">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <MaintenanceCard />
+            <KeyGeneratorCard />
+          </div>
+          <KeysListCard />
+        </AdminSection>
 
+        <AdminSection title="Mensagens e notificações">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <MessagesCard />
+            <PushNotificationsCard />
+          </div>
+        </AdminSection>
 
-        <KeysListCard />
-
-        <MessagesCard />
-
-        <PushNotificationsCard />
-
-        <SupportAdminCard />
+        <AdminSection title="Suporte">
+          <SupportAdminCard />
+        </AdminSection>
       </div>
     </main>
   );
