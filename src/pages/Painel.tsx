@@ -38,6 +38,41 @@ export default function PainelPage() {
   );
 
   useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+
+    const onTouchStart = (event: globalThis.TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+    };
+
+    const onTouchEnd = (event: globalThis.TouchEvent) => {
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+
+      // Igual ao gesto lateral de apps de chat: começa na borda esquerda e puxa para a direita.
+      if (startX <= 42 && dx >= 65 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        setDrawerOpen(true);
+      } else if (drawerOpen && dx <= -65 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        setDrawerOpen(false);
+      }
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [drawerOpen]);
+
+  useEffect(() => {
     if (!loading && keyData && !keyData.is_master) {
       void (async () => {
         const { data } = await rewardApi("get", keyData.key);
