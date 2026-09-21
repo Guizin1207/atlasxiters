@@ -124,7 +124,8 @@ function urlBase64ToUint8Array(base64: string) {
 }
 
 export async function registerPushServiceWorker(role: PushRole) {
-  const registration = await navigator.serviceWorker.register("/sw.js", { scope: ROLE_SCOPES[role] });
+  const workerUrl = role === "admin" ? "/push-admin-sw.js" : "/push-user-sw.js";
+  const registration = await navigator.serviceWorker.register(workerUrl, { scope: ROLE_SCOPES[role] });
   if (registration.active) return registration;
   // navigator.serviceWorker.ready refere-se ao worker que controla a página,
   // não necessariamente ao worker deste papel. Espera o registro correto.
@@ -257,7 +258,7 @@ export async function testAdminPush(password: string): Promise<PushDelivery> {
   if (state.status !== "enabled" || !state.endpoint) {
     return { ok: false, sent: 0, message: "Vincule este aparelho ao ADM antes de testar." };
   }
-  return deliver({ kind: "admin_test", password, targetEndpoint: state.endpoint });
+  return deliver({ kind: "admin_test", password });
 }
 
 /** Usuário só pode testar o próprio endpoint, autorizado pela própria key. */
