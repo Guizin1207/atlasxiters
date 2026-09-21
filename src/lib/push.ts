@@ -10,7 +10,7 @@ export type { PushDelivery } from "@/lib/push-errors";
 
 /** Chave pública VAPID — pode ficar no código (é pública por definição). */
 export const VAPID_PUBLIC_KEY =
-  "BOiHPKDiRjBmVRwdjAWuzJ577UoRXOz7Uq5fxMas0tzaNWVkXN98_ZDiRzC3o6rfJLzoUzN1HhKtviFFrAnvYqQ";
+  "BFL-1Bh-1OMNvTsXmn7dyJrJAgOJHMUbOa7PttkYTH57rtwrIqqiTr4d8BmHMMEWjzh6OoKVOyR7LlXHJOMzdMI";
 
 export type PushStatus =
   | "unsupported"
