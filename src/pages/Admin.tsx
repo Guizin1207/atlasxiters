@@ -30,6 +30,7 @@ import { KeysListCard } from "@/components/admin/KeysListCard";
 import { MessagesCard } from "@/components/admin/MessagesCard";
 import { SupportAdminCard } from "@/components/admin/SupportAdminCard";
 import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard";
+import { AdminRewardsCard } from "@/components/admin/AdminRewardsCard";
 import { getKeyStatus } from "@/lib/key-status";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -325,13 +326,16 @@ export default function AdminPage() {
           )}
 
           {selectedFunction === "rewards" && (
-            <section className="glass-strong rounded-3xl p-6">
-              <p className="vip-eyebrow mb-1">Atlas Coins</p>
-              <h2 className="text-xl font-bold">Recompensas</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                As funções de recompensa existentes continuam disponíveis.
-              </p>
-            </section>
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Atlas Coins</p>
+                <h2 className="text-xl font-bold">Recompensas</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Controle completo de coins, check-ins, limites e resgates.
+                </p>
+              </div>
+              <AdminRewardsCard />
+            </div>
           )}
 
           {selectedFunction === "notifications" && (
