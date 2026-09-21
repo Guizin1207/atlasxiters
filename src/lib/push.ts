@@ -138,7 +138,27 @@ function urlBase64ToUint8Array(base64: string) {
 
 export async function registerPushServiceWorker(role: PushRole) {
   if (isPushPreviewEnvironment()) throw new Error("Notificações desativadas na prévia. Use a versão publicada.");
-  const workerUrl = role === "admin" ? "/push/admin/push-admin-sw.js?v=3" : "/push/user/push-user-sw.js?v=3";
+
+  // Migra automaticamente qualquer Service Worker antigo da raiz.
+  // Isso evita que a push antiga continue recebendo os mesmos eventos.
+  try {
+    const legacyRegistrations = await navigator.serviceWorker.getRegistrations();
+    for (const legacy of legacyRegistrations) {
+      const script = legacy.active?.scriptURL ?? legacy.waiting?.scriptURL ?? legacy.installing?.scriptURL ?? "";
+      const isLegacyPush =
+        legacy.scope === new URL("/", location.origin).href &&
+        (script.endsWith("/push-admin-sw.js") || script.endsWith("/push-user-sw.js"));
+      if (isLegacyPush) {
+        const oldSubscription = await legacy.pushManager.getSubscription();
+        if (oldSubscription) {
+          try { await oldSubscription.unsubscribe(); } catch { /* segue para o unregister */ }
+        }
+        await legacy.unregister();
+      }
+    }
+  } catch { /* a inscrição nova continua sendo registrada normalmente */ }
+
+  const workerUrl = role === "admin" ? "/push/admin/push-admin-sw.js?v=4" : "/push/user/push-user-sw.js?v=4";
   const registration = await navigator.serviceWorker.register(workerUrl, { scope: ROLE_SCOPES[role] });
   if (registration.active) return registration;
   // navigator.serviceWorker.ready refere-se ao worker que controla a página,
