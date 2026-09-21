@@ -6,8 +6,8 @@ export type AtlasTab = "funcoes" | "ajustes" | "perfil" | "recompensa";
 const TABS: { id: AtlasTab; label: string; icon: typeof LayoutGrid }[] = [
   { id: "funcoes", label: "Funções", icon: LayoutGrid },
   { id: "ajustes", label: "Ajustes", icon: SlidersHorizontal },
-  { id: "perfil", label: "Perfil", icon: UserRound },
   { id: "recompensa", label: "Recompensa", icon: Gift },
+  { id: "perfil", label: "Perfil", icon: UserRound },
 ];
 
 export function TabsNav({ value, onChange }: { value: AtlasTab; onChange: (t: AtlasTab) => void }) {
