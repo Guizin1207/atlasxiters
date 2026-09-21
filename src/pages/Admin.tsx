@@ -130,22 +130,40 @@ export default function AdminPage() {
           </div>
         </header>
 
-                                <nav aria-label="Funções administrativas" className="py-3">
+                                        <nav aria-label="Funções administrativas" className="py-3">
           <div className="grid grid-cols-3 gap-3">
             {[
-              { id: "control", title: "Controle", first: "overview" },
-              { id: "service", title: "Atendimento", first: "messages" },
-              { id: "system", title: "Sistema", first: "maintenance" },
-            ].map((group) => (
-              <button
-                key={group.id}
-                type="button"
-                onClick={() => setSelectedFunction(group.first as AdminFunction["id"])}
-                className="rounded-lg bg-white/[0.03] px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground"
-              >
-                {group.title}
-              </button>
-            ))}
+              {
+                title: "Controle",
+                functions: ["overview", "keys", "devices", "rewards", "security"],
+              },
+              {
+                title: "Atendimento",
+                functions: ["notifications", "messages", "support"],
+              },
+              {
+                title: "Sistema",
+                functions: ["maintenance"],
+              },
+            ].map((group) => {
+              const active = group.functions.includes(selectedFunction);
+
+              return (
+                <button
+                  key={group.title}
+                  type="button"
+                  onClick={() => setSelectedFunction(group.functions[0] as AdminFunction["id"])}
+                  className={[
+                    "rounded-lg px-2 py-2.5 text-center text-xs font-semibold transition-all",
+                    active
+                      ? "bg-foreground text-background"
+                      : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.07] hover:text-foreground",
+                  ].join(" ")}
+                >
+                  {group.title}
+                </button>
+              );
+            })}
           </div>
         </nav>
 
