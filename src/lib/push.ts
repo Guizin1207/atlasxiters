@@ -280,10 +280,22 @@ export async function testAdminPush(password: string): Promise<PushDelivery> {
 
 /** Usuário só pode testar o próprio endpoint, autorizado pela própria key. */
 export async function testUserPush(key: string): Promise<PushDelivery> {
+  if (isPushPreviewEnvironment()) {
+    return { ok: false, sent: 0, message: "Notificações desativadas na prévia. Use a versão publicada." };
+  }
+  if (!pushSupported()) return pushFailure(null, { code: "PUSH_SEND_FAILED" });
+  if (Notification.permission !== "granted") {
+    return { ok: false, sent: 0, message: "Ative a permissão de notificações neste aparelho antes de testar." };
+  }
+  const normalizedKey = key.trim().toUpperCase();
   const registration = await roleRegistration("user");
   const subscription = await registration?.pushManager.getSubscription();
-  if (!subscription || await currentPushStatus(key) !== "enabled") return pushFailure(null, { code: "NO_RECIPIENTS" });
-  return deliver({ kind: "user_test", key, targetEndpoint: subscription.endpoint });
+  const binding = readBinding("user");
+  if (!subscription || binding?.scope !== "user" || binding.key !== normalizedKey || binding.endpoint !== subscription.endpoint) {
+    return pushFailure(null, { code: "NO_RECIPIENTS" });
+  }
+  // O teste não depende mais de user_push_status: o próprio endpoint cadastrado é a fonte de verdade.
+  return deliver({ kind: "user_test", key: normalizedKey, targetEndpoint: subscription.endpoint });
 }
 
 const REWARD_NOTIFY_PREFIX = "atlas_reward_ready_v2";
