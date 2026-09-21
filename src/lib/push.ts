@@ -27,7 +27,7 @@ export type PushSubscriptionRecord = {
 type PushRole = "admin" | "user";
 
 /** A prévia/desenvolvimento nunca registra push para não conflitar com o aparelho real. */
-function isPreviewEnvironment() {
+export function isPushPreviewEnvironment() {
   if (import.meta.env.DEV) return true;
   const host = window.location.hostname.toLowerCase();
   return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host.includes("preview") || host.includes("lovableproject.com");
@@ -35,7 +35,7 @@ function isPreviewEnvironment() {
 
 /** Remove inscrições criadas em uma prévia antiga. Não executa no domínio real. */
 export async function cleanupPreviewPushRegistrations() {
-  if (!isPreviewEnvironment() || !("serviceWorker" in navigator)) return;
+  if (!isPushPreviewEnvironment() || !("serviceWorker" in navigator)) return;
   const registrations = await navigator.serviceWorker.getRegistrations();
   await Promise.all(registrations.filter((r) => r.scope.includes("/push/admin/") || r.scope.includes("/push/user/")).map(async (r) => {
     try {
@@ -91,7 +91,7 @@ export function pushSupported() {
 }
 
 function pushAvailability(): PushStatus {
-  if (isPreviewEnvironment()) return "unsupported";
+  if (isPushPreviewEnvironment()) return "unsupported";
   if (!pushSupported()) return isIOS() && !isStandalone() ? "ios-needs-install" : "unsupported";
   if (isIOS() && !isStandalone()) return "ios-needs-install";
   if (Notification.permission === "denied") return "denied";
@@ -119,7 +119,7 @@ export async function currentPushStatus(key?: string): Promise<PushStatus> {
 
 /** Permissão do navegador não prova o vínculo ADM: confere este endpoint no servidor. */
 export async function adminPushState(password: string) {
-  if (isPreviewEnvironment()) {
+  if (isPushPreviewEnvironment()) {
     return { status: "unsupported" as PushStatus, subscriptions: [] as PushSubscriptionRecord[], endpoint: null };
   }
   const { data, error } = await withTimeout(supabase.rpc("admin_list_push_subscriptions", { _password: password }));
@@ -150,7 +150,7 @@ function urlBase64ToUint8Array(base64: string) {
 }
 
 export async function registerPushServiceWorker(role: PushRole) {
-  if (isPreviewEnvironment()) throw new Error("Notificações desativadas na prévia. Use a versão publicada.");
+  if (isPushPreviewEnvironment()) throw new Error("Notificações desativadas na prévia. Use a versão publicada.");
   const workerUrl = role === "admin" ? "/push-admin-sw.js" : "/push-user-sw.js";
   const registration = await navigator.serviceWorker.register(workerUrl, { scope: ROLE_SCOPES[role] });
   if (registration.active) return registration;
@@ -281,7 +281,7 @@ export async function notifyAdmin(kind: "message" | "receipt", key: string, mess
 
 /** Teste remoto, autenticado e limitado ao endpoint deste celular; não é um aviso local. */
 export async function testAdminPush(password: string): Promise<PushDelivery> {
-  if (isPreviewEnvironment()) {
+  if (isPushPreviewEnvironment()) {
     return { ok: false, sent: 0, message: "Notificações desativadas na prévia. Use a versão publicada." };
   }
   const state = await adminPushState(password);
@@ -309,7 +309,7 @@ const expiryLastAttempt = new Map<string, number>();
 export async function notifyRewardReady(key: string, redeemCost: number) {
   // A prévia nunca chama a Edge Function de push. A recompensa pode continuar
   // sendo consultada/coletada normalmente, mas o aviso push fica exclusivo da versão publicada.
-  if (isPreviewEnvironment()) return;
+  if (isPushPreviewEnvironment()) return;
   const normalizedKey = key.trim().toUpperCase();
   const cost = Number(redeemCost);
   if (!normalizedKey || !Number.isFinite(cost) || cost <= 0) return;
@@ -335,7 +335,7 @@ export function resetExpiryNotification(key: string) {
  * Só confirma após envio aceito; erros/zero destinatários permitem tentar de novo.
  */
 export async function notifyExpired(key: string) {
-  if (isPreviewEnvironment()) return;
+  if (isPushPreviewEnvironment()) return;
   const flag = `${EXPIRED_NOTIFY_FLAG}:${key}`;
   if (sessionStorage.getItem(flag) || expiryPending.has(key)) return;
   const lastAttempt = expiryLastAttempt.get(key);
