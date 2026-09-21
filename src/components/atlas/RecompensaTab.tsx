@@ -52,7 +52,7 @@ export function RecompensaTab() {
       return;
     }
 
-    setReward(data as RewardState);
+    setReward(data as unknown as RewardState);
     setClaims(Array.isArray(data?.claims) ? data.claims : []);
     setLoading(false);
   };

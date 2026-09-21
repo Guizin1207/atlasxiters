@@ -164,12 +164,12 @@ export default function LoginPage() {
                 Validando…
               </>
             ) : (
-              isAdminEntry ? "Entrar como ADM" : "Entrar"
+              "Entrar"
             )}
           </Button>
 
           <p className="text-[11px] text-center text-muted-foreground/70 pt-2">
-            {isAdminEntry ? "Confirme para abrir seu painel." : "Sua chave fica vinculada a este dispositivo."}
+            Sua chave fica vinculada a este dispositivo.
           </p>
         </form>
 
@@ -179,7 +179,7 @@ export default function LoginPage() {
           </p>
           <Button
             type="button"
-            disabled={detecting || isAdminEntry}
+            disabled={detecting}
             onClick={() => setSupportOpen(true)}
             className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-white text-sm font-semibold hover:bg-white/10 transition-colors"
           >
