@@ -103,7 +103,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
     const json = (payload: Record<string, unknown>, status = 200) =>
-      new Response(JSON.stringify({ ...payload, version: 5 }), {
+      new Response(JSON.stringify({ ...payload, version: 6 }), {
         status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
