@@ -95,30 +95,32 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <AdminSection title="Visão geral">
+        <AdminSection title="1 · Visão geral">
           <DeviceStatsCard />
         </AdminSection>
 
-        <AdminSection title="Keys — prioridade">
-          <KeysListCard />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <KeyGeneratorCard />
-            <MaintenanceCard />
+        <AdminSection title="2 · Keys e acessos">
+          <div className="space-y-6">
+            <KeysListCard />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <KeyGeneratorCard />
+              <MaintenanceCard />
+            </div>
           </div>
         </AdminSection>
 
-        <AdminSection title="Acessos administrativos">
+        <AdminSection title="3 · Segurança do ADM">
           <AdminDevicesCard />
         </AdminSection>
 
-        <AdminSection title="Notificações">
+        <AdminSection title="4 · Comunicação">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <PushNotificationsCard />
             <MessagesCard />
           </div>
         </AdminSection>
 
-        <AdminSection title="Suporte">
+        <AdminSection title="5 · Suporte">
           <SupportAdminCard />
         </AdminSection>
       </div>
