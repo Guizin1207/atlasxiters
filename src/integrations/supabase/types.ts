@@ -529,6 +529,10 @@ export type Database = {
         Args: { _password: string; _proposal: Json }
         Returns: Json
       }
+      admin_clear_access_devices: {
+        Args: { _current_device_id: string; _password: string }
+        Returns: number
+      }
       admin_create_keys: {
         Args: {
           _count: number
