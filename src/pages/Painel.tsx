@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { rewardApi } from "@/lib/reward-api";
 import { supabase } from "@/integrations/supabase/client";
 import { isReceiptBody } from "@/lib/receipts";
+import { notifyRewardReady } from "@/lib/push";
 
 type SupportMessage = {
   id: string;
@@ -77,9 +78,14 @@ export default function PainelPage() {
     if (!loading && keyData && !keyData.is_master) {
       void (async () => {
         const { data } = await rewardApi("get", keyData.key);
-        if (data?.ok && !data.claimed_today) {
+        if (data?.ok) {
           setDailyReward(data);
-          setRewardOpen(true);
+          if (!data.claimed_today) setRewardOpen(true);
+          const redeemCost = Number(data.goal ?? 0);
+          const coins = Number(data.coins ?? 0);
+          if (redeemCost > 0 && coins >= redeemCost) {
+            void notifyRewardReady(keyData.key, redeemCost);
+          }
         }
       })();
     }
@@ -96,6 +102,11 @@ export default function PainelPage() {
       toast.success("+10 Atlas Coins recebidos!");
       setDailyReward(data);
       setRewardOpen(false);
+      const redeemCost = Number(data?.goal ?? 0);
+      const coins = Number(data?.coins ?? 0);
+      if (redeemCost > 0 && coins >= redeemCost) {
+        void notifyRewardReady(keyData.key, redeemCost);
+      }
     }
     setRewardBusy(false);
   };
