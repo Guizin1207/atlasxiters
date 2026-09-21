@@ -120,7 +120,7 @@ export default function AdminPage() {
 
         {!selectedFunction ? (
           <section aria-label="Funções administrativas" className="space-y-2">
-            <div className="flex items-center gap-6 overflow-x-auto whitespace-nowrap scrollbar-none pb-1">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-1">
               {adminFunctions.map(({ id, title, icon: Icon }) => (
                 <button
                   key={id}
