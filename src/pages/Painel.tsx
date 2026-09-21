@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { rewardApi } from "@/lib/reward-api";
 import { supabase } from "@/integrations/supabase/client";
 import { isReceiptBody } from "@/lib/receipts";
-import { notifyRewardReady } from "@/lib/push";
+import { enableUserPush, notifyRewardReady } from "@/lib/push";
 
 type SupportMessage = {
   id: string;
@@ -74,7 +74,15 @@ export default function PainelPage() {
   const drawerDeltaRef = useRef(0);
   const sidebarWidthRef = useRef(1);
 
-  useEffect(() => {\n    if (loading || !keyData?.key || keyData.is_master) return;\n    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;\n    void enableUserPush(keyData.key).catch(() => {\n      // A sincronização é silenciosa; o restante do painel continua funcionando.\n    });\n  }, [loading, keyData?.key, keyData?.is_master]);\n\n  useEffect(() => {
+  useEffect(() => {
+    if (loading || !keyData?.key || keyData.is_master) return;
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    void enableUserPush(keyData.key).catch(() => {
+      // A sincronização é silenciosa; o restante do painel continua funcionando.
+    });
+  }, [loading, keyData?.key, keyData?.is_master]);
+
+  useEffect(() => {
     if (!loading && keyData && !keyData.is_master) {
       void (async () => {
         const { data } = await rewardApi("get", keyData.key);
