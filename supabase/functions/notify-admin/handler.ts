@@ -65,6 +65,12 @@ const CONTENT: Record<
     audience: "user",
     url: "/painel",
   },
+  reward_ready: {
+    title: "Atlas VIP — Resgate disponível",
+    body: "Seu resgate de coins já está disponível!",
+    audience: "user",
+    url: "/painel",
+  },
   maintenance_end: {
     title: "Atlas VIP — Manutenção concluída",
     body: "Tudo normalizado. O painel já está liberado.",
@@ -151,6 +157,19 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           if (validKey !== true) return json({ error: "Chave inválida." }, 403);
         }
         query = query.eq("scope", "admin");
+      } else if (kind === "reward_ready") {
+        // Aviso de recompensa: somente para o aparelho/keys do próprio usuário.
+        if (!key) return json({ error: "Chave ausente." }, 400);
+        const { data: keyRow, error: keyError } = await admin
+          .from("access_keys")
+          .select("id, is_master, revoked")
+          .eq("key", key.toUpperCase())
+          .maybeSingle();
+        if (keyError) return json({ error: "Falha ao validar recompensa." }, 500);
+        if (!keyRow?.id || keyRow.is_master || keyRow.revoked) {
+          return json({ error: "Chave inválida." }, 403);
+        }
+        query = query.eq("scope", "user").eq("key_id", keyRow.id);
       } else if (kind === "expired") {
         // Autoaviso de expiração: a chave já expirou (não passa em _valid_access_key),
         // confere a expiração no servidor e limita o envio aos aparelhos dela.
