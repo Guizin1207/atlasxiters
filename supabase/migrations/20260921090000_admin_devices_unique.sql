@@ -94,7 +94,8 @@ BEGIN
   PERFORM public._require_admin(_password);
 
   DELETE FROM atlas_private.admin_access_sessions
-  WHERE _current_device_id IS NULL OR device_id IS DISTINCT FROM _current_device_id;
+  WHERE _current_device_id IS NOT NULL
+    AND device_id IS DISTINCT FROM _current_device_id;
 
   GET DIAGNOSTICS removed = ROW_COUNT;
   RETURN removed;
