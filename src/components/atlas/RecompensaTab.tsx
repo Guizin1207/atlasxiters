@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Gift, Coins, Flame, CheckCircle2, Clock3, CalendarDays } from "lucide-react";
+import { Gift, Coins, Flame, CheckCircle2, XCircle, Clock3, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
@@ -116,7 +116,16 @@ export function RecompensaTab() {
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
   const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const claimed = new Set(claims.map((c) => c.day));
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const claimed = new Set(
+    claims
+      .filter((c) => {
+        const date = new Date(c.date);
+        return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
+      })
+      .map((c) => c.day)
+  );
 
   return (
     <section aria-label="Recompensa" className="space-y-5">
@@ -191,20 +200,18 @@ export function RecompensaTab() {
                   title={isClaimed ? "+10 Atlas Coins" : "Não coletado"}
                   className={`aspect-square rounded-lg flex items-center justify-center text-xs font-bold border ${
                     isClaimed
-                      ? "bg-white text-black border-white"
-                      : isToday
-                        ? "border-white/60 bg-white/10"
-                        : "border-white/10 bg-white/[0.03] text-muted-foreground"
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40"
+                      : "bg-red-500/10 text-red-400 border-red-500/30"
                   }`}
                 >
-                  {isClaimed ? <CheckCircle2 className="w-3.5 h-3.5" /> : day}
+                  {isClaimed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                 </div>
               );
             })}
           </div>
 
           <p className="mt-3 text-[10px] text-muted-foreground">
-            ✓ = recompensa coletada • Hoje fica destacado até você coletar.
+            ✓ verde = coletado • ✕ vermelho = não coletado • O calendário reinicia automaticamente no dia 1 de cada mês.
           </p>
         </div>
 
