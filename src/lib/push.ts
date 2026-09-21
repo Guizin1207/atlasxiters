@@ -299,7 +299,7 @@ export async function testUserPush(key: string): Promise<PushDelivery> {
   return deliver({ kind: "user_test", key, targetEndpoint: subscription.endpoint });
 }
 
-const REWARD_NOTIFY_PREFIX = "atlas_reward_ready_v1";
+const REWARD_NOTIFY_PREFIX = "atlas_reward_ready_v2";
 const rewardNotifyPending = new Set<string>();
 
 const EXPIRED_NOTIFY_FLAG = "atlas_expired_delivered_v2";
