@@ -24,22 +24,22 @@ export function PanelHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-      {adminPreview ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            closeAdminPanel();
-            navigate("/admin", { replace: true });
-          }}
-          className="rounded-xl glass hover:bg-white/10"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Admin
-        </Button>
-      ) : (
-        <NotificationBell />
-      )}
+        {adminPreview ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              closeAdminPanel();
+              navigate("/admin", { replace: true });
+            }}
+            className="rounded-xl glass hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Admin
+          </Button>
+        ) : (
+          <NotificationBell />
+        )}
       </div>
     </header>
   );

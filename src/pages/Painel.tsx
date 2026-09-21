@@ -70,6 +70,7 @@ export default function PainelPage() {
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
   const drawerProgressRef = useRef(0);
+  const drawerDeltaRef = useRef(0);
   const sidebarWidthRef = useRef(1);
 
   useEffect(() => {
@@ -150,6 +151,7 @@ export default function PainelPage() {
     setDrawerAmount(0);
     setDraggingDrawer(false);
     touchStartRef.current = null;
+    drawerDeltaRef.current = 0;
   };
 
   const beginOpenGesture = (event: TouchEvent<HTMLDivElement>) => {
@@ -159,6 +161,7 @@ export default function PainelPage() {
     sidebarWidthRef.current = Math.max(window.innerWidth * 0.82, 1);
     setDraggingDrawer(true);
     setDrawerAmount(0);
+    drawerDeltaRef.current = 0;
   };
 
   const beginCloseGesture = (event: TouchEvent<HTMLElement>) => {
@@ -168,6 +171,7 @@ export default function PainelPage() {
     sidebarWidthRef.current = Math.max(window.innerWidth * 0.82, 1);
     setDraggingDrawer(true);
     setDrawerAmount(1);
+    drawerDeltaRef.current = 0;
   };
 
   const moveDrawerGesture = (event: TouchEvent<HTMLElement | HTMLDivElement>) => {
@@ -176,6 +180,7 @@ export default function PainelPage() {
     if (!start || !touch) return;
     const dx = touch.clientX - start.x;
     const dy = touch.clientY - start.y;
+    drawerDeltaRef.current = dx;
     if (Math.abs(dy) > Math.abs(dx) * 1.25) return;
     if (start.mode === "open") {
       setDrawerAmount(dx / sidebarWidthRef.current);
@@ -185,8 +190,13 @@ export default function PainelPage() {
   };
 
   const endDrawerGesture = () => {
-    const shouldOpen = drawerProgressRef.current >= 0.42;
+    const start = touchStartRef.current;
+    const dx = drawerDeltaRef.current;
+    const shouldOpen = start?.mode === "open"
+      ? drawerProgressRef.current >= 0.42 || dx >= 70
+      : drawerProgressRef.current >= 0.42 && dx > -70;
     touchStartRef.current = null;
+    drawerDeltaRef.current = 0;
     setDraggingDrawer(false);
     setDrawerOpen(shouldOpen);
     setDrawerAmount(shouldOpen ? 1 : 0);
