@@ -72,7 +72,7 @@ export default function PainelPage() {
   if (!loading && expired) {
     return (
       <main className="min-h-screen mx-auto max-w-md px-5 pt-6 pb-12">
-        <PanelHeader />
+        <PanelHeader onOpenRecentes={() => setDrawerOpen(true)} />
         <ExpiredKeyModal />
       </main>
     );
