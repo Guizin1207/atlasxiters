@@ -126,7 +126,8 @@ export function AdminDevicesCard() {
             <thead>
               <tr className="border-b border-white/10">
                 <th className="p-2">Dispositivo</th>
-                <th className="p-2">Acesso / Key</th>\n                <th className="p-2">Primeiro registro</th>
+                <th className="p-2">Acesso / Key</th>
+                <th className="p-2">Primeiro registro</th>
                 <th className="p-2">Última atividade</th>
                 <th className="p-2">Status</th>
               </tr>
