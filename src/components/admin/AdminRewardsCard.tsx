@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Coins, Flame, Loader2, Plus, RefreshCw, Settings2, Trash2 } from "lucide-react";
+import { Bell, Coins, Flame, Loader2, Plus, RefreshCw, Settings2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ export function AdminRewardsCard() {
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
   const [amounts,setAmounts]=useState<Record<string,string>>({});
+  const [testingNotify,setTestingNotify]=useState(false);
 
   const call=useCallback(async(name:string,args:Record<string,unknown>)=>{
     const {data,error}=await supabase.rpc(name as never,args as never);
@@ -72,6 +73,19 @@ export function AdminRewardsCard() {
     catch{toast.error("Não foi possível definir o saldo.");}
   };
 
+  const testNotify=async()=>{
+    if(!password)return;
+    setTestingNotify(true);
+    try{
+      const {data,error}=await supabase.functions.invoke("notify-admin",{body:{kind:"admin_test",password}});
+      if(error) throw error;
+      if(data?.sent>0) toast.success("Notificação de teste enviada para o ADM.");
+      else if(data?.code==="NO_RECIPIENTS") toast.warning("Nenhum aparelho ADM está registrado para receber notificações.");
+      else toast.error(data?.error??"Não foi possível enviar a notificação.");
+    }catch(e){toast.error("Falha ao testar a notificação.");}
+    finally{setTestingNotify(false);}
+  };
+
   const reset=async(id:string,history:boolean)=>{
     if(!password)return;
     try{await call("admin_reward_reset",{_key_id:id,_clear_history:history,_password:password});toast.success(history?"Recompensa e histórico resetados.":"Recompensa resetada.");await load();}
@@ -89,7 +103,7 @@ export function AdminRewardsCard() {
           ["daily_amount","Coins por check-in"],["max_coins","Máximo de coins"],["redeem_cost","Custo do resgate"],["redeem_days","Dias ganhos no resgate"]
         ].map(([key,label])=><label key={key} className="space-y-1.5"><span className="text-xs text-muted-foreground">{label}</span><Input type="number" min="1" value={config[key as keyof Config]} onChange={e=>setConfig(c=>({...c,[key]:Number(e.target.value)}))} className="rounded-xl"/></label>)}
       </div>
-      <Button onClick={saveConfig} disabled={saving} className="rounded-xl">{saving&&<Loader2 className="w-4 h-4 mr-2 animate-spin"/>}Salvar regras</Button>
+      <div className="flex flex-wrap gap-2"><Button onClick={saveConfig} disabled={saving} className="rounded-xl">{saving&&<Loader2 className="w-4 h-4 mr-2 animate-spin"/>}Salvar regras</Button><Button variant="outline" onClick={()=>void testNotify()} disabled={testingNotify} className="rounded-xl">{testingNotify?<Loader2 className="w-4 h-4 mr-2 animate-spin"/>:<Bell className="w-4 h-4 mr-2"/>}Testar notificação</Button></div>
       <p className="text-xs text-muted-foreground">As regras novas valem para os próximos check-ins e resgates.</p>
     </div>
 
