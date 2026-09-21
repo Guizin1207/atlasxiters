@@ -38,41 +38,6 @@ export default function PainelPage() {
   );
 
   useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-
-    const onTouchStart = (event: globalThis.TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch) return;
-      startX = touch.clientX;
-      startY = touch.clientY;
-    };
-
-    const onTouchEnd = (event: globalThis.TouchEvent) => {
-      const touch = event.changedTouches[0];
-      if (!touch) return;
-
-      const dx = touch.clientX - startX;
-      const dy = touch.clientY - startY;
-
-      // Igual ao gesto lateral de apps de chat: começa na borda esquerda e puxa para a direita.
-      if (startX <= 42 && dx >= 65 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-        setDrawerOpen(true);
-      } else if (drawerOpen && dx <= -65 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-        setDrawerOpen(false);
-      }
-    };
-
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-
-    return () => {
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchend", onTouchEnd);
-    };
-  }, [drawerOpen]);
-
-  useEffect(() => {
     if (!loading && keyData && !keyData.is_master) {
       void (async () => {
         const { data } = await rewardApi("get", keyData.key);
@@ -128,31 +93,8 @@ export default function PainelPage() {
     setSupportOpen(true);
   };
 
-  const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
-    const touch = event.touches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
-    const start = touchStartRef.current;
-    touchStartRef.current = null;
-    if (!start) return;
-
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-
-    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
-    if (start.x <= 28 && dx > 0) setDrawerOpen(true);
-    if (drawerOpen && dx < 0) setDrawerOpen(false);
-  };
-
   return (
-    <main
-      className="min-h-screen pb-32"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
+    <main className="min-h-screen pb-32">
       <div className="mx-auto max-w-md px-3.5 pt-4 min-[390px]:px-5 min-[390px]:pt-6">
         <PanelHeader />
 
@@ -169,9 +111,43 @@ export default function PainelPage() {
 
       {tab === "funcoes" && <InjectButton />}
 
+      {/* Área de gesto estilo ChatGPT: puxe da borda esquerda para abrir. */}
+      {!drawerOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed left-0 top-0 z-[75] h-full w-5 touch-pan-y"
+          onTouchStart={(event) => {
+            const touch = event.touches[0];
+            if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+          }}
+          onTouchEnd={(event) => {
+            const start = touchStartRef.current;
+            touchStartRef.current = null;
+            const touch = event.changedTouches[0];
+            if (!start || !touch) return;
+            const dx = touch.clientX - start.x;
+            const dy = touch.clientY - start.y;
+            if (dx >= 45 && Math.abs(dx) > Math.abs(dy) * 1.15) setDrawerOpen(true);
+          }}
+        />
+      )}
+
       {drawerOpen && (
         <div
           className="fixed inset-0 z-[80] bg-black/55 backdrop-blur-[2px]"
+          onTouchStart={(event) => {
+            const touch = event.touches[0];
+            if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+          }}
+          onTouchEnd={(event) => {
+            const start = touchStartRef.current;
+            touchStartRef.current = null;
+            const touch = event.changedTouches[0];
+            if (!start || !touch) return;
+            const dx = touch.clientX - start.x;
+            const dy = touch.clientY - start.y;
+            if (dx <= -45 && Math.abs(dx) > Math.abs(dy) * 1.15) setDrawerOpen(false);
+          }}
           onClick={() => setDrawerOpen(false)}
         >
           <aside
