@@ -130,55 +130,67 @@ export default function AdminPage() {
           </div>
         </header>
 
-                                                        <nav aria-label="Funções administrativas" className="py-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {[
-              {
-                title: "Controle",
-                functions: [
-                  { id: "overview", title: "Visão geral" },
-                  { id: "keys", title: "Keys" },
-                  { id: "devices", title: "Dispositivos" },
-                  { id: "rewards", title: "Recompensas" },
-                  { id: "security", title: "Segurança" },
-                ],
-              },
-              {
-                title: "Atendimento",
-                functions: [
-                  { id: "notifications", title: "Notificações" },
-                  { id: "messages", title: "Mensagens" },
-                  { id: "support", title: "Suporte" },
-                ],
-              },
-              {
-                title: "Sistema",
-                functions: [
-                  { id: "maintenance", title: "Manutenção" },
-                ],
-              },
-            ].map((group) => (
-              <div key={group.title} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-                <h3 className="mb-2 text-sm font-semibold text-foreground">{group.title}</h3>
-                <div className="flex flex-col gap-1">
-                  {group.functions.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedFunction(item.id as AdminFunction["id"])}
-                      className={[
-                        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                        selectedFunction === item.id
-                          ? "bg-foreground text-background font-semibold"
-                          : "text-muted-foreground hover:bg-white/[0.06] hover:text-foreground",
-                      ].join(" ")}
-                    >
-                      {item.title}
-                    </button>
-                  ))}
+                                                                <nav aria-label="Funções administrativas" className="py-4">
+          <div className="grid grid-cols-[auto_1fr] gap-4">
+            <div className="flex flex-col items-center justify-start gap-2">
+              {["Controle", "Atendimento", "Sistema"].map((title) => (
+                <div
+                  key={title}
+                  className="writing-mode-vertical rounded-lg border border-white/10 bg-white/[0.03] px-2 py-3 text-xs font-semibold tracking-wide text-muted-foreground [writing-mode:vertical-rl]"
+                >
+                  {title}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              {[
+                {
+                  title: "Controle",
+                  functions: [
+                    { id: "overview", title: "Visão geral" },
+                    { id: "keys", title: "Keys" },
+                    { id: "devices", title: "Dispositivos" },
+                    { id: "rewards", title: "Recompensas" },
+                    { id: "security", title: "Segurança" },
+                  ],
+                },
+                {
+                  title: "Atendimento",
+                  functions: [
+                    { id: "notifications", title: "Notificações" },
+                    { id: "messages", title: "Mensagens" },
+                    { id: "support", title: "Suporte" },
+                  ],
+                },
+                {
+                  title: "Sistema",
+                  functions: [
+                    { id: "maintenance", title: "Manutenção" },
+                  ],
+                },
+              ].map((group) => (
+                <div key={group.title} className="border-b border-white/10 pb-3 last:border-b-0">
+                  <div className="flex flex-wrap gap-2">
+                    {group.functions.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedFunction(item.id as AdminFunction["id"])}
+                        className={[
+                          "rounded-lg px-3 py-2 text-sm transition-colors",
+                          selectedFunction === item.id
+                            ? "bg-foreground text-background font-semibold"
+                            : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.07] hover:text-foreground",
+                        ].join(" ")}
+                      >
+                        {item.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </nav>
 
