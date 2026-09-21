@@ -29,35 +29,8 @@ type PushRole = "admin" | "user";
 /** A prévia/desenvolvimento nunca registra push para não conflitar com o aparelho real. */
 export function isPushPreviewEnvironment() {
   if (import.meta.env.DEV) return true;
-  const host = window.location.hostname.toLowerCase();
+  if (typeof window === "undefined") return true;\n  const host = window.location.hostname.toLowerCase();
   return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host.includes("preview") || host.includes("lovableproject.com") || host.includes("lovable.app") || host.includes("lovable.dev");
-}
-
-/** Remove inscrições criadas em uma prévia antiga. Não executa no domínio real. */
-export async function cleanupPreviewPushRegistrations() {
-  if (!isPushPreviewEnvironment() || !("serviceWorker" in navigator)) return;
-  try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(
-      registrations
-        .filter((r) => r.scope.includes("/push/admin/") || r.scope.includes("/push/user/"))
-        .map(async (r) => {
-          try {
-            const sub = r.pushManager ? await r.pushManager.getSubscription() : null;
-            if (sub) await sub.unsubscribe();
-          } catch {
-            // limpeza preventiva
-          }
-          try {
-            await r.unregister();
-          } catch {
-            // a prévia nunca deve quebrar por causa de um service worker antigo
-          }
-        })
-    );
-  } catch {
-    // falhas de service worker na prévia são ignoradas
-  }
 }
 
 const BINDING_PREFIX = "atlas_push_binding_v2";
