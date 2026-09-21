@@ -71,47 +71,9 @@ export default function PainelPage() {
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
   const [userPushReady, setUserPushReady] = useState(false);
-  const pushAttemptedRef = useRef(false);
-  const drawerProgressRef = useRef(0);
-  const drawerDeltaRef = useRef(0);
-  const sidebarWidthRef = useRef(1);
-
-  const tryEnableUserPush = useCallback(() => {
-    if (loading || !keyData?.key || keyData.is_master || pushAttemptedRef.current) return;
-    pushAttemptedRef.current = true;
-    void enableUserPush(keyData.key)
-      .then((status) => {
-        setUserPushReady(status === "enabled");
-        // Se o navegador exigir gesto do usuário, a primeira interação já
-        // disparou esta tentativa sem precisar mostrar um botão de ativação.
-        if (status !== "enabled") pushAttemptedRef.current = false;
-      })
-      .catch(() => {
-        pushAttemptedRef.current = false;
-      });
-  }, [loading, keyData?.key, keyData?.is_master]);
 
   useEffect(() => {
-    if (loading || !keyData?.key || keyData.is_master) return;
-    tryEnableUserPush();
-
-    // Fallback invisível para navegadores que só permitem a permissão
-    // durante uma interação do usuário.
-    const onFirstInteraction = () => {
-      tryEnableUserPush();
-      window.removeEventListener("pointerdown", onFirstInteraction);
-      window.removeEventListener("touchstart", onFirstInteraction);
-    };
-    window.addEventListener("pointerdown", onFirstInteraction, { once: true });
-    window.addEventListener("touchstart", onFirstInteraction, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", onFirstInteraction);
-      window.removeEventListener("touchstart", onFirstInteraction);
-    };
-  }, [loading, keyData?.key, keyData?.is_master, tryEnableUserPush]);
-
-  useEffect(() => {
-    if (!loading && keyData && !keyData.is_master && userPushReady) {
+    if (!loading && keyData && !keyData.is_master) {
       void (async () => {
         const { data } = await rewardApi("get", keyData.key);
         if (data?.ok) {
@@ -131,14 +93,19 @@ export default function PainelPage() {
         }
       })();
     }
-  }, [loading, keyData?.key, keyData?.is_master, userPushReady]);
+  }, [loading, keyData?.key, keyData?.is_master]);
+
 
   const collectDailyReward = async () => {
     if (!keyData?.key || rewardBusy) return;
     setRewardBusy(true);
-    // O próprio clique da coleta é uma interação do usuário: aproveitamos para
-    // cadastrar o push sem precisar exibir um botão "Ativar notificações".
-    void enableUserPush(keyData.key).catch(() => {});
+    // A permissão só é solicitada neste clique real do usuário.
+    try {
+      const status = await enableUserPush(keyData.key);
+      setUserPushReady(status === "enabled");
+    } catch {
+      setUserPushReady(false);
+    }
     const { data, error } = await rewardApi("claim", keyData.key);
     if (error || data?.ok === false) {
       if (data?.reason === "already_claimed") toast.info("Você já recebeu a recompensa de hoje.");
