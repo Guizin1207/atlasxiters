@@ -11,18 +11,29 @@ const rpcName = (action: "get" | "claim" | "redeem") =>
   action === "get" ? "get_daily_reward" : action === "claim" ? "claim_daily_reward" : "redeem_atlas_coins";
 
 async function directRpc(action: "get" | "claim" | "redeem", key: string): Promise<RewardResponse> {
+  const url = supabase.supabaseUrl + "/rest/v1/rpc/" + rpcName(action);
   const normalizedKey = key.trim().toUpperCase();
-  const { data, error } = await supabase.rpc(rpcName(action), { _key: normalizedKey });
-  if (error) throw new Error(error.message || "Falha ao consultar recompensa.");
-  const normalized = action === "redeem" && (data as any)?.reward ? (data as any).reward : data;
-  if (!normalized) throw new Error("RPC retornou resposta vazia.");
-  return normalized as RewardResponse;
+  const sessionResult = await supabase.auth.getSession();
+  const token = sessionResult.data.session?.access_token;
+  const apiKey = (supabase as any).supabaseKey as string | undefined;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: apiKey ?? "",
+      Authorization: "Bearer " + (token ?? apiKey ?? ""),
+    },
+    body: JSON.stringify({ _key: normalizedKey }),
+  });
+  const raw = await response.text();
+  let data: any;
+  try { data = JSON.parse(raw); } catch { data = null; }
+  if (!response.ok) throw new Error(data?.message || data?.hint || data?.details || raw || ("HTTP " + response.status));
+  if (!data) throw new Error("RPC retornou resposta vazia.");
+  return (action === "redeem" && data.reward ? data.reward : data) as RewardResponse;
 }
 
 export async function rewardApi(action: "get" | "claim" | "redeem", key: string): Promise<{ data: RewardResponse | null; error: Error | null }> {
-  try {
-    return { data: await directRpc(action, key), error: null };
-  } catch (err) {
-    return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
-  }
+  try { return { data: await directRpc(action, key), error: null }; }
+  catch (err) { return { data: null, error: err instanceof Error ? err : new Error(String(err)) }; }
 }
