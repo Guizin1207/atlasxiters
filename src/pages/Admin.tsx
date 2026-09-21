@@ -58,6 +58,30 @@ export default function AdminPage() {
   const [selectedFunction, setSelectedFunction] = useState("overview");
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
 
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+    const start = (e: globalThis.TouchEvent) => {
+      const t = e.touches[0];
+      if (t) { startX = t.clientX; startY = t.clientY; }
+    };
+    const end = (e: globalThis.TouchEvent) => {
+      const t = e.changedTouches[0];
+      if (!t) return;
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+      if (!adminDrawerOpen && startX < 70 && dx > 0) setAdminDrawerOpen(true);
+      if (adminDrawerOpen && dx < 0) setAdminDrawerOpen(false);
+    };
+    window.addEventListener("touchstart", start, { passive: true });
+    window.addEventListener("touchend", end, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", start);
+      window.removeEventListener("touchend", end);
+    };
+  }, [adminDrawerOpen]);
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -87,16 +111,6 @@ export default function AdminPage() {
       { id: "maintenance", title: "Manutenção", icon: Wrench },
     ]},
   ];
-
-  useState(() => {
-    let startX = 0;
-    let startY = 0;
-    const start = (e: TouchEvent) => { const t = e.touches[0]; if (t) { startX=t.clientX; startY=t.clientY; } };
-    const end = (e: TouchEvent) => { const t=e.changedTouches[0]; if (!t) return; const dx=t.clientX-startX, dy=t.clientY-startY; if (Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.15) return; if (!adminDrawerOpen && startX<70 && dx>0) setAdminDrawerOpen(true); if (adminDrawerOpen && dx<0) setAdminDrawerOpen(false); };
-    window.addEventListener("touchstart", start, {passive:true}); window.addEventListener("touchend", end, {passive:true});
-    return () => { window.removeEventListener("touchstart", start); window.removeEventListener("touchend", end); };
-  });
-
 
 
   return (
