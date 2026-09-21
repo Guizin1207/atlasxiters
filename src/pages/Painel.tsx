@@ -2,8 +2,8 @@
  * Painel principal — protegido por chave.
  * Layout mobile-first com tabs Funções / Ajustes / Perfil.
  */
-import { useEffect, useState } from "react";
-import { Gift, Flame, Coins } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Gift, Flame, Coins, Plus, MessageCircle, Clock3, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useKey } from "@/lib/key-context";
@@ -31,6 +31,8 @@ export default function PainelPage() {
   const [rewardOpen, setRewardOpen] = useState(false);
   const [rewardBusy, setRewardBusy] = useState(false);
   const [dailyReward, setDailyReward] = useState<any>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [supportOpen, setSupportOpen] = useState(
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
@@ -86,8 +88,36 @@ export default function PainelPage() {
 
   const blockMaintenance = maintenance.enabled && !keyData.is_master;
 
+  const openNewChat = () => {
+    setDrawerOpen(false);
+    setSupportOpen(true);
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+
+    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+    if (start.x <= 28 && dx > 0) setDrawerOpen(true);
+    if (drawerOpen && dx < 0) setDrawerOpen(false);
+  };
+
   return (
-    <main className="min-h-screen pb-32">
+    <main
+      className="min-h-screen pb-32"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="mx-auto max-w-md px-3.5 pt-4 min-[390px]:px-5 min-[390px]:pt-6">
         <PanelHeader />
 
@@ -103,6 +133,70 @@ export default function PainelPage() {
       </div>
 
       {tab === "funcoes" && <InjectButton />}
+
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-[80] bg-black/55 backdrop-blur-[2px]"
+          onClick={() => setDrawerOpen(false)}
+        >
+          <aside
+            className="h-full w-[82%] max-w-sm border-r border-white/10 bg-background/95 p-5 shadow-2xl backdrop-blur-xl animate-in slide-in-from-left duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="vip-eyebrow">Atlas</p>
+                <h2 className="text-xl font-black">Recentes</h2>
+              </div>
+              <button
+                type="button"
+                aria-label="Fechar menu"
+                onClick={() => setDrawerOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={openNewChat}
+              className="mt-6 flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3.5 text-left text-black transition-transform active:scale-[0.98]"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/10">
+                <Plus className="h-4 w-4" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold">Novo chat</span>
+                <span className="block text-xs text-black/55">Abrir atendimento com o ADM</span>
+              </span>
+            </button>
+
+            <div className="mt-7">
+              <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Conversas recentes
+              </p>
+              <button
+                type="button"
+                onClick={openNewChat}
+                className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-left hover:bg-white/[0.06]"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5">
+                  <Clock3 className="h-4 w-4 text-muted-foreground" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">Atendimento com o ADM</span>
+                  <span className="block text-xs text-muted-foreground">Abrir conversa</span>
+                </span>
+              </button>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-xs leading-5 text-muted-foreground">
+              Arraste da borda esquerda para a direita para abrir este menu.
+            </div>
+          </aside>
+        </div>
+      )}
 
       {rewardOpen && dailyReward && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-5 backdrop-blur-sm">
