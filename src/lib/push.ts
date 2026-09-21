@@ -119,6 +119,9 @@ export async function currentPushStatus(key?: string): Promise<PushStatus> {
 
 /** Permissão do navegador não prova o vínculo ADM: confere este endpoint no servidor. */
 export async function adminPushState(password: string) {
+  if (isPreviewEnvironment()) {
+    return { status: "unsupported" as PushStatus, subscriptions: [] as PushSubscriptionRecord[], endpoint: null };
+  }
   const { data, error } = await withTimeout(supabase.rpc("admin_list_push_subscriptions", { _password: password }));
   if (error) throw new Error("Não foi possível conferir os aparelhos do ADM.");
   const subscriptions = (data ?? []) as PushSubscriptionRecord[];
@@ -278,6 +281,9 @@ export async function notifyAdmin(kind: "message" | "receipt", key: string, mess
 
 /** Teste remoto, autenticado e limitado ao endpoint deste celular; não é um aviso local. */
 export async function testAdminPush(password: string): Promise<PushDelivery> {
+  if (isPreviewEnvironment()) {
+    return { ok: false, sent: 0, message: "Notificações desativadas na prévia. Use a versão publicada." };
+  }
   const state = await adminPushState(password);
   if (state.status !== "enabled" || !state.endpoint) {
     return { ok: false, sent: 0, message: "Vincule este aparelho ao ADM antes de testar." };
@@ -301,6 +307,9 @@ const expiryPending = new Set<string>();
 const expiryLastAttempt = new Map<string, number>();
 
 export async function notifyRewardReady(key: string, redeemCost: number) {
+  // A prévia nunca chama a Edge Function de push. A recompensa pode continuar
+  // sendo consultada/coletada normalmente, mas o aviso push fica exclusivo da versão publicada.
+  if (isPreviewEnvironment()) return;
   const normalizedKey = key.trim().toUpperCase();
   const cost = Number(redeemCost);
   if (!normalizedKey || !Number.isFinite(cost) || cost <= 0) return;
@@ -326,6 +335,7 @@ export function resetExpiryNotification(key: string) {
  * Só confirma após envio aceito; erros/zero destinatários permitem tentar de novo.
  */
 export async function notifyExpired(key: string) {
+  if (isPreviewEnvironment()) return;
   const flag = `${EXPIRED_NOTIFY_FLAG}:${key}`;
   if (sessionStorage.getItem(flag) || expiryPending.has(key)) return;
   const lastAttempt = expiryLastAttempt.get(key);
