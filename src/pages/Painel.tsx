@@ -2,8 +2,8 @@
  * Painel principal — protegido por chave.
  * Layout mobile-first com tabs Funções / Ajustes / Perfil.
  */
-import { useEffect, useRef, useState } from "react";
-import { Gift, Flame, Coins, Plus, MessageCircle, Clock3, X } from "lucide-react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { Gift, Flame, Coins, Plus, Clock3, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useKey } from "@/lib/key-context";
@@ -93,7 +93,7 @@ export default function PainelPage() {
     setSupportOpen(true);
   };
 
-  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+  const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
     const touch = event.touches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
   };
