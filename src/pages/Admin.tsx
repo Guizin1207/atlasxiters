@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Loader2, ShieldAlert, LogOut, LayoutGrid } from "lucide-react";
+import { Loader2, ShieldAlert, LogOut, LayoutGrid, UserRound, KeyRound, Smartphone, Coins, Bell, MessageSquare, LifeBuoy, Wrench, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAdmin } from "@/lib/admin-context";
 import { useKey } from "@/lib/key-context";
@@ -17,11 +17,12 @@ import { MessagesCard } from "@/components/admin/MessagesCard";
 import { SupportAdminCard } from "@/components/admin/SupportAdminCard";
 import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard";
 
-function AdminSection({ title, children }: { title: string; children: React.ReactNode }) {
+function AdminSection({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div className="flex items-center gap-3">
-        <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-muted-foreground">{title}</h2>
+        <Icon className="w-4 h-4 text-muted-foreground" />
+        <h2 className="text-sm font-bold">{title}</h2>
         <div className="h-px flex-1 bg-white/10" />
       </div>
       {children}
@@ -37,17 +38,8 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-      </main>
-    );
-  }
-
-  if (!password) return <Navigate to="/admin/login" replace />;
-
-  return (
     <main className="min-h-screen pb-16">
-      <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-8 space-y-8">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-8 space-y-5">
         <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl glass-strong flex items-center justify-center">
@@ -59,93 +51,62 @@ export default function AdminPage() {
               <p className="text-xs text-muted-foreground mt-1">Central de administração</p>
             </div>
           </div>
-
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" className="rounded-2xl" onClick={() => {
               if (adminPreview) closeAdminPanel();
               navigate("/login?trocar=1");
-            }}>
-              Acesso de usuário
-            </Button>
-            <Button
-              onClick={async () => {
-                if (!password || openingPanel) return;
-                setOpeningPanel(true);
-                const opened = await openAdminPanel(password);
-                setOpeningPanel(false);
-                if (opened) navigate("/painel");
-              }}
-              disabled={openingPanel}
-              className="rounded-2xl"
-            >
+            }}>Acesso de usuário</Button>
+            <Button onClick={async () => {
+              if (!password || openingPanel) return;
+              setOpeningPanel(true);
+              const opened = await openAdminPanel(password);
+              setOpeningPanel(false);
+              if (opened) navigate("/painel");
+            }} disabled={openingPanel} className="rounded-2xl">
               {openingPanel ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LayoutGrid className="w-4 h-4 mr-2" />}
               Abrir painel
             </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                if (adminPreview) closeAdminPanel();
-                signOut();
-              }}
-              className="rounded-2xl glass hover:bg-white/10"
-              aria-label="Sair do admin"
-            >
+            <Button variant="ghost" onClick={() => {
+              if (adminPreview) closeAdminPanel();
+              signOut();
+            }} className="rounded-2xl glass hover:bg-white/10" aria-label="Sair do admin">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </header>
 
-        <AdminSection title="1 · Visão geral">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {[
+            ["Perfil", UserRound], ["Keys", KeyRound], ["Dispositivos", Smartphone],
+            ["Recompensas", Coins], ["Notificações", Bell], ["Mensagens", MessageSquare],
+            ["Suporte", LifeBuoy], ["Manutenção", Wrench], ["Segurança", ShieldCheck],
+          ].map(([title, Icon]) => (
+            <button key={title as string} type="button" className="glass-strong rounded-2xl p-4 text-left hover:bg-white/10 transition-colors">
+              <Icon className="w-5 h-5 mb-3" />
+              <span className="font-semibold text-sm">{title as string}</span>
+            </button>
+          ))}
+        </div>
+
+        <AdminSection title="Visão geral" icon={LayoutGrid}>
           <DeviceStatsCard />
         </AdminSection>
 
-        <AdminSection title="2 · Keys">
-          <div className="space-y-6">
-            <KeysListCard />
-            <KeyGeneratorCard />
-          </div>
+        <AdminSection title="Keys" icon={KeyRound}>
+          <div className="space-y-6"><KeysListCard /><KeyGeneratorCard /></div>
         </AdminSection>
 
-        <AdminSection title="3 · Dispositivos ADM">
-          <AdminDevicesCard />
+        <AdminSection title="Dispositivos" icon={Smartphone}><AdminDevicesCard /></AdminSection>
+        <AdminSection title="Recompensas" icon={Coins}>
+          <section className="glass-strong rounded-3xl p-6"><p className="vip-eyebrow mb-1">Atlas Coins</p><h2 className="text-xl font-bold">Recompensas</h2><p className="text-sm text-muted-foreground mt-2">As funções de recompensa existentes continuam disponíveis.</p></section>
         </AdminSection>
-
-        <AdminSection title="4 · Recompensas">
-          <section className="glass-strong rounded-3xl p-6">
-            <p className="vip-eyebrow mb-1">Atlas Coins</p>
-            <h2 className="text-xl font-bold">Recompensas</h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              As funções de recompensa existentes continuam disponíveis sem alterar sua lógica.
-            </p>
-          </section>
-        </AdminSection>
-
-        <AdminSection title="5 · Notificações">
-          <PushNotificationsCard />
-        </AdminSection>
-
-        <AdminSection title="6 · Mensagens">
-          <MessagesCard />
-        </AdminSection>
-
-        <AdminSection title="7 · Suporte">
-          <SupportAdminCard />
-        </AdminSection>
-
-        <AdminSection title="8 · Manutenção">
-          <MaintenanceCard />
-        </AdminSection>
-
-        <AdminSection title="9 · Segurança">
-          <section className="glass-strong rounded-3xl p-6">
-            <p className="vip-eyebrow mb-1">Proteção</p>
-            <h2 className="text-xl font-bold">Segurança do ADM</h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              O controle de dispositivos e sessões administrativas permanece separado e protegido.
-            </p>
-          </section>
+        <AdminSection title="Notificações" icon={Bell}><PushNotificationsCard /></AdminSection>
+        <AdminSection title="Mensagens" icon={MessageSquare}><MessagesCard /></AdminSection>
+        <AdminSection title="Suporte" icon={LifeBuoy}><SupportAdminCard /></AdminSection>
+        <AdminSection title="Manutenção" icon={Wrench}><MaintenanceCard /></AdminSection>
+        <AdminSection title="Segurança" icon={ShieldCheck}>
+          <section className="glass-strong rounded-3xl p-6"><p className="vip-eyebrow mb-1">Proteção</p><h2 className="text-xl font-bold">Segurança do ADM</h2><p className="text-sm text-muted-foreground mt-2">Controle de acesso e sessões administrativas.</p></section>
         </AdminSection>
       </div>
     </main>
   );
-}
