@@ -268,9 +268,28 @@ export async function testUserPush(key: string): Promise<PushDelivery> {
   return deliver({ kind: "user_test", key, targetEndpoint: subscription.endpoint });
 }
 
+const REWARD_NOTIFY_PREFIX = "atlas_reward_ready_v1";
+const rewardNotifyPending = new Set<string>();
+
 const EXPIRED_NOTIFY_FLAG = "atlas_expired_delivered_v2";
 const expiryPending = new Set<string>();
 const expiryLastAttempt = new Map<string, number>();
+
+export async function notifyRewardReady(key: string, redeemCost: number) {
+  const normalizedKey = key.trim().toUpperCase();
+  const cost = Number(redeemCost);
+  if (!normalizedKey || !Number.isFinite(cost) || cost <= 0) return;
+  const flag = `${REWARD_NOTIFY_PREFIX}:${normalizedKey}:${cost}`;
+  const stored = Number(localStorage.getItem(flag) ?? "0");
+  if (stored >= cost || rewardNotifyPending.has(flag)) return;
+  rewardNotifyPending.add(flag);
+  try {
+    const result = await deliver({ kind: "reward_ready", key: normalizedKey });
+    if (result.ok) localStorage.setItem(flag, String(cost));
+  } finally {
+    rewardNotifyPending.delete(flag);
+  }
+}
 
 export function resetExpiryNotification(key: string) {
   sessionStorage.removeItem(`${EXPIRED_NOTIFY_FLAG}:${key}`);
