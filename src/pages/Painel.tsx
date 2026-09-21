@@ -103,8 +103,17 @@ export default function PainelPage() {
     try {
       const status = await enableUserPush(keyData.key);
       setUserPushReady(status === "enabled");
-    } catch {
+      if (status === "ios-needs-install") {
+        toast.info("No iPhone, adicione o Atlas à Tela de Início para ativar as notificações.");
+      } else if (status === "denied") {
+        toast.error("As notificações estão bloqueadas. Ative-as nos ajustes do navegador.");
+      } else if (status === "unsupported") {
+        toast.error("Este navegador não permite notificações push. Abra o Atlas no navegador compatível.");
+      }
+    } catch (error) {
       setUserPushReady(false);
+      const message = error instanceof Error ? error.message : "Não foi possível cadastrar este aparelho para notificações.";
+      toast.error(message);
     }
     const { data, error } = await rewardApi("claim", keyData.key);
     if (error || data?.ok === false) {
