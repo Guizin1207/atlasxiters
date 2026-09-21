@@ -119,6 +119,12 @@ export default function PainelPage() {
           if (!data.claimed_today) setRewardOpen(true);
           const redeemCost = Number(data.goal ?? 0);
           const coins = Number(data.coins ?? 0);
+          const balanceKey = `atlas_coins_seen:${keyData.key.toUpperCase()}`;
+          const previousCoins = Number(localStorage.getItem(balanceKey) ?? "");
+          if (Number.isFinite(previousCoins) && coins > previousCoins) {
+            void notifyCoinsAdded(keyData.key, coins - previousCoins, coins);
+          }
+          localStorage.setItem(balanceKey, String(coins));
           if (redeemCost > 0 && coins >= redeemCost) {
             void notifyRewardReady(keyData.key, redeemCost);
           }
@@ -130,6 +136,9 @@ export default function PainelPage() {
   const collectDailyReward = async () => {
     if (!keyData?.key || rewardBusy) return;
     setRewardBusy(true);
+    // O próprio clique da coleta é uma interação do usuário: aproveitamos para
+    // cadastrar o push sem precisar exibir um botão "Ativar notificações".
+    void enableUserPush(keyData.key).catch(() => {});
     const { data, error } = await rewardApi("claim", keyData.key);
     if (error || data?.ok === false) {
       if (data?.reason === "already_claimed") toast.info("Você já recebeu a recompensa de hoje.");
@@ -138,7 +147,10 @@ export default function PainelPage() {
       toast.success("+10 Atlas Coins recebidos!");
       setDailyReward(data);
       setRewardOpen(false);
-      void notifyCoinsAdded(keyData.key, 10, Number(data?.coins ?? 0));
+      const newCoins = Number(data?.coins ?? 0);
+      const balanceKey = `atlas_coins_seen:${keyData.key.toUpperCase()}`;
+      localStorage.setItem(balanceKey, String(newCoins));
+      void notifyCoinsAdded(keyData.key, 10, newCoins);
       const redeemCost = Number(data?.goal ?? 0);
       const coins = Number(data?.coins ?? 0);
       if (redeemCost > 0 && coins >= redeemCost) {
