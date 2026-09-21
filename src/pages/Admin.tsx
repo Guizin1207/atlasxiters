@@ -2,7 +2,7 @@
  * Página /admin — central administrativa protegida.
  * Navegação direta por funções, mantendo a ordem operacional do ADM.
  */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
   Loader2,
@@ -30,6 +30,7 @@ import { KeysListCard } from "@/components/admin/KeysListCard";
 import { MessagesCard } from "@/components/admin/MessagesCard";
 import { SupportAdminCard } from "@/components/admin/SupportAdminCard";
 import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard";
+import { getKeyStatus } from "@/lib/key-status";
 
 type AdminFunction = {
   id: string;
@@ -56,7 +57,31 @@ export default function AdminPage() {
   const [openingPanel, setOpeningPanel] = useState(false);
   const [selectedFunction, setSelectedFunction] = useState("overview");
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
+  const [overviewStats, setOverviewStats] = useState({ totalKeys: 0, activeKeys: 0, unusedKeys: 0, expiredKeys: 0, revokedKeys: 0, loading: true });
   const touchStartRef = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (!password) return;
+    let mounted = true;
+    const loadOverview = async () => {
+      const { data, error } = await supabase.rpc("admin_list_keys", { _password: password });
+      if (!mounted || error) return;
+      const keys = (data ?? []) as any[];
+      const counts = keys.reduce((acc, key) => {
+        const status = getKeyStatus(key);
+        acc.totalKeys += 1;
+        if (status === "active") acc.activeKeys += 1;
+        if (status === "unused") acc.unusedKeys += 1;
+        if (status === "expired") acc.expiredKeys += 1;
+        if (status === "revoked") acc.revokedKeys += 1;
+        return acc;
+      }, { totalKeys: 0, activeKeys: 0, unusedKeys: 0, expiredKeys: 0, revokedKeys: 0 });
+      setOverviewStats({ ...counts, loading: false });
+    };
+    void loadOverview();
+    const timer = window.setInterval(loadOverview, 15000);
+    return () => { mounted = false; window.clearInterval(timer); };
+  }, [password]);
 
 
   if (loading) {
@@ -226,37 +251,54 @@ export default function AdminPage() {
             <div className="space-y-5">
               <div>
                 <p className="vip-eyebrow">Atlas Control</p>
-                <h2 className="text-xl font-bold">Resumo do aplicativo</h2>
+                <h2 className="text-xl font-bold">Sobre o aplicativo</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Visão rápida dos principais recursos e áreas do Atlas.
+                  Resumo somente para visualização do estado atual do Atlas.
                 </p>
               </div>
 
-              <DeviceStatsCard />
+              <section className="glass-strong rounded-3xl p-5">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-2xl bg-white/[0.03] p-4">
+                    <p className="text-xs text-muted-foreground">Versão atual</p>
+                    <p className="mt-1 text-lg font-bold">0.0.0</p>
+                    <p className="text-[11px] text-muted-foreground">versão do projeto</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/[0.03] p-4">
+                    <p className="text-xs text-muted-foreground">Keys criadas</p>
+                    <p className="mt-1 text-lg font-bold">{overviewStats.loading ? "—" : overviewStats.totalKeys}</p>
+                    <p className="text-[11px] text-muted-foreground">total cadastrado</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/[0.03] p-4">
+                    <p className="text-xs text-muted-foreground">Keys ativas</p>
+                    <p className="mt-1 text-lg font-bold">{overviewStats.loading ? "—" : overviewStats.activeKeys}</p>
+                    <p className="text-[11px] text-muted-foreground">em funcionamento</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/[0.03] p-4">
+                    <p className="text-xs text-muted-foreground">Não utilizadas</p>
+                    <p className="mt-1 text-lg font-bold">{overviewStats.loading ? "—" : overviewStats.unusedKeys}</p>
+                    <p className="text-[11px] text-muted-foreground">disponíveis</p>
+                  </div>
+                </div>
+              </section>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {[
-                  { title: "Keys", description: "Criação e gerenciamento de acessos", icon: KeyRound, id: "keys" },
-                  { title: "Dispositivos", description: "Acessos e dispositivos conectados", icon: Smartphone, id: "devices" },
-                  { title: "Recompensas", description: "Atlas Coins e benefícios", icon: Coins, id: "rewards" },
-                  { title: "Notificações", description: "Comunicação com os usuários", icon: Bell, id: "notifications" },
-                  { title: "Suporte", description: "Atendimento e solicitações", icon: LifeBuoy, id: "support" },
-                  { title: "Segurança", description: "Controle e proteção do ADM", icon: ShieldCheck, id: "security" },
-                ].map(({ title, description, icon: Icon, id }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setSelectedFunction(id)}
-                    className="glass-strong rounded-2xl p-4 text-left transition hover:bg-white/[0.06] active:scale-[0.98]"
-                  >
-                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <p className="font-semibold">{title}</p>
-                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
-                  </button>
-                ))}
-              </div>
+              <section className="glass-strong rounded-3xl p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="vip-eyebrow">Status</p>
+                    <h3 className="font-bold">Estado atual do Atlas</h3>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Somente leitura</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div><p className="text-xs text-muted-foreground">Expiradas</p><p className="mt-1 text-xl font-bold">{overviewStats.loading ? "—" : overviewStats.expiredKeys}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Desativadas</p><p className="mt-1 text-xl font-bold">{overviewStats.loading ? "—" : overviewStats.revokedKeys}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Recursos ADM</p><p className="mt-1 text-xl font-bold">{adminFunctions.length}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Atualização</p><p className="mt-1 text-xl font-bold">15s</p></div>
+                </div>
+              </section>
+
+              <DeviceStatsCard />
             </div>
           )}
 
