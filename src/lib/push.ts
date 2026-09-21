@@ -31,7 +31,7 @@ export function isPushPreviewEnvironment() {
   if (import.meta.env.DEV) return true;
   if (typeof window === "undefined") return true;
   const host = window.location.hostname.toLowerCase();
-  return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host.includes("preview") || host.includes("lovableproject.com") || host.includes("lovable.app") || host.includes("lovable.dev");
+  return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0";
 }
 
 const BINDING_PREFIX = "atlas_push_binding_v2";
