@@ -358,9 +358,6 @@ export default function PainelPage() {
                     <Crosshair className="h-5 w-5" />
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-2">
-                    
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
                     <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Geral</span><strong className="block text-2xl">{sensiValues.geral}</strong></div>
                     <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Ponto Vermelho</span><strong className="block text-2xl">{sensiValues.red}</strong></div>
                     <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">2x</span><strong className="block text-2xl">{sensiValues.x2}</strong></div>
