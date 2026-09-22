@@ -1,11 +1,11 @@
 /** Cartão do admin para ativar notificações push neste aparelho. */
 import { useCallback, useEffect, useState } from "react";
-import { Bell, BellOff, Loader2, Trash2, Smartphone, Info, Megaphone } from "lucide-react";
+import { Bell, BellOff, Loader2, Trash2, Smartphone, Info, Megaphone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
-import { adminPushState, enableAdminPush, disableAdminPush, testAdminPush, notifyUsers, type PushStatus, type PushSubscriptionRecord } from "@/lib/push";
+import { adminPushState, enableAdminPush, disableAdminPush, testAdminPush, testNotification, notifyUsers, type PushStatus, type PushSubscriptionRecord, type NotificationTestKind } from "@/lib/push";
 
 type Sub = PushSubscriptionRecord;
 
@@ -26,6 +26,8 @@ export function PushNotificationsCard() {
   const [loading, setLoading] = useState(true);
   const [currentEndpoint, setCurrentEndpoint] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [testKey, setTestKey] = useState("");
+  const [testKind, setTestKind] = useState<NotificationTestKind | null>(null);
 
   const load = useCallback(async () => {
     if (!password) { setLoading(false); return; }
@@ -101,6 +103,34 @@ export function PushNotificationsCard() {
     } finally { setBusy(false); }
   };
 
+  const runNotificationTest = async (kind: NotificationTestKind) => {
+    if (!password || busy) return;
+    const needsKey = !["message", "receipt"].includes(kind);
+    if (needsKey && !testKey.trim()) {
+      toast.error("Informe a key do usuário para este teste.");
+      return;
+    }
+    setBusy(true);
+    setTestKind(kind);
+    setTestResult(null);
+    try {
+      const result = await testNotification(password, kind, needsKey ? testKey : undefined);
+      const detail = result.code
+        ? `${result.message} Código: ${result.code}${result.httpStatus ? ` · HTTP ${result.httpStatus}` : ""}.`
+        : result.message;
+      setTestResult(detail);
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Falha no teste da notificação.";
+      setTestResult(message);
+      toast.error(message);
+    } finally {
+      setTestKind(null);
+      setBusy(false);
+    }
+  };
+
   const announceUpdate = async () => {
     if (!password || busy) return;
     setBusy(true);
@@ -149,6 +179,59 @@ export function PushNotificationsCard() {
         <Bell className="mr-2 h-4 w-4" /> Testar neste aparelho
       </Button>
       {testResult && <p role="status" className="text-xs text-muted-foreground">{testResult}</p>}
+
+      <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div>
+          <p className="vip-eyebrow">Testes individuais</p>
+          <p className="text-xs text-muted-foreground">Teste cada tipo de notificação separadamente.</p>
+        </div>
+
+        <input
+          value={testKey}
+          onChange={(e) => setTestKey(e.target.value)}
+          placeholder="Key do usuário para testes"
+          className="h-10 w-full rounded-xl border border-white/10 bg-background px-3 text-sm outline-none focus:border-primary/50"
+        />
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("user_test")}>
+            {testKind === "user_test" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Teste do usuário
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("message")}>
+            {testKind === "message" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Nova mensagem ADM
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("receipt")}>
+            {testKind === "receipt" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Novo comprovante ADM
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("reply")}>
+            {testKind === "reply" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Resposta do suporte
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("notice")}>
+            {testKind === "notice" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Novo aviso
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("update")}>
+            {testKind === "update" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Atualização
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("maintenance")}>
+            {testKind === "maintenance" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Manutenção
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("maintenance_end")}>
+            {testKind === "maintenance_end" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Fim da manutenção
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("coins_added")}>
+            {testKind === "coins_added" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Coins recebidos
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("reward_ready")}>
+            {testKind === "reward_ready" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Recompensa disponível
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("daily_reward")}>
+            {testKind === "daily_reward" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Coin diário disponível
+          </Button>
+          <Button variant="outline" className="justify-start rounded-xl" disabled={busy || loading} onClick={() => runNotificationTest("expired")}>
+            {testKind === "expired" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Key expirada
+          </Button>
+        </div>
+      </div>
 
       <Button
         onClick={announceUpdate}
