@@ -95,6 +95,21 @@ const CONTENT: Record<
   },
 };
 
+const TESTABLE_KINDS = new Set([
+  "user_test",
+  "message",
+  "receipt",
+  "reply",
+  "notice",
+  "update",
+  "maintenance",
+  "maintenance_end",
+  "reward_ready",
+  "coins_added",
+  "daily_reward",
+  "expired",
+]);
+
 export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "PUSH_NOT_CONFIGURED", corsHeaders, sendNotification }: Dependencies) {
   return async (req: Request) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -119,6 +134,63 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       const messageId = typeof raw?.messageId === "string" ? raw.messageId : "";
       const customBody = typeof raw?.body === "string" ? raw.body.trim().slice(0, 180) : "";
       const cronToken = typeof raw?.cronToken === "string" ? raw.cronToken : "";
+
+      if (kind === "notification_test") {
+        if (!password) return json({ error: "Senha ausente." }, 400);
+        const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
+        if (adminError || isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Senha inválida." }, 403);
+
+        const testKind = String(raw?.notificationKind ?? "");
+        const targetTestKey = typeof raw?.targetKey === "string" ? raw.targetKey.trim() : "";
+        if (!TESTABLE_KINDS.has(testKind) || testKind === "admin_test") {
+          return json({ error: "Tipo de teste inválido." }, 400);
+        }
+
+        const testContent = CONTENT[testKind];
+        if (testContent.audience === "admin") {
+          query = query.eq("scope", "admin");
+        } else {
+          if (!targetTestKey) return json({ error: "Key de destino obrigatória." }, 400);
+          const { data: keyRow, error: keyError } = await admin.from("access_keys")
+            .select("id, is_master, revoked")
+            .eq("key", targetTestKey.toUpperCase())
+            .maybeSingle();
+          if (keyError) return json({ code: "DATABASE_ERROR", error: "Falha ao validar key." }, 500);
+          if (!keyRow?.id || keyRow.is_master || keyRow.revoked) {
+            return json({ code: "REQUEST_FORBIDDEN", error: "Key inválida." }, 403);
+          }
+          query = query.eq("scope", "user").eq("key_id", keyRow.id);
+        }
+
+        const { data: testSubs, error: testSubsError } = await query;
+        if (testSubsError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar aparelhos." }, 500);
+        if (!testSubs?.length) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
+
+        const payload = JSON.stringify({
+          title: testContent.title,
+          body: testContent.body,
+          url: testContent.url,
+          tag: `atlas-test-${testKind}`,
+        });
+        const stale: string[] = [];
+        let sent = 0;
+        let failed = 0;
+        for (const sub of testSubs) {
+          try {
+            await sendNotification(
+              { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              payload,
+            );
+            sent++;
+          } catch (err) {
+            failed++;
+            const status = (err as { statusCode?: number })?.statusCode;
+            if (status === 404 || status === 410) stale.push(sub.id);
+          }
+        }
+        if (stale.length) await admin.from("push_subscriptions").delete().in("id", stale);
+        return json({ sent, failed, removed: stale.length, testedKind: testKind }, sent === 0 && failed > 0 ? 502 : 200);
+      }
 
       const content = Object.prototype.hasOwnProperty.call(CONTENT, kind) ? CONTENT[kind] : null;
       if (!content) return json({ error: "Tipo de notificação inválido." }, 400);
