@@ -18,6 +18,8 @@ export function MaintenanceCard() {
   const [noticeTitle, setNoticeTitle] = useState("Atlas VIP — Atualização programada");
   const [noticeBody, setNoticeBody] = useState("O Atlas VIP será atualizado em breve. Salve seu progresso e aguarde o aviso de conclusão.");
   const [sendingNotice, setSendingNotice] = useState(false);
+  const [version, setVersion] = useState("1.0");
+  const [versionSaving, setVersionSaving] = useState(false);
 
   const NOTICE_PRESETS: Record<string, { title: string; body: string }> = {
     before_update: { title: "Atlas VIP — Atualização programada", body: "O Atlas VIP será atualizado em breve. Salve seu progresso e aguarde o aviso de conclusão." },
@@ -49,17 +51,35 @@ export function MaintenanceCard() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data } = await supabase.rpc("get_maintenance");
+      const [{ data }, { data: versionData }] = await Promise.all([
+        supabase.rpc("get_maintenance"),
+        supabase.rpc("get_app_version"),
+      ]);
       if (!mounted) return;
       const obj = (data ?? {}) as { enabled?: boolean; message?: string };
       setEnabled(!!obj.enabled);
       setMessage(obj.message ?? "");
+      if (versionData) setVersion(String(versionData));
       setLoading(false);
     })();
     return () => {
       mounted = false;
     };
   }, []);
+
+  const saveVersion = async () => {
+    if (!password || versionSaving) return;
+    const normalized = version.trim();
+    if (!/^\\d+\\.\\d+$/.test(normalized)) {
+      toast.error("Versão inválida", { description: "Use o formato X.Y, por exemplo 1.2 ou 2.0." });
+      return;
+    }
+    setVersionSaving(true);
+    const { data, error } = await supabase.rpc("admin_set_app_version", { _version: normalized, _password: password });
+    setVersionSaving(false);
+    if (error) toast.error("Não foi possível salvar a versão", { description: error.message });
+    else { setVersion(String(data ?? normalized)); toast.success(`Versão ${data ?? normalized} salva.`); }
+  };
 
   const save = async () => {
     if (!password) return;
@@ -102,6 +122,26 @@ export function MaintenanceCard() {
             disabled={loading}
           />
         </div>
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div>
+          <p className="vip-eyebrow mb-1">Versão do aplicativo</p>
+          <p className="text-xs text-muted-foreground">Defina manualmente a versão que aparece no topo do painel.</p>
+        </div>
+        <div className="flex gap-2">
+          <input
+            value={version}
+            onChange={(e) => setVersion(e.target.value)}
+            placeholder="Ex.: 1.2"
+            inputMode="decimal"
+            className="h-10 flex-1 rounded-xl border border-white/10 bg-background px-3 text-sm outline-none focus:border-primary/50"
+          />
+          <Button onClick={saveVersion} disabled={loading || versionSaving} variant="outline" className="rounded-xl px-5">
+            {versionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar versão"}
+          </Button>
+        </div>
+        <p className="text-[10px] text-muted-foreground">A manutenção continua podendo avançar automaticamente 1.0 → 1.1 → … → 1.9 → 2.0.</p>
       </div>
 
       <Textarea
