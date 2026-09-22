@@ -11,6 +11,9 @@ import {
   Users,
   User,
   Eye,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -36,6 +39,7 @@ type AdminMessage = {
   target_key: string | null;
   created_at: string;
   read_count: number;
+  edited_at?: string | null;
 };
 
 const BROADCAST = "__broadcast__";
@@ -49,6 +53,9 @@ export function MessagesCard() {
   const [target, setTarget] = useState<string>(BROADCAST);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
 
   const load = useCallback(async () => {
     if (!password) return;
@@ -117,6 +124,30 @@ export function MessagesCard() {
     setTarget(BROADCAST);
     load();
   }, [password, busy, title, body, target, keys, load]);
+
+  const editMessage = useCallback(async (id: string) => {
+    if (!password || !editTitle.trim() || !editBody.trim()) {
+      toast.error("Preencha título e mensagem.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_edit_message", {
+      _password: password,
+      _id: id,
+      _title: editTitle.trim(),
+      _body: editBody.trim(),
+    });
+    setBusy(false);
+    if (error) {
+      toast.error("Falha ao editar mensagem.");
+      return;
+    }
+    setEditingId(null);
+    setEditTitle("");
+    setEditBody("");
+    toast.success("Mensagem editada.");
+    load();
+  }, [password, editTitle, editBody, load]);
 
   const remove = useCallback(
     async (id: string) => {
@@ -244,23 +275,63 @@ export function MessagesCard() {
                 key={m.id}
                 className="glass rounded-2xl p-4 space-y-2 animate-fade-in"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">{m.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                      {m.body}
-                    </p>
+                {editingId === m.id ? (
+                  <div className="space-y-2">
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      maxLength={120}
+                      placeholder="Título"
+                      className="h-10 rounded-xl bg-white/5 border-white/10"
+                    />
+                    <Textarea
+                      value={editBody}
+                      onChange={(e) => setEditBody(e.target.value)}
+                      maxLength={1000}
+                      rows={4}
+                      placeholder="Mensagem"
+                      className="rounded-xl bg-white/5 border-white/10 resize-none"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingId(null); setEditTitle(""); setEditBody(""); }} disabled={busy}>
+                        <X className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" onClick={() => editMessage(m.id)} disabled={busy}>
+                        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => remove(m.id)}
-                    aria-label="Apagar mensagem"
-                    className="w-8 h-8 rounded-xl hover:bg-status-danger/15 hover:text-status-danger shrink-0"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{m.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                        {m.body}
+                        {m.edited_at && <span className="ml-1 opacity-60">(editada)</span>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setEditingId(m.id); setEditTitle(m.title); setEditBody(m.body); }}
+                        aria-label="Editar mensagem"
+                        className="w-8 h-8 rounded-xl"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(m.id)}
+                        aria-label="Apagar mensagem"
+                        className="w-8 h-8 rounded-xl hover:bg-status-danger/15 hover:text-status-danger"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     {m.target_key ? (
