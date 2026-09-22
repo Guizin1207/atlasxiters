@@ -69,16 +69,28 @@ export default function PainelPage() {
   const [sensiSeed, setSensiSeed] = useState(0);
 
   const getDeviceProfile = (deviceOverride?: string) => {
-  const model = (deviceOverride ?? sensiDevice).toLowerCase();
-  if (model.includes("iphone 15") || model.includes("iphone 14") || model.includes("iphone 13")) return { button: 57, offset: 2, label: "iPhone recente" };
-  if (model.includes("iphone 11") || model.includes("iphone 12")) return { button: 59, offset: 1, label: "iPhone" };
+  const raw = (deviceOverride ?? sensiDevice).toLowerCase().trim();
+  const model = raw
+    .replace(/\b(apple|xiaomi|samsung|motorola|moto|galaxy|redmi|poco|realme|infinix|tecno)\b/g, "$1 ")
+    .replace(/[._-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (/\b(ip ?15|iphone ?15|15 pro|15 pro max|15\+|15 plus)\b/.test(model)) return { button: 57, offset: 2, label: "iPhone 15 / 15 Pro" };
+  if (/\b(ip ?14|iphone ?14|14 pro|14 pro max|14\+|14 plus)\b/.test(model)) return { button: 57, offset: 2, label: "iPhone 14 / 14 Pro" };
+  if (/\b(ip ?13|iphone ?13|13 pro|13 pro max|13 mini)\b/.test(model)) return { button: 58, offset: 2, label: "iPhone 13 / 13 Pro" };
+  if (/\b(ip ?12|iphone ?12|12 pro|12 pro max|12 mini)\b/.test(model)) return { button: 59, offset: 1, label: "iPhone 12" };
+  if (/\b(ip ?11|iphone ?11|11 pro|11 pro max)\b/.test(model)) return { button: 59, offset: 1, label: "iPhone 11" };
   if (model.includes("iphone")) return { button: 58, offset: 0, label: "iPhone" };
-  if (model.includes("s23") || model.includes("s24") || model.includes("s25")) return { button: 54, offset: 2, label: "Galaxy S recente" };
-  if (model.includes("s20") || model.includes("s21") || model.includes("s22")) return { button: 55, offset: 1, label: "Galaxy S" };
+  if (/\b(s ?25|galaxy ?s ?25|a ?56)\b/.test(model)) return { button: 54, offset: 2, label: "Galaxy S25 / A56" };
+  if (/\b(s ?24|galaxy ?s ?24|a ?55)\b/.test(model)) return { button: 54, offset: 2, label: "Galaxy S24 / A55" };
+  if (/\b(s ?23|galaxy ?s ?23|a ?54)\b/.test(model)) return { button: 54, offset: 2, label: "Galaxy S23 / A54" };
+  if (/\b(s ?22|galaxy ?s ?22|a ?53)\b/.test(model)) return { button: 55, offset: 1, label: "Galaxy S22 / A53" };
+  if (/\b(s ?21|galaxy ?s ?21)\b/.test(model)) return { button: 55, offset: 1, label: "Galaxy S21" };
+  if (/\b(s ?20|galaxy ?s ?20)\b/.test(model)) return { button: 55, offset: 1, label: "Galaxy S20" };
   if (model.includes("galaxy") || model.includes("samsung")) return { button: 56, offset: 0, label: "Samsung Galaxy" };
-  if (model.includes("redmi note") || model.includes("poco")) return { button: 53, offset: 1, label: "Redmi/Poco" };
-  if (model.includes("redmi")) return { button: 54, offset: 0, label: "Redmi" };
-  if (model.includes("motorola") || model.includes("moto")) return { button: 55, offset: -1, label: "Motorola" };
+  if (/\b(note ?1[0-9]|redmi ?note|rn ?1[0-9]|poco ?[a-z0-9]+)\b/.test(model)) return { button: 53, offset: 1, label: "Redmi Note / POCO" };
+  if (/\b(r ?[0-9]+|redmi ?[0-9]+|redmi)\b/.test(model)) return { button: 54, offset: 0, label: "Redmi" };
+  if (/\b(moto ?g[0-9]+|g[0-9]+|moto ?e[0-9]+|edge ?[0-9]+|motorola)\b/.test(model)) return { button: 55, offset: -1, label: "Motorola / Moto" };
   if (model.includes("realme")) return { button: 54, offset: 0, label: "Realme" };
   if (model.includes("infinix") || model.includes("tecno")) return { button: 55, offset: 0, label: "Android" };
   return { button: 55, offset: 0, label: "Android" };
@@ -106,7 +118,7 @@ const getButtonSize = () => {
   const sendSensiMessage = () => {
     const text = sensiInput.trim();
     if (!text || sensiTyping) return;
-    const match = text.match(/(?:iphone|galaxy|samsung|redmi|poco|motorola|moto|realme|infinix|tecno)[^,.!?]*/i);
+    const match = text.match(/(?:iphone|ip ?\d+|galaxy|samsung|s ?\d+|a ?\d+|redmi|rn ?\d+|note ?\d+|poco|motorola|moto ?[a-z]?\d+|g ?\d+|edge ?\d+|realme|infinix|tecno)[^,.!?]*/i);
     const nextDevice = sensiDevice || (match?.[0] ?? "");
     setSensiDevice(nextDevice);
     setSensiMessages((messages) => [...messages, { role: "user", text }]);
