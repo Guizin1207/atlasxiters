@@ -390,7 +390,7 @@ export default function PainelPage() {
                     <div className="mt-2 h-2 rounded-full bg-white/10">
                       <div className="h-2 rounded-full bg-white/60" style={{ width: sensiDevice.toLowerCase().includes("iphone") ? "58%" : sensiDevice.toLowerCase().includes("redmi") ? "52%" : "55%" }} />
                     </div>
-                    <p className="mt-2 text-[11px] text-muted-foreground">Ajuste inicial para o botão principal de tiro. O HUD do Free Fire permite alterar tamanho e transparência. cite não permitido aqui</p>
+                    <p className="mt-2 text-[11px] text-muted-foreground">Ajuste inicial para o botão principal de tiro. O HUD do Free Fire permite alterar tamanho e transparência. </p>
                   </div>
 
                   <div className="mt-3 rounded-2xl bg-white/5 p-3 text-xs text-muted-foreground">
