@@ -31,6 +31,7 @@ import { MessagesCard } from "@/components/admin/MessagesCard";
 import { SupportAdminCard } from "@/components/admin/SupportAdminCard";
 import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard";
 import { AdminRewardsCard } from "@/components/admin/AdminRewardsCard";
+import { SecurityCard } from "@/components/admin/SecurityCard";
 import { getKeyStatus } from "@/lib/key-status";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -378,15 +379,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {selectedFunction === "security" && (
-            <section className="glass-strong rounded-3xl p-6">
-              <p className="vip-eyebrow mb-1">Proteção</p>
-              <h2 className="text-xl font-bold">Segurança do ADM</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Controle de acesso e sessões administrativas.
-              </p>
-            </section>
-          )}
+          {selectedFunction === "security" && <SecurityCard />}
         </section>
       </div>
     </main>
