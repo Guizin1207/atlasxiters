@@ -99,7 +99,33 @@ export default function PainelPage() {
     window.setTimeout(() => {
       const cfg = getSensiConfig();
       const model = nextDevice || "seu aparelho";
-      setSensiMessages((messages) => [...messages, { role: "ai", text: "Entendi. Para " + model + ", vou começar com Geral " + cfg.geral + ", Ponto Vermelho " + cfg.red + ", 2x " + cfg.x2 + ", 4x " + cfg.x4 + ", AWM " + cfg.awm + ", Olhadinha " + cfg.olhadinha + " e botão de tiro em " + cfg.button + "%. Se sentir a mira passando da cabeça, reduza de 2 em 2; se estiver pesada, aumente de 2 em 2." }]);
+      const detailedReply = [
+        "🎯 CONFIGURAÇÃO ATLAS AI",
+        "",
+        "📱 Aparelho: " + model,
+        "🎮 Estilo: " + sensiStyle,
+        "⚙️ DPI: " + sensiDpi,
+        "",
+        "🔥 SENSIBILIDADE",
+        "• Geral: " + cfg.geral,
+        "• Ponto Vermelho: " + cfg.red,
+        "• Mira 2x: " + cfg.x2,
+        "• Mira 4x: " + cfg.x4,
+        "• Mira AWM: " + cfg.awm,
+        "• Olhadinha: " + cfg.olhadinha,
+        "",
+        "🔘 BOTÃO DE TIRO",
+        "• Tamanho recomendado: " + cfg.button + "%",
+        "• Comece com esse tamanho e ajuste de 1–2% se necessário.",
+        "",
+        "🧠 AJUSTE FINO",
+        "• Mira passando da cabeça → diminua Geral e Ponto Vermelho em 2.",
+        "• Mira pesada → aumente Geral e Ponto Vermelho em 2.",
+        "• Dificuldade para puxar capa → teste +2 no botão de tiro.",
+        "",
+        "📌 Essa configuração é uma base inicial para o seu aparelho. O resultado pode variar conforme tela, toque, FPS e estilo de jogo."
+      ].join("\n");
+      setSensiMessages((messages) => [...messages, { role: "ai", text: detailedReply }]);
       setSensiSeed((value) => value + 1);
       setSensiTyping(false);
     }, 650);
