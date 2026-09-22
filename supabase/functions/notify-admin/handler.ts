@@ -147,6 +147,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         }
 
         const testContent = CONTENT[testKind];
+        let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
         if (testContent.audience === "admin") {
           query = query.eq("scope", "admin");
         } else {
@@ -192,6 +193,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         return json({ sent, failed, removed: stale.length, testedKind: testKind }, sent === 0 && failed > 0 ? 502 : 200);
       }
 
+      let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
       const content = Object.prototype.hasOwnProperty.call(CONTENT, kind) ? CONTENT[kind] : null;
       if (!content) return json({ error: "Tipo de notificação inválido." }, 400);
 
@@ -210,8 +212,6 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           return json({ code: "CRON_AUTH_FAILED", error: "Agendamento não autorizado." }, 403);
         }
       }
-
-      let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
 
       if (kind === "admin_test") {
         if (!password) return json({ error: "Autenticação obrigatória." }, 400);
