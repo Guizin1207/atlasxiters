@@ -13,7 +13,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeout } from "@/lib/request-timeout";
-import { beginAdminSession, endAdminSession, touchAdminSession } from "@/lib/admin-devices";
+import { beginAdminSession, endAdminSession, touchAdminSession, checkAdminDeviceAccess } from "@/lib/admin-devices";
 
 const SESSION_KEY = "atlas_vip_admin_pwd";
 
@@ -94,6 +94,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async (pwd: string) => {
     const candidate = await validatedCredential(pwd);
     if (!candidate) return false;
+    const access = await checkAdminDeviceAccess(candidate);
+    if (access === "pending") throw new Error("admin_access_pending");
+    if (access === "denied") throw new Error("admin_access_denied");
     // As próximas RPCs precisam usar exatamente a credencial aceita.
     sessionStorage.setItem(SESSION_KEY, candidate);
     beginAdminSession();
