@@ -498,7 +498,7 @@ export async function testNotification(
 export async function notifyUsers(
   password: string,
   kind: UserNotifyKind,
-  options?: { targetKey?: string; body?: string },
+  options?: { targetKey?: string; body?: string; title?: string },
 ) {
-  return deliver({ kind, password, targetKey: options?.targetKey, body: options?.body });
+  return deliver({ kind, password, targetKey: options?.targetKey, body: options?.body, title: options?.title });
 }
