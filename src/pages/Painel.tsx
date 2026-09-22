@@ -450,7 +450,7 @@ const sendSensiMessage = () => {
                     <button type="button" onClick={resetSensiChat} className="rounded-xl p-2 text-muted-foreground hover:bg-white/10" aria-label="Novo chat"><RotateCcw className="h-4 w-4" /></button>
                   </div>
                 </div>
-                <div className="min-h-[430px] space-y-3 p-3 [zoom:1]">
+                <div className="min-h-[430px] space-y-3 p-3">
                   {sensiMessages.map((message, index) => (
                     <div key={index} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
                       <div className={message.role === "user" ? "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm leading-6 text-primary-foreground" : "max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-sm leading-6"}>{message.text}</div>
@@ -465,7 +465,7 @@ const sendSensiMessage = () => {
                     ))}
                   </div>
                   <div className="flex items-end gap-2">
-                    <textarea value={sensiInput} onChange={(e) => setSensiInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendSensiMessage(); } }} placeholder="Digite sua mensagem..." rows={1} className="min-h-11 flex-1 resize-none rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-foreground outline-none focus:border-white/30" />
+                    <textarea value={sensiInput} onChange={(e) => setSensiInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendSensiMessage(); } }} placeholder="Digite sua mensagem..." rows={1} className="min-h-11 flex-1 resize-none rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 text-[16px] text-foreground outline-none focus:border-white/30" />
                     <Button onClick={sendSensiMessage} disabled={!sensiInput.trim() || sensiTyping} className="h-11 w-11 shrink-0 rounded-2xl p-0"><MessageCircle className="h-4 w-4" /></Button>
                   </div>
                   <p className="mt-2 text-center text-[10px] text-muted-foreground">Converse normalmente. A IA monta a base de sensibilidade e botão de tiro a partir do que você informar.</p>
