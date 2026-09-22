@@ -69,7 +69,7 @@ export function MaintenanceCard() {
 
   const saveVersion = async () => {
     if (!password || versionSaving) return;
-    const normalized = version.trim();
+    const normalized = version.trim().replace(",", ".");
     if (!/^\d+\.\d+$/.test(normalized)) {
       toast.error("Versão inválida", { description: "Use o formato X.Y, por exemplo 1.2 ou 2.0." });
       return;
@@ -132,7 +132,7 @@ export function MaintenanceCard() {
         <div className="flex gap-2">
           <input
             value={version}
-            onChange={(e) => setVersion(e.target.value)}
+            onChange={(e) => setVersion(e.target.value.replace(",", "."))}
             placeholder="Ex.: 1.2"
             inputMode="decimal"
             className="h-10 flex-1 rounded-xl border border-white/10 bg-background px-3 text-sm outline-none focus:border-primary/50"
