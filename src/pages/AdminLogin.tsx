@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useAdmin } from "@/lib/admin-context";
 
 export default function AdminLoginPage() {
-  const { password, loading, signIn } = useAdmin();
+  const { password, loading, signIn, recoverAccess } = useAdmin();
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
@@ -14,6 +14,16 @@ export default function AdminLoginPage() {
 
   if (loading) return <main className="min-h-screen grid place-items-center"><Loader2 aria-label="Carregando login ADM" className="animate-spin" /></main>;
   if (password) return <Navigate to="/admin" replace />;
+
+  const recover = async () => {
+    if (busy || !value.trim()) return;
+    setBusy(true); setError(null);
+    try {
+      if (await recoverAccess(value.trim())) navigate("/admin", { replace: true });
+      else setError("Chave ou senha de ADM inválida.");
+    } catch { setError("Não foi possível recuperar o ADM neste dispositivo."); }
+    finally { setBusy(false); }
+  };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -49,6 +59,9 @@ export default function AdminLoginPage() {
           {error && <p role="alert" className="rounded-xl bg-status-danger/10 p-3 text-sm text-status-danger">{error}</p>}
           <Button type="submit" disabled={busy || !value.trim()} className="w-full h-12 rounded-2xl">
             {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Entrar como ADM
+          </Button>
+          <Button type="button" variant="outline" onClick={recover} disabled={busy || !value.trim()} className="w-full h-11 rounded-2xl">
+            Recuperar acesso ADM neste dispositivo
           </Button>
         </form>
         <Link to="/login?trocar=1" className="block text-center text-sm underline underline-offset-4">Entrar como usuário com uma key</Link>
