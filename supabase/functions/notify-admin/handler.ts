@@ -27,7 +27,6 @@ const CONTENT: Record<
     audience: "admin",
     url: "/admin",
   },
-  // Disparadas pelo usuário → vão para os aparelhos do ADM
   message: {
     title: "Atlas VIP — Novo atendimento",
     body: "Você recebeu uma nova mensagem no suporte.",
@@ -40,7 +39,6 @@ const CONTENT: Record<
     audience: "admin",
     url: "/admin",
   },
-  // Disparadas pelo ADM → vão para os aparelhos dos usuários
   reply: {
     title: "Atlas VIP — Suporte respondeu",
     body: "Você recebeu uma nova mensagem no chat de suporte.",
@@ -89,7 +87,6 @@ const CONTENT: Record<
     audience: "user",
     url: "/painel",
   },
-  // Disparada pelo próprio usuário quando a chave dele expira → vai só para os aparelhos dele
   expired: {
     title: "Atlas VIP — Sua key foi expirada",
     body: "Sua key foi expirada. Fale com o suporte para renovar seu acesso.",
@@ -142,14 +139,12 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         }
       }
 
-
       let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
 
       if (kind === "admin_test") {
         if (!password) return json({ error: "Autenticação obrigatória." }, 400);
         const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
         if (adminError || isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Acesso negado." }, 403);
-        // Nunca faz broadcast de um teste e nunca envia para endpoints fora do cadastro ADM.
         query = query.eq("scope", "admin");
       } else if (kind === "user_test") {
         if (!key || !targetEndpoint) return json({ error: "Key e aparelho de destino obrigatórios." }, 400);
@@ -164,8 +159,6 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       } else if (content.audience === "admin") {
         if (!key) return json({ error: "Chave ausente." }, 400);
         if (messageId) {
-          // A mesma regra do suporte: chave existente/não revogada, mesmo após expirar.
-          // Exige uma mensagem recente, realmente salva, pertencente a essa chave.
           const { data: keyRow, error: keyError } = await admin.from("access_keys")
             .select("id").eq("key", key.toUpperCase()).eq("revoked", false).maybeSingle();
           if (keyError) return json({ error: "Falha ao validar atendimento." }, 500);
@@ -180,7 +173,6 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           if (messageError) return json({ error: "Falha ao validar mensagem." }, 500);
           if (!message) return json({ error: "Mensagem inválida ou antiga." }, 403);
         } else {
-          // Clientes antigos continuam funcionando; não libera keys expiradas sem mensagem.
           const { data: validKey, error: keyError } = await admin.rpc("_valid_access_key", { _key: key });
           if (keyError) return json({ error: "Falha ao validar chave." }, 500);
           if (validKey !== true) return json({ error: "Chave inválida." }, 403);
@@ -209,20 +201,24 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
             .filter((row) => rewardByKey.get(String(row.id)) !== today)
             .map((row) => String(row.id)),
         );
+
         query = query.eq("scope", "user");
         const { data: candidateSubs, error: candidateError } = await query;
         if (candidateError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar aparelhos." }, 500);
+
         const eligibleSubs = (candidateSubs ?? []).filter((sub) => sub.key_id && eligible.has(String(sub.key_id)));
         const payload = JSON.stringify({
           title: content.title,
           body: content.body,
           url: content.url,
-          tag: "atlas-daily-reward",
+          tag: `atlas-daily-reward-${today}`,
         });
+
         const stale: string[] = [];
         let sent = 0;
         let failed = 0;
         let dailyNext = 0;
+
         await Promise.all(Array.from({ length: Math.min(8, eligibleSubs.length) }, async () => {
           while (dailyNext < eligibleSubs.length) {
             const sub = eligibleSubs[dailyNext++];
@@ -239,15 +235,17 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
             }
           }
         }));
+
         if (stale.length) await admin.from("push_subscriptions").delete().in("id", stale);
+
         return json({
           sent,
           failed,
           removed: stale.length,
+          eligibleKeys: eligible.size,
           code: sent > 0 ? undefined : "NO_RECIPIENTS",
         }, sent === 0 && failed > 0 ? 502 : 200);
       } else if (kind === "reward_ready") {
-        // Aviso de recompensa: somente para o aparelho/keys do próprio usuário.
         if (!key) return json({ error: "Chave ausente." }, 400);
         const { data: keyRow, error: keyError } = await admin
           .from("access_keys")
@@ -255,9 +253,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           .eq("key", key.toUpperCase())
           .maybeSingle();
         if (keyError) return json({ error: "Falha ao validar recompensa." }, 500);
-        if (!keyRow?.id || keyRow.is_master || keyRow.revoked) {
-          return json({ error: "Chave inválida." }, 403);
-        }
+        if (!keyRow?.id || keyRow.is_master || keyRow.revoked) return json({ error: "Chave inválida." }, 403);
         query = query.eq("scope", "user").eq("key_id", keyRow.id);
       } else if (kind === "coins_added") {
         if (!key) return json({ error: "Chave ausente." }, 400);
@@ -267,13 +263,9 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           .eq("key", key.toUpperCase())
           .maybeSingle();
         if (keyError) return json({ error: "Falha ao validar coins." }, 500);
-        if (!keyRow?.id || keyRow.is_master || keyRow.revoked) {
-          return json({ error: "Chave inválida." }, 403);
-        }
+        if (!keyRow?.id || keyRow.is_master || keyRow.revoked) return json({ error: "Chave inválida." }, 403);
         query = query.eq("scope", "user").eq("key_id", keyRow.id);
       } else if (kind === "expired") {
-        // Autoaviso de expiração: a chave já expirou (não passa em _valid_access_key),
-        // confere a expiração no servidor e limita o envio aos aparelhos dela.
         if (!key) return json({ error: "Chave ausente." }, 400);
         const { data: keyRow, error: keyError } = await admin
           .from("access_keys")
@@ -286,38 +278,24 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         }
         query = query.eq("scope", "user").eq("key_id", keyRow.id);
       } else {
-        // Envio para usuários: só o ADM autenticado pode disparar.
         if (!password) return json({ error: "Senha ausente." }, 400);
         const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
-        if (adminError) {
-          console.error("Falha ao validar senha:", adminError.message);
-          return json({ error: "Falha ao validar senha." }, 500);
-        }
+        if (adminError) return json({ error: "Falha ao validar senha." }, 500);
         if (isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Senha inválida." }, 403);
-
-        // Respostas do suporte são sempre individuais; destino ausente nunca vira broadcast.
         if (kind === "reply" && !targetKey) return json({ error: "Destinatário da resposta obrigatório." }, 400);
-
         query = query.eq("scope", "user");
 
         if (targetKey) {
-          const { data: keyRow } = await admin
-            .from("access_keys")
-            .select("id")
-            .eq("key", targetKey.toUpperCase())
-            .maybeSingle();
+          const { data: keyRow } = await admin.from("access_keys")
+            .select("id").eq("key", targetKey.toUpperCase()).maybeSingle();
           if (!keyRow?.id) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
           query = query.eq("key_id", keyRow.id);
         }
       }
 
       const { data: subs, error: subsError } = await query;
-      if (subsError) {
-        console.error("Falha ao listar inscrições:", subsError.message);
-        return json({ code: "DATABASE_ERROR", error: "Falha ao listar inscrições." }, 500);
-      }
+      if (subsError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar inscrições." }, 500);
       if (!subs?.length) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
-
 
       const payload = JSON.stringify({
         title: content.title,
@@ -331,23 +309,21 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       let credentialsRejected = false;
       let next = 0;
 
-      // Um aparelho com conexão lenta não impede o envio aos demais.
       await Promise.all(Array.from({ length: Math.min(8, subs.length) }, async () => {
         while (next < subs.length) {
           const sub = subs[next++];
-        try {
-          await sendNotification(
-            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            payload,
-          );
-          sent++;
-        } catch (err) {
-          failed++;
-          const status = (err as { statusCode?: number })?.statusCode;
-          console.error(`Envio push falhou [${status ?? "?"}].`);
-          if (status === 404 || status === 410) stale.push(sub.id);
-          if (status === 401 || status === 403) credentialsRejected = true;
-        }
+          try {
+            await sendNotification(
+              { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              payload,
+            );
+            sent++;
+          } catch (err) {
+            failed++;
+            const status = (err as { statusCode?: number })?.statusCode;
+            if (status === 404 || status === 410) stale.push(sub.id);
+            if (status === 401 || status === 403) credentialsRejected = true;
+          }
         }
       }));
 
