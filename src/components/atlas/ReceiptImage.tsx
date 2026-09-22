@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { resolveReceiptUrl } from "@/lib/receipts";
+import { resolveReceiptUrl, type ReceiptAuth } from "@/lib/receipts";
 
-export function ReceiptImage({ refValue, caption }: { refValue: string; caption: string }) {
+export function ReceiptImage({ refValue, caption, auth }: { refValue: string; caption: string; auth: ReceiptAuth }) {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    resolveReceiptUrl(refValue).then((u) => {
+    resolveReceiptUrl(refValue, auth).then((u) => {
       if (active) setUrl(u);
     });
     return () => {
       active = false;
     };
-  }, [refValue]);
+  }, [refValue, auth.key, auth.password]);
 
   if (!url) return <span className="text-[10px] opacity-60">Carregando comprovante…</span>;
 
