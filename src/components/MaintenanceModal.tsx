@@ -1,13 +1,49 @@
+import { useEffect } from "react";
 import { Wrench, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
 
 /**
  * Modal full-screen quando a manutenção está ativa.
- * Não pode ser fechado — apenas sair ou contatar suporte.
+ * Durante a atualização, qualquer ação/link de WhatsApp do app é ocultada.
  */
 export function MaintenanceModal({ message }: { message: string }) {
   const { signOut } = useKey();
+
+  useEffect(() => {
+    const className = "atlas-maintenance-active";
+    document.body.classList.add(className);
+
+    const hideWhatsApp = () => {
+      const elements = document.querySelectorAll<HTMLElement>(
+        'a, button, [role="button"]'
+      );
+
+      elements.forEach((element) => {
+        const href = element.getAttribute("href")?.toLowerCase() ?? "";
+        const text = element.textContent?.toLowerCase() ?? "";
+
+        if (
+          href.includes("wa.me") ||
+          href.includes("whatsapp") ||
+          text.includes("whatsapp")
+        ) {
+          element.style.setProperty("display", "none", "important");
+        }
+      });
+    };
+
+    hideWhatsApp();
+
+    const observer = new MutationObserver(hideWhatsApp);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      document.body.classList.remove(className);
+    };
+  }, []);
+
   return (
     <div
       role="dialog"
