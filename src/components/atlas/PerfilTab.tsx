@@ -24,7 +24,18 @@ export function PerfilTab() {
   useTicker(1000); // re-render a cada segundo p/ contador
 
   const [copied, setCopied] = useState(false);
-  const [supportOpen, setSupportOpen] = useState(false);\n\n  const deviceInfo = (() => {\n    if (typeof navigator === "undefined") return null;\n    const ua = navigator.userAgent || "";\n    const browser = /edg\//i.test(ua) ? "Microsoft Edge" : /chrome\//i.test(ua) ? "Google Chrome" : /firefox\//i.test(ua) ? "Mozilla Firefox" : /safari\//i.test(ua) && !/chrome|android/i.test(ua) ? "Safari" : "Navegador";\n    const os = /iphone|ipad|ipod/i.test(ua) ? "iOS" : /android/i.test(ua) ? "Android" : /windows/i.test(ua) ? "Windows" : /mac os x|macintosh/i.test(ua) ? "macOS" : /linux/i.test(ua) ? "Linux" : "Desconhecido";\n    const screen = `${window.screen?.width ?? 0} × ${window.screen?.height ?? 0}`;\n    const language = navigator.language || "—";\n    const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection?.effectiveType;\n    return { browser, os, screen, language, connection: connection ? connection.toUpperCase() : "Indisponível" };\n  })();
+  const [supportOpen, setSupportOpen] = useState(false);
+
+  const deviceInfo = (() => {
+    if (typeof navigator === "undefined") return null;
+    const ua = navigator.userAgent || "";
+    const browser = /edg\//i.test(ua) ? "Microsoft Edge" : /chrome\//i.test(ua) ? "Google Chrome" : /firefox\//i.test(ua) ? "Mozilla Firefox" : /safari\//i.test(ua) && !/chrome|android/i.test(ua) ? "Safari" : "Navegador";
+    const os = /iphone|ipad|ipod/i.test(ua) ? "iOS" : /android/i.test(ua) ? "Android" : /windows/i.test(ua) ? "Windows" : /mac os x|macintosh/i.test(ua) ? "macOS" : /linux/i.test(ua) ? "Linux" : "Desconhecido";
+    const screen = `${window.screen?.width ?? 0} × ${window.screen?.height ?? 0}`;
+    const language = navigator.language || "—";
+    const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection?.effectiveType;
+    return { browser, os, screen, language, connection: connection ? connection.toUpperCase() : "Indisponível" };
+  })();
   if (!keyData) return null;
 
   const DeviceIcon = getDeviceIcon(device);
@@ -92,7 +103,25 @@ export function PerfilTab() {
         </div>
       </div>
 
-      {/* Informações do dispositivo */}\n      {deviceInfo && !adminPreview && (\n        <div className="glass-strong rounded-2xl p-5 space-y-4">\n          <div>\n            <p className="vip-eyebrow mb-1">Seu dispositivo</p>\n            <h3 className="text-base font-bold">Informações do meu dispositivo</h3>\n            <p className="text-[11px] text-muted-foreground mt-1">Dados técnicos básicos deste aparelho e navegador.</p>\n          </div>\n          <div className="grid grid-cols-2 gap-3">\n            <Stat label="Sistema" value={deviceInfo.os} icon={<Smartphone className="w-3.5 h-3.5" />} />\n            <Stat label="Navegador" value={deviceInfo.browser} icon={<Globe className="w-3.5 h-3.5" />} />\n            <Stat label="Tela" value={deviceInfo.screen} icon={<Maximize2 className="w-3.5 h-3.5" />} />\n            <Stat label="Idioma" value={deviceInfo.language} icon={<Monitor className="w-3.5 h-3.5" />} />\n            <Stat label="Conexão" value={deviceInfo.connection} icon={<Wifi className="w-3.5 h-3.5" />} />\n          </div>\n        </div>\n      )}\n\n      {/* Contador */}
+      {/* Informações do dispositivo */}
+      {deviceInfo && !adminPreview && (
+        <div className="glass-strong rounded-2xl p-5 space-y-4">
+          <div>
+            <p className="vip-eyebrow mb-1">Seu dispositivo</p>
+            <h3 className="text-base font-bold">Informações do meu dispositivo</h3>
+            <p className="text-[11px] text-muted-foreground mt-1">Dados técnicos básicos deste aparelho e navegador.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Stat label="Sistema" value={deviceInfo.os} icon={<Smartphone className="w-3.5 h-3.5" />} />
+            <Stat label="Navegador" value={deviceInfo.browser} icon={<Globe className="w-3.5 h-3.5" />} />
+            <Stat label="Tela" value={deviceInfo.screen} icon={<Maximize2 className="w-3.5 h-3.5" />} />
+            <Stat label="Idioma" value={deviceInfo.language} icon={<Monitor className="w-3.5 h-3.5" />} />
+            <Stat label="Conexão" value={deviceInfo.connection} icon={<Wifi className="w-3.5 h-3.5" />} />
+          </div>
+        </div>
+      )}
+
+      {/* Contador */}
       <div className="glass-strong rounded-2xl p-5">
         <p className="vip-eyebrow mb-3">Tempo restante</p>
         <div
