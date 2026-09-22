@@ -287,8 +287,13 @@ async function deliver(body: Record<string, unknown>): Promise<PushDelivery> {
 }
 
 /** Dispara a notificação para os aparelhos do admin. Nunca lança erro. */
-export async function notifyAdmin(kind: "message" | "receipt", key: string, messageId?: string) {
+export async function notifyAdmin(kind: "message" | "receipt" | "security", key: string, messageId?: string) {
   return deliver({ kind, key, messageId });
+}
+
+export async function notifySecurity(eventId: string) {
+  if (!eventId) return { ok: false, sent: 0, message: "Evento de segurança ausente." };
+  return deliver({ kind: "security", eventId });
 }
 
 /** Teste remoto, autenticado e limitado ao endpoint deste celular; não é um aviso local. */
