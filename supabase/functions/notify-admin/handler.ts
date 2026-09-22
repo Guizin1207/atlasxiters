@@ -364,9 +364,16 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         query = query.eq("scope", "user");
 
         if (targetKey) {
-          const { data: keyRow } = await admin.from("access_keys")
-            .select("id").eq("key", targetKey.toUpperCase()).maybeSingle();
-          if (!keyRow?.id) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
+          // Resposta do ADM é entregue diretamente aos aparelhos da key do cliente.
+          // Não depende da existência/conexão de nenhuma inscrição de ADM.
+          const { data: keyRow, error: keyError } = await admin.from("access_keys")
+            .select("id, is_master, revoked, expires_at")
+            .eq("key", targetKey.toUpperCase())
+            .maybeSingle();
+          if (keyError) return json({ code: "DATABASE_ERROR", error: "Falha ao localizar destinatário." }, 500);
+          if (!keyRow?.id || keyRow.is_master || keyRow.revoked) {
+            return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
+          }
           query = query.eq("key_id", keyRow.id);
         }
       }
