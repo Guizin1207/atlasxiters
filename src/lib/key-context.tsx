@@ -16,7 +16,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { detectDevice } from "@/lib/device";
-import { notifyExpired, resetExpiryNotification, retireOtherUserPush } from "@/lib/push";
+import { notifyExpired, resetExpiryNotification, retireOtherUserPush, notifySecurity } from "@/lib/push";
 import { withTimeout } from "@/lib/request-timeout";
 
 export { detectDevice } from "@/lib/device";
@@ -157,6 +157,17 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       if (version !== requestVersion.current) return;
       if (error) {
         const reason = parseError(error.message);
+        if (["invalid_key", "revoked_key", "device_mismatch"].includes(reason)) {
+          void (async () => {
+            const { data: eventId } = await supabase.rpc("record_security_event", {
+              _key: stored,
+              _device_id: deviceIdRef.current,
+              _device: deviceRef.current,
+              _reason: reason,
+            });
+            if (eventId) void notifySecurity(String(eventId));
+          })();
+        }
         if (reason === "expired_key") {
           expireKey(stored);
           void notifyExpired(stored);
@@ -229,6 +240,17 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       if (version !== requestVersion.current) return { ok: false, error: "network_error" };
       if (error) {
         const reason = parseError(error.message);
+        if (["invalid_key", "revoked_key", "device_mismatch"].includes(reason)) {
+          void (async () => {
+            const { data: eventId } = await supabase.rpc("record_security_event", {
+              _key: key,
+              _device_id: deviceIdRef.current,
+              _device: deviceRef.current,
+              _reason: reason,
+            });
+            if (eventId) void notifySecurity(String(eventId));
+          })();
+        }
         if (reason === "expired_key") {
           localStorage.removeItem(STORAGE_KEY);
           expireKey(key);
