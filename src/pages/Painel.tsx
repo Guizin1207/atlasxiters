@@ -368,7 +368,8 @@ export default function PainelPage() {
                   <Button variant="outline" onClick={generateSensi} className="mt-4 h-10 w-full rounded-xl gap-2"><RotateCcw className="h-4 w-4" /> Ajustar e gerar outra</Button>
                 </div>
               )}
-            </section>}
+            </section>
+          )}
 
         </div>
       </div>
