@@ -133,6 +133,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       const targetEndpoint = typeof raw?.targetEndpoint === "string" ? raw.targetEndpoint.trim() : "";
       const messageId = typeof raw?.messageId === "string" ? raw.messageId : "";
       const customBody = typeof raw?.body === "string" ? raw.body.trim().slice(0, 180) : "";
+      const customTitle = typeof raw?.title === "string" ? raw.title.trim().slice(0, 80) : "";
       const cronToken = typeof raw?.cronToken === "string" ? raw.cronToken : "";
 
       if (kind === "notification_test") {
@@ -383,7 +384,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       if (!subs?.length) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
 
       const payload = JSON.stringify({
-        title: content.title,
+        title: customTitle || content.title,
         body: content.audience === "admin" || kind === "expired" || kind === "user_test" ? content.body : customBody || content.body,
         url: content.url,
         tag: `atlas-${kind}`,
