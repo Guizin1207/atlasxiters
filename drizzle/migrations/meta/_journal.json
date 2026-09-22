@@ -134,6 +134,13 @@
       "when": 1790067010509,
       "tag": "0018_lock_internal_helpers_and_receipt_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790110608293,
+      "tag": "0019_admin_password_case_insensitive",
+      "breakpoints": true
     }
   ]
 }
