@@ -1,4 +1,5 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { createOpenAI } from "npm:@ai-sdk/openai";
 import { Output, generateText } from "npm:ai";
 import { z } from "npm:zod";
@@ -56,6 +57,32 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => null);
+
+    // Só chaves VIP válidas usam a IA paga: valida no servidor antes de qualquer chamada.
+    const accessKey = typeof body?.key === "string" ? body.key.trim().toUpperCase() : "";
+    if (!accessKey) {
+      return new Response(JSON.stringify({ error: "Informe sua chave de acesso." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceRole) {
+      return new Response(JSON.stringify({ error: "Configuração do backend ausente." }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const admin = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false } });
+    const { data: keyOk } = await admin.rpc("_valid_access_key", { _key: accessKey });
+    if (keyOk !== true) {
+      return new Response(JSON.stringify({ error: "Chave inválida, revogada ou expirada." }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const question = typeof body?.question === "string" ? body.question.trim().slice(0, 500) : "";
     const chat = Array.isArray(body?.chat) ? body.chat.slice(-8).filter((m: unknown) => m && typeof m === "object") : [];
     const device = typeof body?.device === "string" ? body.device.trim().slice(0, 100) : "";

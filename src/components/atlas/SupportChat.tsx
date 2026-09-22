@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useKey } from "@/lib/key-context";
 import { ReceiptImage } from "@/components/atlas/ReceiptImage";
-import { RECEIPT_BUCKET, RECEIPT_EXTENSIONS, RECEIPT_MAX_BYTES, RECEIPT_PREFIX, isReceiptBody, receiptRef } from "@/lib/receipts";
+import { RECEIPT_EXTENSIONS, RECEIPT_MAX_BYTES, RECEIPT_PREFIX, isReceiptBody, receiptRef, uploadReceipt } from "@/lib/receipts";
 import { notifyAdmin } from "@/lib/push";
 
 type Msg = { id: string; sender_type: "user" | "admin"; body: string; created_at: string; edited_at?: string | null };
@@ -101,13 +101,9 @@ export function SupportChat({ accessKey }: { accessKey?: string | null }) {
     if (!(RECEIPT_EXTENSIONS as readonly string[]).includes(ext)) {
       ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
     }
-    const safeKey = supportKey.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
-    const path = `${safeKey}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from(RECEIPT_BUCKET)
-      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type || undefined });
+    const path = await uploadReceipt(supportKey, file, ext);
 
-    if (uploadError) {
+    if (!path) {
       setUploading(false);
       toast.error("Não foi possível enviar o comprovante.");
       return;
