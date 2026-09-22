@@ -117,7 +117,39 @@ const getButtonSize = () => {
     return { geral: Math.min(200, base + deviceAdjust + dpiAdjust + variation), red: Math.min(200, base - 2 + deviceAdjust + dpiAdjust + variation), x2: Math.min(200, base - 8 + deviceAdjust + dpiAdjust), x4: Math.min(200, base - 14 + deviceAdjust + dpiAdjust), awm: Math.min(200, base - 22 + deviceAdjust), olhadinha: Math.min(200, base - 10 + variation), button: getButtonSize() };
   };
 
-  const sendSensiMessage = () => {
+  const getFfTips = (message: string) => {
+  const text = message.toLowerCase();
+  const tips: string[] = [];
+  if (/(fps|travando|lag|lento|leve|pesado)/.test(text)) {
+    tips.push("⚡ DESEMPENHO");
+    tips.push("• FPS: use o FPS mais alto que o aparelho mantém estável.");
+    tips.push("• Gráficos: comece em Suave/Padrão para priorizar estabilidade.");
+    tips.push("• Sombras e efeitos: reduza se houver queda de FPS.");
+    tips.push("• Feche apps em segundo plano e evite jogar com o aparelho muito quente.");
+  }
+  if (/(gr[aá]fico|grafico|qualidade|resolu[cç][aã]o)/.test(text)) {
+    tips.push("🎮 GRÁFICOS");
+    tips.push("• Qualidade baixa/Suave → mais estabilidade e resposta ao toque.");
+    tips.push("• Qualidade alta → visual melhor, mas pode aumentar o uso de GPU.");
+    tips.push("• Teste uma mudança por vez para saber o que realmente melhorou.");
+  }
+  if (/(dpi|touch|toque|sens[ií]|capa|headshot|bot[aã]o)/.test(text)) {
+    tips.push("🎯 CONTROLE");
+    tips.push("• DPI, sensibilidade e tamanho do botão devem ser ajustados juntos.");
+    tips.push("• Se a mira passa da cabeça, reduza Geral/Ponto Vermelho aos poucos.");
+    tips.push("• Se está pesada, aumente aos poucos em vez de mudar tudo de uma vez.");
+    tips.push("• Botão de tiro: use o tamanho recomendado pelo perfil do aparelho e ajuste 1–2% por teste.");
+  }
+  if (/(config|configura[cç][aã]o|deixar|deixa|otim|melhorar|leve)/.test(text)) {
+    tips.push("🛠️ CONFIGURAÇÃO LEVE");
+    tips.push("• Priorize FPS estável em vez de qualidade gráfica máxima.");
+    tips.push("• Mantenha o jogo e o sistema atualizados.");
+    tips.push("• Evite sobreposição de muitos aplicativos durante a partida.");
+  }
+  return tips;
+};
+
+const sendSensiMessage = () => {
     const text = sensiInput.trim();
     if (!text || sensiTyping) return;
     const match = text.match(/(?:iphone|ip ?(?:\d+|xr|xs)|galaxy|samsung|s ?\d+|a ?\d+|redmi|rn ?\d+|note ?\d+|poco|motorola|moto ?[a-z]?\d+|g ?\d+|edge ?\d+|realme|infinix|tecno)[^,.!?]*/i);
@@ -159,7 +191,8 @@ const getButtonSize = () => {
         "",
         "━━━━━━━━━━━━━━━━",
         "📌  OBSERVAÇÃO",
-        "Essa configuração é uma base inicial. Ajuste aos poucos conforme tela, toque, FPS e seu estilo de jogo."
+        "Essa configuração é uma base inicial. Ajuste aos poucos conforme tela, toque, FPS e seu estilo de jogo.",
+      ...(ffTips.length ? ["", "━━━━━━━━━━━━━━━━", ...ffTips] : [])
       ].join("\n");
       setSensiMessages((messages) => [...messages, { role: "ai", text: detailedReply }]);
       setSensiSeed((value) => value + 1);
