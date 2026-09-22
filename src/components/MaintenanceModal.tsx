@@ -1,7 +1,6 @@
-import { Wrench, LogOut, MessageCircle } from "lucide-react";
+import { Wrench, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
-import { SUPPORT_URL } from "@/lib/atlas-config";
 
 /**
  * Modal full-screen quando a manutenção está ativa.
@@ -30,25 +29,14 @@ export function MaintenanceModal({ message }: { message: string }) {
           {message || "Voltamos em instantes."}
         </p>
 
-        <div className="grid grid-cols-2 gap-3 pt-2">
-          <Button
-            variant="ghost"
-            onClick={signOut}
-            className="h-12 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
-          <Button
-            asChild
-            className="h-12 rounded-2xl bg-white text-black hover:bg-white/90"
-          >
-            <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
-              <MessageCircle className="w-4 h-4 mr-2" />
-              WhatsApp
-            </a>
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          onClick={signOut}
+          className="w-full h-12 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sair
+        </Button>
       </div>
     </div>
   );
