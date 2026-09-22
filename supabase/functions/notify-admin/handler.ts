@@ -230,7 +230,13 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         query = query.eq("scope", "user").eq("key_id", keyRow.id).eq("endpoint", targetEndpoint);
       } else if (content.audience === "admin") {
         if (!key) return json({ error: "Chave ausente." }, 400);
-        if (messageId) {
+        // Comprovante: valide a key e envie ao ADM sem depender de uma segunda consulta à thread.
+        if (kind === "receipt") {
+          const { data: validKey, error: keyError } = await admin.rpc("_valid_access_key", { _key: key });
+          if (keyError) return json({ error: "Falha ao validar chave." }, 500);
+          if (validKey !== true) return json({ error: "Chave inválida." }, 403);
+          query = query.eq("scope", "admin");
+        } else if (messageId) {
           const { data: keyRow, error: keyError } = await admin.from("access_keys")
             .select("id").eq("key", key.toUpperCase()).eq("revoked", false).maybeSingle();
           if (keyError) return json({ error: "Falha ao validar atendimento." }, 500);
