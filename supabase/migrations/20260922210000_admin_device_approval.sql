@@ -35,6 +35,9 @@ BEGIN
   LIMIT 1;
 
   IF current_status = 'approved' THEN
+    IF NOT EXISTS (SELECT 1 FROM atlas_private.admin_access_sessions WHERE is_primary = true AND approval_status = 'approved') THEN
+      UPDATE atlas_private.admin_access_sessions SET is_primary = true, approved_at = coalesce(approved_at, now()) WHERE device_id = _device_id;
+    END IF;
     RETURN 'approved';
   END IF;
 
@@ -138,12 +141,13 @@ BEGIN
   FROM atlas_private.admin_access_sessions
   WHERE device_id = _device_id
   ORDER BY last_seen_at DESC NULLS LAST LIMIT 1
-  ON CONFLICT (session_id) DO UPDATE SET
-    device_id = excluded.device_id,
+  ON CONFLICT (device_id) WHERE device_id IS NOT NULL DO UPDATE SET
+    session_id = excluded.session_id,
     device_label = excluded.device_label,
     approval_status = excluded.approval_status,
     is_primary = excluded.is_primary,
-    last_seen_at = CASE WHEN current_session.ended_at IS NULL THEN now() ELSE current_session.last_seen_at END;
+    last_seen_at = now(),
+    ended_at = NULL;
   RETURN true;
 END;
 $$;
