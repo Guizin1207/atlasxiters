@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Trash2 } from "lucide-react";
+import { CheckCircle2, Trash2, ShieldCheck, ShieldX, Clock3 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdmin } from "@/lib/admin-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   clearAdminDevices,
   currentAdminDeviceId,
-  currentAdminSessionId,
+  setAdminDeviceApproval,
   listAdminSessions,
   type AdminAccessSession,
 } from "@/lib/admin-devices";
@@ -20,6 +20,7 @@ export function AdminDevicesCard() {
   const [cleaning, setCleaning] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [keysByDevice, setKeysByDevice] = useState<Record<string, string[]>>({});
+  const [processingDevice, setProcessingDevice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!password) return;
@@ -89,6 +90,20 @@ export function AdminDevicesCard() {
   };
 
   const date = (value: string) => new Date(value).toLocaleString("pt-BR");
+
+  const approveDevice = async (deviceId: string, approved: boolean) => {
+    if (!password || processingDevice) return;
+    setProcessingDevice(deviceId);
+    try {
+      await setAdminDeviceApproval(password, deviceId, approved);
+      toast.success(approved ? "Dispositivo ADM aprovado." : "Dispositivo ADM bloqueado.");
+      setRefresh((value) => value + 1);
+    } catch {
+      toast.error("Somente o ADM principal pode aprovar ou bloquear dispositivos.");
+    } finally {
+      setProcessingDevice(null);
+    }
+  };
   const currentDeviceId = currentAdminDeviceId();
 
   return (
@@ -98,7 +113,7 @@ export function AdminDevicesCard() {
           <p className="vip-eyebrow">Segurança</p>
           <h2 className="font-bold">Dispositivos ADM</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Cada aparelho aparece uma única vez. Novos acessos apenas atualizam o registro.
+            O primeiro dispositivo aprovado é o ADM principal. Novos dispositivos precisam de aprovação antes de entrar.
           </p>
         </div>
         <div className="flex gap-2">
@@ -130,6 +145,7 @@ export function AdminDevicesCard() {
                 <th className="p-2">Primeiro registro</th>
                 <th className="p-2">Última atividade</th>
                 <th className="p-2">Status</th>
+                <th className="p-2">Aprovação</th>
               </tr>
             </thead>
             <tbody>
@@ -167,6 +183,47 @@ export function AdminDevicesCard() {
                         "Saiu do ADM"
                       ) : (
                         "Sem atividade recente"
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {row.is_primary ? (
+                        <span className="inline-flex items-center gap-1 text-sm font-semibold">
+                          <ShieldCheck className="w-4 h-4" /> ADM principal
+                        </span>
+                      ) : row.approval_status === "pending" ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-status-warning">
+                            <Clock3 className="w-4 h-4" /> Aguardando
+                          </span>
+                          {!isCurrent && (
+                            <>
+                              <Button size="sm" onClick={() => void approveDevice(row.device_id!, true)} disabled={processingDevice === row.device_id}>
+                                <ShieldCheck className="w-4 h-4 mr-1" /> Aprovar
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => void approveDevice(row.device_id!, false)} disabled={processingDevice === row.device_id}>
+                                <ShieldX className="w-4 h-4 mr-1" /> Desaprovar
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      ) : row.approval_status === "denied" ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-status-danger"><ShieldX className="w-4 h-4" /> Bloqueado</span>
+                          {!isCurrent && (
+                            <Button size="sm" variant="outline" onClick={() => void approveDevice(row.device_id!, true)} disabled={processingDevice === row.device_id}>
+                              Aprovar
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-status-success"><ShieldCheck className="w-4 h-4" /> Aprovado</span>
+                          {!isCurrent && (
+                            <Button size="sm" variant="destructive" onClick={() => void approveDevice(row.device_id!, false)} disabled={processingDevice === row.device_id}>
+                              Desaprovar
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
