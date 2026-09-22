@@ -70,7 +70,7 @@ export function MaintenanceCard() {
   const saveVersion = async () => {
     if (!password || versionSaving) return;
     const normalized = version.trim();
-    if (!/^\\d+\\.\\d+$/.test(normalized)) {
+    if (!/^\d+\.\d+$/.test(normalized)) {
       toast.error("Versão inválida", { description: "Use o formato X.Y, por exemplo 1.2 ou 2.0." });
       return;
     }
