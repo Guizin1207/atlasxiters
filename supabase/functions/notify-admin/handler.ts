@@ -167,9 +167,6 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           return json({ sent: 0, code: "EVENT_ALREADY_PROCESSED" });
         }
 
-        const { data: marked, error: markError } = await admin.rpc("mark_security_event_notified", { _event_id: eventId });
-        if (markError || marked !== true) return json({ sent: 0, code: "EVENT_ALREADY_PROCESSED" });
-
         query = query.eq("scope", "admin");
         const { data: securitySubs, error: securitySubsError } = await query;
         if (securitySubsError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar aparelhos do ADM." }, 500);
@@ -203,6 +200,9 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           }
         }
         if (stale.length) await admin.from("push_subscriptions").delete().in("id", stale);
+        if (sent > 0) {
+          await admin.rpc("mark_security_event_notified", { _event_id: eventId });
+        }
         return json({ sent, failed, removed: stale.length });
       }
 
