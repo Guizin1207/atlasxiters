@@ -33,6 +33,12 @@ const CONTENT: Record<
     audience: "admin",
     url: "/admin",
   },
+  security: {
+    title: "Atlas VIP — Alerta de segurança",
+    body: "Foi detectada uma tentativa suspeita de acesso ou uso de key.",
+    audience: "admin",
+    url: "/admin",
+  },
   receipt: {
     title: "Atlas VIP — Novo comprovante",
     body: "Um cliente enviou um comprovante.",
@@ -135,6 +141,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       const customBody = typeof raw?.body === "string" ? raw.body.trim().slice(0, 180) : "";
       const customTitle = typeof raw?.title === "string" ? raw.title.trim().slice(0, 80) : "";
       const cronToken = typeof raw?.cronToken === "string" ? raw.cronToken : "";
+      const eventId = typeof raw?.eventId === "string" ? raw.eventId.trim() : "";
 
       if (kind === "notification_test") {
         if (!password) return json({ error: "Senha ausente." }, 400);
@@ -148,7 +155,58 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         }
 
         const testContent = CONTENT[testKind];
-        let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
+        if (kind === "security") {
+        if (!eventId) return json({ error: "Evento de segurança ausente." }, 400);
+        const { data: event, error: eventError } = await admin
+          .from("security_events")
+          .select("id, reason, key_hint, device, notified_at, created_at")
+          .eq("id", eventId)
+          .maybeSingle();
+        if (eventError) return json({ code: "DATABASE_ERROR", error: "Falha ao validar alerta." }, 500);
+        if (!event || event.notified_at || new Date(event.created_at).getTime() < Date.now() - 24 * 60 * 60 * 1000) {
+          return json({ sent: 0, code: "EVENT_ALREADY_PROCESSED" });
+        }
+
+        const { data: marked, error: markError } = await admin.rpc("mark_security_event_notified", { _event_id: eventId });
+        if (markError || marked !== true) return json({ sent: 0, code: "EVENT_ALREADY_PROCESSED" });
+
+        query = query.eq("scope", "admin");
+        const { data: securitySubs, error: securitySubsError } = await query;
+        if (securitySubsError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar aparelhos do ADM." }, 500);
+        if (!securitySubs?.length) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
+
+        const reasonLabel: Record<string, string> = {
+          invalid_key: "key inválida/aleatória",
+          revoked_key: "key revogada",
+          device_mismatch: "key usada em outro dispositivo",
+        };
+        const payload = JSON.stringify({
+          title: "Atlas VIP — 🚨 Alerta de segurança",
+          body: `Detectado: ${reasonLabel[event.reason] ?? "tentativa suspeita"}${event.key_hint ? ` • final da key: ****${event.key_hint}` : ""}.`,
+          url: "/admin",
+          tag: `atlas-security-${eventId}`,
+        });
+        const stale: string[] = [];
+        let sent = 0;
+        let failed = 0;
+        for (const sub of securitySubs) {
+          try {
+            await sendNotification(
+              { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              payload,
+            );
+            sent++;
+          } catch (err) {
+            failed++;
+            const status = (err as { statusCode?: number })?.statusCode;
+            if (status === 404 || status === 410) stale.push(sub.id);
+          }
+        }
+        if (stale.length) await admin.from("push_subscriptions").delete().in("id", stale);
+        return json({ sent, failed, removed: stale.length });
+      }
+
+      let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
         if (testContent.audience === "admin") {
           query = query.eq("scope", "admin");
         } else {
