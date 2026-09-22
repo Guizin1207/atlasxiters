@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Bell, BellOff, Loader2, Trash2, Smartphone, Info, Megaphone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
 import { adminPushState, enableAdminPush, disableAdminPush, testAdminPush, testNotification, notifyUsers, type PushStatus, type PushSubscriptionRecord, type NotificationTestKind } from "@/lib/push";
@@ -30,6 +31,16 @@ export function PushNotificationsCard() {
   const [testKind, setTestKind] = useState<NotificationTestKind | null>(null);
   const [broadcastTitle, setBroadcastTitle] = useState("Atualização disponível");
   const [broadcastBody, setBroadcastBody] = useState("O Atlas VIP foi atualizado. Feche e abra o app novamente para usar a versão mais nova.");
+  const [broadcastType, setBroadcastType] = useState("updated");
+
+  const BROADCAST_PRESETS: Record<string, { title: string; body: string }> = {
+    before_update: { title: "Atlas VIP — Atualização programada", body: "O Atlas VIP será atualizado em breve. Salve seu progresso e aguarde o aviso de conclusão." },
+    updated: { title: "Atlas VIP — Atualização concluída", body: "O Atlas VIP foi atualizado. Feche e abra o app novamente para carregar a versão mais nova." },
+    maintenance: { title: "Atlas VIP — Manutenção", body: "O Atlas VIP está passando por manutenção. Tente novamente em alguns instantes." },
+    maintenance_end: { title: "Atlas VIP — Manutenção concluída", body: "A manutenção foi concluída e o Atlas VIP já está disponível normalmente." },
+    bug: { title: "Atlas VIP — Instabilidade", body: "Identificamos uma instabilidade no aplicativo. Nossa equipe já está verificando o problema." },
+    bug_fixed: { title: "Atlas VIP — Problema corrigido", body: "O problema identificado foi corrigido. Feche e abra o app novamente para atualizar." },
+  };
 
   const load = useCallback(async () => {
     if (!password) { setLoading(false); return; }
@@ -136,7 +147,7 @@ export function PushNotificationsCard() {
   const announceUpdate = async () => {
     if (!password || busy) return;
     setBusy(true);
-    const pushResult = await notifyUsers(password, "update", { body: broadcastBody.trim() || undefined });
+    const pushResult = await notifyUsers(password, "notice", { title: broadcastTitle.trim() || undefined, body: broadcastBody.trim() || undefined });
     const { error } = await supabase.rpc("admin_send_message", {
       _password: password,
       _title: broadcastTitle.trim() || "Atualização disponível",
@@ -237,9 +248,32 @@ export function PushNotificationsCard() {
 
       <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
         <div>
-          <p className="vip-eyebrow">Broadcast</p>
-          <p className="text-xs text-muted-foreground">Edite o título e a mensagem antes de enviar o aviso para os usuários.</p>
+          <p className="vip-eyebrow">Manutenção / Broadcast</p>
+          <p className="text-xs text-muted-foreground">Escolha o tipo de aviso e edite o texto antes de enviar para todos os usuários.</p>
         </div>
+        <Select
+          value={broadcastType}
+          onValueChange={(value) => {
+            setBroadcastType(value);
+            const preset = BROADCAST_PRESETS[value];
+            if (preset) {
+              setBroadcastTitle(preset.title);
+              setBroadcastBody(preset.body);
+            }
+          }}
+        >
+          <SelectTrigger className="h-10 rounded-xl border-white/10 bg-background">
+            <SelectValue placeholder="Tipo de aviso" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="before_update">Avisar que vai atualizar</SelectItem>
+            <SelectItem value="updated">Avisar que atualizou</SelectItem>
+            <SelectItem value="maintenance">Avisar que entrou em manutenção</SelectItem>
+            <SelectItem value="maintenance_end">Avisar que saiu da manutenção</SelectItem>
+            <SelectItem value="bug">Avisar sobre bug / instabilidade</SelectItem>
+            <SelectItem value="bug_fixed">Avisar que o bug foi corrigido</SelectItem>
+          </SelectContent>
+        </Select>
         <input
           value={broadcastTitle}
           onChange={(e) => setBroadcastTitle(e.target.value)}
@@ -264,7 +298,7 @@ export function PushNotificationsCard() {
         className="w-full rounded-2xl border-white/10 bg-white/5"
       >
         <Megaphone className="mr-2 h-4 w-4" />
-        Avisar atualização do app ({userSubs.length})
+        Enviar aviso para todos ({userSubs.length})
       </Button>
 
       <div className="flex items-start gap-2 rounded-2xl bg-white/5 border border-white/10 p-3">
