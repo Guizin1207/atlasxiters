@@ -1,7 +1,7 @@
 -- Permite ao ADM ajustar manualmente a versão exibida no painel.
 create or replace function public.admin_set_app_version(
-  _version text,
-  _password text
+  _password text,
+  _version text
 ) returns text
 language plpgsql
 security definer
