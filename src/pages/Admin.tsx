@@ -123,7 +123,7 @@ export default function AdminPage() {
         if (adminDrawerOpen && deltaX < 0) setAdminDrawerOpen(false);
       }}
     >
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-5 sm:pt-7 space-y-5">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 pt-5 sm:pt-7 space-y-5">
         <header className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <Button
@@ -253,7 +253,7 @@ export default function AdminPage() {
             <div className="space-y-5">
               <div>
                 <p className="vip-eyebrow">Atlas Control</p>
-                <h2 className="text-xl font-bold">Sobre o aplicativo</h2>
+                <h2 className="text-2xl font-bold">Sobre o aplicativo</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                 </p>
               </div>
