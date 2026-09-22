@@ -12,6 +12,10 @@ declare
 begin
   perform public._require_admin(_password);
 
+  if not coalesce((public.get_maintenance()).enabled, false) then
+    raise exception 'Ative o modo de manutenção antes de alterar a versão.';
+  end if;
+
   normalized := btrim(coalesce(_version, ''));
   if normalized !~ '^([0-9]+)\\.([0-9]+)$' then
     raise exception 'Versão inválida. Use o formato X.Y, por exemplo 1.2 ou 2.0.';
