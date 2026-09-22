@@ -69,6 +69,10 @@ export function MaintenanceCard() {
 
   const saveVersion = async () => {
     if (!password || versionSaving) return;
+    if (!enabled) {
+      toast.error("Ative o modo de manutenção antes de alterar a versão.");
+      return;
+    }
     const normalized = version.trim().replace(",", ".");
     if (!/^\d+\.\d+$/.test(normalized)) {
       toast.error("Versão inválida", { description: "Use o formato X.Y, por exemplo 1.2 ou 2.0." });
