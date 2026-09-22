@@ -120,20 +120,23 @@ const getButtonSize = () => {
   const getFfTips = (message: string) => {
   const text = message.toLowerCase();
   const tips: string[] = [];
-  if (/(fps|travando|lag|lento|leve|pesado)/.test(text)) {
+  const wantsGraphics = /(gr[aá]fico|grafico|qualidade|resolu[cç][aã]o|visual)/.test(text);
+  const wantsPerformance = /(fps|travando|lag|lento|leve|pesado|desempenho|otim)/.test(text);
+  const wantsSensi = /(dpi|touch|toque|sens[ií]|capa|headshot|bot[aã]o)/.test(text);
+  if (wantsPerformance) {
     tips.push("⚡ DESEMPENHO");
     tips.push("• FPS: use o FPS mais alto que o aparelho mantém estável.");
     tips.push("• Gráficos: comece em Suave/Padrão para priorizar estabilidade.");
     tips.push("• Sombras e efeitos: reduza se houver queda de FPS.");
     tips.push("• Feche apps em segundo plano e evite jogar com o aparelho muito quente.");
   }
-  if (/(gr[aá]fico|grafico|qualidade|resolu[cç][aã]o)/.test(text)) {
+  if (wantsGraphics) {
     tips.push("🎮 GRÁFICOS");
     tips.push("• Qualidade baixa/Suave → mais estabilidade e resposta ao toque.");
     tips.push("• Qualidade alta → visual melhor, mas pode aumentar o uso de GPU.");
     tips.push("• Teste uma mudança por vez para saber o que realmente melhorou.");
   }
-  if (/(dpi|touch|toque|sens[ií]|capa|headshot|bot[aã]o)/.test(text)) {
+  if (wantsSensi) {
     tips.push("🎯 CONTROLE");
     tips.push("• DPI, sensibilidade e tamanho do botão devem ser ajustados juntos.");
     tips.push("• Se a mira passa da cabeça, reduza Geral/Ponto Vermelho aos poucos.");
