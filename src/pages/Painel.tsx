@@ -108,10 +108,11 @@ const getButtonSize = () => {
     return Math.max(48, Math.min(62, size));
   };
 
-  const getSensiConfig = () => {
-    const model = sensiDevice.toLowerCase();
+  const getSensiConfig = (deviceOverride?: string) => {
+    const model = deviceOverride ?? sensiDevice;
+    const profile = getDeviceProfile(model);
     const base = sensiStyle === "3 dedos" ? 98 : sensiStyle === "4 dedos" ? 92 : 95;
-    const deviceAdjust = model.includes("iphone") ? 2 : model.includes("redmi") || model.includes("poco") ? 0 : model.includes("samsung") || model.includes("galaxy") ? -1 : -2;
+    const deviceAdjust = profile.offset;
     const dpiAdjust = sensiDpi === "Alto" ? 3 : sensiDpi === "Baixo" ? -3 : 0;
     const variation = sensiSeed % 3;
     return { geral: Math.min(200, base + deviceAdjust + dpiAdjust + variation), red: Math.min(200, base - 2 + deviceAdjust + dpiAdjust + variation), x2: Math.min(200, base - 8 + deviceAdjust + dpiAdjust), x4: Math.min(200, base - 14 + deviceAdjust + dpiAdjust), awm: Math.min(200, base - 22 + deviceAdjust), olhadinha: Math.min(200, base - 10 + variation), button: getButtonSize() };
@@ -162,8 +163,9 @@ const sendSensiMessage = () => {
     setSensiInput("");
     setSensiTyping(true);
     window.setTimeout(() => {
-      const cfg = getSensiConfig();
+      const cfg = getSensiConfig(nextDevice);
       const model = nextDevice || "seu aparelho";
+      const ffTips = getFfTips(text);
       const detailedReply = [
         "🎯  CONFIGURAÇÃO ATLAS AI",
         "",
