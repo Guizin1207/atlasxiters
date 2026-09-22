@@ -67,6 +67,9 @@ export default function PainelPage() {
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
   const [recentLoading, setRecentLoading] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number; mode: "open" | "close" } | null>(null);
+  const drawerProgressRef = useRef(0);
+  const drawerDeltaRef = useRef(0);
+  const sidebarWidthRef = useRef(1);
   const [supportOpen, setSupportOpen] = useState(
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
