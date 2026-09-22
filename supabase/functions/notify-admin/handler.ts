@@ -399,6 +399,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           } catch (err) {
             failed++;
             const status = (err as { statusCode?: number })?.statusCode;
+            console.error("push falhou", kind, status, (err as { body?: string })?.body ?? (err as Error)?.message);
             if (status === 404 || status === 410) stale.push(sub.id);
             if (status === 401 || status === 403) credentialsRejected = true;
           }

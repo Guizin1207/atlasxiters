@@ -16,10 +16,21 @@ else {
   catch { pushConfigCode = "PUSH_CONFIG_INVALID"; }
 }
 
-Deno.serve(createNotifyHandler({
+const handler = createNotifyHandler({
   admin: createClient(url, serviceRole, { auth: { persistSession: false } }),
   pushConfigured: !pushConfigCode,
   pushConfigCode,
   corsHeaders,
   sendNotification: (target, payload) => webpush.sendNotification(target, payload, { TTL: 300, timeout: 8_000 }),
-}));
+});
+
+Deno.serve(async (req) => {
+  const requestUrl = new URL(req.url);
+  // A chave pública VAPID não é segredo: o app precisa dela para cadastrar aparelhos.
+  if (req.method === "GET" && requestUrl.searchParams.get("info") === "vapid") {
+    return new Response(JSON.stringify({ publicKey: publicKey ?? null, version: 6 }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  return handler(req);
+});
