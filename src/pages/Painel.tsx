@@ -3,7 +3,7 @@
  * Layout mobile-first com tabs Funções / Ajustes / Perfil.
  */
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
-import { Gift, Flame, Coins, Plus, MessageCircle, X, Loader2 } from "lucide-react";
+import { Gift, Flame, Coins, Plus, MessageCircle, X, Loader2, Sparkles, Crosshair, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useKey } from "@/lib/key-context";
@@ -58,6 +58,31 @@ export default function PainelPage() {
   const maintenance = useMaintenance();
   const { expired } = useKeyValidity();
   const [tab, setTab] = useState<AtlasTab>("funcoes");
+  const [sensiDevice, setSensiDevice] = useState("Android");
+  const [sensiStyle, setSensiStyle] = useState("Capa");
+  const [sensiDpi, setSensiDpi] = useState("Padrão");
+  const [sensiGenerated, setSensiGenerated] = useState(false);
+  const [sensiSeed, setSensiSeed] = useState(0);
+
+  const sensiValues = (() => {
+    const base = sensiStyle === "Capa" ? 94 : sensiStyle === "Rush" ? 98 : 88;
+    const deviceAdjust = sensiDevice === "iPhone" ? 1 : sensiDevice === "Android" ? 0 : -2;
+    const dpiAdjust = sensiDpi === "Alto" ? 3 : sensiDpi === "Baixo" ? -3 : 0;
+    const variation = sensiSeed % 3;
+    return {
+      geral: Math.min(200, base + deviceAdjust + dpiAdjust + variation),
+      red: Math.min(200, base - 2 + deviceAdjust + dpiAdjust + variation),
+      x2: Math.min(200, base - 8 + deviceAdjust + dpiAdjust),
+      x4: Math.min(200, base - 14 + deviceAdjust + dpiAdjust),
+      awm: Math.min(200, base - 22 + deviceAdjust),
+      olhadinha: Math.min(200, base - 10 + variation),
+    };
+  })();
+
+  const generateSensi = () => {
+    setSensiSeed((value) => value + 1);
+    setSensiGenerated(true);
+  };
   const [rewardOpen, setRewardOpen] = useState(false);
   const [rewardBusy, setRewardBusy] = useState(false);
   const [dailyReward, setDailyReward] = useState<any>(null);
@@ -286,6 +311,67 @@ export default function PainelPage() {
           {tab === "ajustes" && <AjustesTab />}
           {tab === "perfil" && <PerfilTab />}
           {tab === "recompensa" && <RecompensaTab />}
+          {tab === "sensi" && (
+            <section className="space-y-4">
+              <div className="glass-strong rounded-3xl p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="vip-eyebrow">Atlas Intelligence</p>
+                    <h2 className="text-xl font-black">IA de Sensi</h2>
+                  </div>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">Monte uma sensibilidade personalizada para seu estilo de jogo.</p>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <label className="text-xs text-muted-foreground">Dispositivo
+                    <select value={sensiDevice} onChange={(e) => setSensiDevice(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
+                      <option>Android</option><option>iPhone</option><option>PC/Emulador</option>
+                    </select>
+                  </label>
+                  <label className="text-xs text-muted-foreground">Estilo
+                    <select value={sensiStyle} onChange={(e) => setSensiStyle(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
+                      <option>Capa</option><option>Rush</option><option>Equilibrado</option>
+                    </select>
+                  </label>
+                  <label className="text-xs text-muted-foreground col-span-2">DPI
+                    <select value={sensiDpi} onChange={(e) => setSensiDpi(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
+                      <option>Padrão</option><option>Baixo</option><option>Alto</option>
+                    </select>
+                  </label>
+                </div>
+
+                <Button onClick={generateSensi} className="mt-4 h-11 w-full rounded-xl gap-2">
+                  <Sparkles className="h-4 w-4" /> Gerar sensibilidade
+                </Button>
+              </div>
+
+              {sensiGenerated && (
+                <div className="glass-strong rounded-3xl p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="vip-eyebrow">Configuração gerada</p>
+                      <h3 className="text-lg font-black">Sua Sensi</h3>
+                    </div>
+                    <Crosshair className="h-5 w-5" />
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Geral</span><strong className="block text-2xl">{sensiValues.geral}</strong></div>
+                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Ponto Vermelho</span><strong className="block text-2xl">{sensiValues.red}</strong></div>
+                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">2x</span><strong className="block text-2xl">{sensiValues.x2}</strong></div>
+                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">4x</span><strong className="block text-2xl">{sensiValues.x4}</strong></div>
+                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">AWM</span><strong className="block text-2xl">{sensiValues.awm}</strong></div>
+                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Olhadinha</span><strong className="block text-2xl">{sensiValues.olhadinha}</strong></div>
+                  </div>
+                  <Button variant="outline" onClick={generateSensi} className="mt-4 h-10 w-full rounded-xl gap-2"><RotateCcw className="h-4 w-4" /> Ajustar e gerar outra</Button>
+                </div>
+              )}
+            </section>}
 
         </div>
       </div>
