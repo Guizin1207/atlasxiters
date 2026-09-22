@@ -28,6 +28,8 @@ export function PushNotificationsCard() {
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testKey, setTestKey] = useState("");
   const [testKind, setTestKind] = useState<NotificationTestKind | null>(null);
+  const [broadcastTitle, setBroadcastTitle] = useState("Atualização disponível");
+  const [broadcastBody, setBroadcastBody] = useState("O Atlas VIP foi atualizado. Feche e abra o app novamente para usar a versão mais nova.");
 
   const load = useCallback(async () => {
     if (!password) { setLoading(false); return; }
@@ -134,11 +136,11 @@ export function PushNotificationsCard() {
   const announceUpdate = async () => {
     if (!password || busy) return;
     setBusy(true);
-    const pushResult = await notifyUsers(password, "update");
+    const pushResult = await notifyUsers(password, "update", { body: broadcastBody.trim() || undefined });
     const { error } = await supabase.rpc("admin_send_message", {
       _password: password,
-      _title: "Atualização disponível",
-      _body: "O Atlas VIP foi atualizado. Feche e abra o app novamente para usar a versão mais nova.",
+      _title: broadcastTitle.trim() || "Atualização disponível",
+      _body: broadcastBody.trim() || "O Atlas VIP foi atualizado. Feche e abra o app novamente para usar a versão mais nova.",
       _target_key_id: null,
     });
     setBusy(false);
@@ -231,6 +233,28 @@ export function PushNotificationsCard() {
             {testKind === "expired" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />} Key expirada
           </Button>
         </div>
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div>
+          <p className="vip-eyebrow">Broadcast</p>
+          <p className="text-xs text-muted-foreground">Edite o título e a mensagem antes de enviar o aviso para os usuários.</p>
+        </div>
+        <input
+          value={broadcastTitle}
+          onChange={(e) => setBroadcastTitle(e.target.value)}
+          maxLength={80}
+          placeholder="Título do broadcast"
+          className="h-10 w-full rounded-xl border border-white/10 bg-background px-3 text-sm outline-none focus:border-primary/50"
+        />
+        <textarea
+          value={broadcastBody}
+          onChange={(e) => setBroadcastBody(e.target.value)}
+          maxLength={500}
+          rows={4}
+          placeholder="Texto do broadcast"
+          className="w-full resize-none rounded-xl border border-white/10 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+        />
       </div>
 
       <Button
