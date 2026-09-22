@@ -40,3 +40,36 @@ begin
   return to_jsonb(rec);
 end;
 $$;
+
+-- Inclui a marca de edição no histórico do ADM.
+create or replace function public.admin_list_messages(_password text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  result jsonb;
+begin
+  perform public._require_admin(_password);
+
+  select coalesce(jsonb_agg(row_to_json(t) order by t.created_at desc), '[]'::jsonb)
+  into result
+  from (
+    select
+      m.id,
+      m.title,
+      m.body,
+      m.target_key_id,
+      m.created_at,
+      m.edited_at,
+      ak.key as target_key,
+      (select count(*) from public.message_reads r where r.message_id = m.id) as read_count
+    from public.admin_messages m
+    left join public.access_keys ak on ak.id = m.target_key_id
+  ) t;
+
+  return result;
+end;
+$$;
