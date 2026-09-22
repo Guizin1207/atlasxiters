@@ -58,31 +58,58 @@ export default function PainelPage() {
   const maintenance = useMaintenance();
   const { expired } = useKeyValidity();
   const [tab, setTab] = useState<AtlasTab>("funcoes");
-  const [sensiDevice, setSensiDevice] = useState("Android");
-  const [sensiStyle, setSensiStyle] = useState("Capa");
+  const [sensiDevice, setSensiDevice] = useState("");
+  const [sensiStyle, setSensiStyle] = useState("2 dedos");
   const [sensiDpi, setSensiDpi] = useState("Padrão");
-  const [sensiGenerated, setSensiGenerated] = useState(false);
+  const [sensiMessages, setSensiMessages] = useState<{ role: "ai" | "user"; text: string }[]>([
+    { role: "ai", text: "Fala! Eu sou a Atlas IA. Me conta qual é seu celular, quantos dedos você usa e se quer mais capa, precisão ou uma sensi rápida. Eu monto a configuração completa, incluindo o tamanho do botão de tiro." }
+  ]);
+  const [sensiInput, setSensiInput] = useState("");
+  const [sensiTyping, setSensiTyping] = useState(false);
   const [sensiSeed, setSensiSeed] = useState(0);
 
-  const sensiValues = (() => {
-    const base = sensiStyle === "Capa" ? 94 : sensiStyle === "Rush" ? 98 : 88;
-    const deviceAdjust = sensiDevice === "iPhone" ? 1 : sensiDevice === "Android" ? 0 : -2;
+  const getButtonSize = () => {
+    const model = sensiDevice.toLowerCase();
+    let size = model.includes("iphone") ? 58 : model.includes("redmi") || model.includes("poco") ? 53 : model.includes("samsung") || model.includes("galaxy") ? 55 : model.includes("motorola") || model.includes("moto") ? 54 : model.includes("realme") ? 53 : 55;
+    if (sensiStyle === "3 dedos") size -= 2;
+    if (sensiStyle === "4 dedos") size -= 3;
+    if (sensiDpi === "Alto") size -= 1;
+    if (sensiDpi === "Baixo") size += 1;
+    return Math.max(48, Math.min(62, size));
+  };
+
+  const getSensiConfig = () => {
+    const model = sensiDevice.toLowerCase();
+    const base = sensiStyle === "3 dedos" ? 98 : sensiStyle === "4 dedos" ? 92 : 95;
+    const deviceAdjust = model.includes("iphone") ? 2 : model.includes("redmi") || model.includes("poco") ? 0 : model.includes("samsung") || model.includes("galaxy") ? -1 : -2;
     const dpiAdjust = sensiDpi === "Alto" ? 3 : sensiDpi === "Baixo" ? -3 : 0;
     const variation = sensiSeed % 3;
-    return {
-      geral: Math.min(200, base + deviceAdjust + dpiAdjust + variation),
-      red: Math.min(200, base - 2 + deviceAdjust + dpiAdjust + variation),
-      x2: Math.min(200, base - 8 + deviceAdjust + dpiAdjust),
-      x4: Math.min(200, base - 14 + deviceAdjust + dpiAdjust),
-      awm: Math.min(200, base - 22 + deviceAdjust),
-      olhadinha: Math.min(200, base - 10 + variation),
-    };
-  })();
-
-  const generateSensi = () => {
-    setSensiSeed((value) => value + 1);
-    setSensiGenerated(true);
+    return { geral: Math.min(200, base + deviceAdjust + dpiAdjust + variation), red: Math.min(200, base - 2 + deviceAdjust + dpiAdjust + variation), x2: Math.min(200, base - 8 + deviceAdjust + dpiAdjust), x4: Math.min(200, base - 14 + deviceAdjust + dpiAdjust), awm: Math.min(200, base - 22 + deviceAdjust), olhadinha: Math.min(200, base - 10 + variation), button: getButtonSize() };
   };
+
+  const sendSensiMessage = () => {
+    const text = sensiInput.trim();
+    if (!text || sensiTyping) return;
+    const match = text.match(/(?:iphone|galaxy|samsung|redmi|poco|motorola|moto|realme|infinix|tecno)[^,.!?]*/i);
+    const nextDevice = sensiDevice || (match?.[0] ?? "");
+    setSensiDevice(nextDevice);
+    setSensiMessages((messages) => [...messages, { role: "user", text }]);
+    setSensiInput("");
+    setSensiTyping(true);
+    window.setTimeout(() => {
+      const cfg = getSensiConfig();
+      const model = nextDevice || "seu aparelho";
+      setSensiMessages((messages) => [...messages, { role: "ai", text: "Entendi. Para " + model + ", vou começar com Geral " + cfg.geral + ", Ponto Vermelho " + cfg.red + ", 2x " + cfg.x2 + ", 4x " + cfg.x4 + ", AWM " + cfg.awm + ", Olhadinha " + cfg.olhadinha + " e botão de tiro em " + cfg.button + "%. Se sentir a mira passando da cabeça, reduza de 2 em 2; se estiver pesada, aumente de 2 em 2." }]);
+      setSensiSeed((value) => value + 1);
+      setSensiTyping(false);
+    }, 650);
+  };
+
+  const resetSensiChat = () => {
+    setSensiMessages([{ role: "ai", text: "Beleza, vamos começar de novo. Qual é o seu celular e como você joga: 2, 3 ou 4 dedos? Também pode me dizer se prefere capa, precisão ou sensi rápida." }]);
+    setSensiInput(""); setSensiDevice(""); setSensiSeed(0);
+  };
+
   const [rewardOpen, setRewardOpen] = useState(false);
   const [rewardBusy, setRewardBusy] = useState(false);
   const [dailyReward, setDailyReward] = useState<any>(null);
@@ -312,96 +339,40 @@ export default function PainelPage() {
           {tab === "perfil" && <PerfilTab />}
           {tab === "recompensa" && <RecompensaTab />}
           {tab === "sensi" && (
-            <section className="space-y-4">
+            <section className="space-y-3">
               <div className="glass-strong overflow-hidden rounded-3xl">
-                <div className="border-b border-white/10 bg-white/[0.03] p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
-                      <Sparkles className="h-5 w-5" />
+                <div className="border-b border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10"><Sparkles className="h-5 w-5" /></div>
+                      <div><p className="vip-eyebrow">Atlas AI</p><h2 className="text-lg font-black">IA de Sensi 2026</h2></div>
                     </div>
-                    <div>
-                      <p className="vip-eyebrow">Atlas AI</p>
-                      <h2 className="text-xl font-black">IA de Sensi 2026</h2>
-                    </div>
+                    <button type="button" onClick={resetSensiChat} className="rounded-xl p-2 text-muted-foreground hover:bg-white/10" aria-label="Novo chat"><RotateCcw className="h-4 w-4" /></button>
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">Converse com a IA e receba uma configuração feita para o seu aparelho.</p>
                 </div>
-
-                <div className="space-y-3 p-4">
-                  <div className="rounded-2xl bg-white/5 p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">IA Atlas</p>
-                    <p className="mt-1 text-sm">Me diga seu celular e como você joga. Eu monto a sensi e o tamanho do botão de tiro.</p>
-                  </div>
-
-                  <label className="block text-xs font-semibold text-muted-foreground">Modelo do aparelho
-                    <input value={sensiDevice} onChange={(e) => setSensiDevice(e.target.value)} placeholder="Ex.: iPhone 11, Galaxy A15, Redmi Note 13" className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground outline-none focus:border-white/30" />
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="text-xs font-semibold text-muted-foreground">Dedos
-                      <select value={sensiStyle} onChange={(e) => setSensiStyle(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
-                        <option value="Capa">2 dedos</option><option value="Rush">3 dedos</option><option value="Equilibrado">4 dedos</option>
-                      </select>
-                    </label>
-                    <label className="text-xs font-semibold text-muted-foreground">DPI
-                      <select value={sensiDpi} onChange={(e) => setSensiDpi(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
-                        <option>Padrão</option><option>Baixo</option><option>Alto</option>
-                      </select>
-                    </label>
-                  </div>
-
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {["Quero capa","Quero precisão","Quero sensi rápida"].map((q) => (
-                      <button key={q} type="button" onClick={() => setSensiGenerated(false)} className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10">{q}</button>
+                <div className="min-h-[430px] space-y-3 p-3">
+                  {sensiMessages.map((message, index) => (
+                    <div key={index} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                      <div className={message.role === "user" ? "max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "max-w-[88%] rounded-2xl rounded-bl-md bg-white/5 px-3.5 py-2.5 text-sm"}>{message.text}</div>
+                    </div>
+                  ))}
+                  {sensiTyping && <div className="flex justify-start"><div className="rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-xs text-muted-foreground">Atlas IA está pensando...</div></div>}
+                </div>
+                <div className="border-t border-white/10 bg-white/[0.02] p-3">
+                  <div className="mb-2 flex gap-2 overflow-x-auto">
+                    {["Meu celular é iPhone", "Uso 3 dedos", "Quero mais capa", "Quero precisão"].map((quick) => (
+                      <button key={quick} type="button" onClick={() => setSensiInput(quick)} className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] hover:bg-white/10">{quick}</button>
                     ))}
                   </div>
-
-                  <Button onClick={generateSensi} className="h-11 w-full rounded-xl gap-2">
-                    <Sparkles className="h-4 w-4" /> Analisar meu aparelho
-                  </Button>
+                  <div className="flex items-end gap-2">
+                    <textarea value={sensiInput} onChange={(e) => setSensiInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendSensiMessage(); } }} placeholder="Digite sua mensagem..." rows={1} className="min-h-11 flex-1 resize-none rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-foreground outline-none focus:border-white/30" />
+                    <Button onClick={sendSensiMessage} disabled={!sensiInput.trim() || sensiTyping} className="h-11 w-11 shrink-0 rounded-2xl p-0"><MessageCircle className="h-4 w-4" /></Button>
+                  </div>
+                  <p className="mt-2 text-center text-[10px] text-muted-foreground">Converse normalmente. A IA monta a base de sensibilidade e botão de tiro a partir do que você informar.</p>
                 </div>
               </div>
-
-              {sensiGenerated && (
-                <div className="glass-strong rounded-3xl p-5">
-                  <div className="flex items-center justify-between">
-                    <div><p className="vip-eyebrow">Resposta da IA</p><h3 className="text-lg font-black">Configuração personalizada</h3></div>
-                    <Crosshair className="h-5 w-5" />
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    {[
-                      ["Geral", sensiValues.geral], ["Ponto Vermelho", sensiValues.red],
-                      ["Mira 2x", sensiValues.x2], ["Mira 4x", sensiValues.x4],
-                      ["Mira AWM", sensiValues.awm], ["Olhadinha", sensiValues.olhadinha]
-                    ].map(([name, value]) => (
-                      <div key={name} className="rounded-2xl bg-white/5 p-3">
-                        <span className="text-xs text-muted-foreground">{name}</span>
-                        <strong className="block text-2xl">{value}</strong>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">Botão de tiro</span>
-                      <strong className="text-xl">{sensiDevice.toLowerCase().includes("iphone") ? 58 : sensiDevice.toLowerCase().includes("redmi") ? 52 : 55}%</strong>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full bg-white/10">
-                      <div className="h-2 rounded-full bg-white/60" style={{ width: sensiDevice.toLowerCase().includes("iphone") ? "58%" : sensiDevice.toLowerCase().includes("redmi") ? "52%" : "55%" }} />
-                    </div>
-                    <p className="mt-2 text-[11px] text-muted-foreground">Ajuste inicial para o botão principal de tiro. O HUD do Free Fire permite alterar tamanho e transparência. </p>
-                  </div>
-
-                  <div className="mt-3 rounded-2xl bg-white/5 p-3 text-xs text-muted-foreground">
-                    Base 2026: a configuração é um ponto de partida e deve ser refinada no treinamento conforme tela, FPS, toque e seu arrasto.
-                  </div>
-
-                  <Button variant="outline" onClick={generateSensi} className="mt-4 h-10 w-full rounded-xl gap-2"><RotateCcw className="h-4 w-4" /> Gerar outra configuração</Button>
-                </div>
-              )}
             </section>
-          )}
+          )}}
 
         </div>
       </div>
