@@ -127,6 +127,13 @@
       "when": 1790017089308,
       "tag": "0017_admin_reward_management",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790067010509,
+      "tag": "0018_lock_internal_helpers_and_receipt_storage",
+      "breakpoints": true
     }
   ]
 }
