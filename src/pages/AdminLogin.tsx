@@ -22,8 +22,11 @@ export default function AdminLoginPage() {
     try {
       if (await signIn(value.trim())) navigate("/admin", { replace: true });
       else setError("Chave ou senha de ADM inválida. Confira e tente novamente.");
-    } catch {
-      setError("Não foi possível confirmar seu acesso ADM agora. Confira sua conexão e tente novamente. Isso não significa que sua chave está errada.");
+    } catch (err) {
+      const code = err instanceof Error ? err.message : "";
+      if (code === "admin_access_pending") setError("Este dispositivo está aguardando aprovação do ADM principal.");
+      else if (code === "admin_access_denied") setError("Este dispositivo foi bloqueado pelo ADM principal.");
+      else setError("Não foi possível confirmar seu acesso ADM agora. Confira sua conexão e tente novamente.");
     } finally { setBusy(false); }
   };
 
