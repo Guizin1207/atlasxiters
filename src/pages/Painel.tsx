@@ -68,7 +68,23 @@ export default function PainelPage() {
   const [sensiTyping, setSensiTyping] = useState(false);
   const [sensiSeed, setSensiSeed] = useState(0);
 
-  const getButtonSize = () => {
+  const getDeviceProfile = (deviceOverride?: string) => {
+  const model = (deviceOverride ?? sensiDevice).toLowerCase();
+  if (model.includes("iphone 15") || model.includes("iphone 14") || model.includes("iphone 13")) return { button: 57, offset: 2, label: "iPhone recente" };
+  if (model.includes("iphone 11") || model.includes("iphone 12")) return { button: 59, offset: 1, label: "iPhone" };
+  if (model.includes("iphone")) return { button: 58, offset: 0, label: "iPhone" };
+  if (model.includes("s23") || model.includes("s24") || model.includes("s25")) return { button: 54, offset: 2, label: "Galaxy S recente" };
+  if (model.includes("s20") || model.includes("s21") || model.includes("s22")) return { button: 55, offset: 1, label: "Galaxy S" };
+  if (model.includes("galaxy") || model.includes("samsung")) return { button: 56, offset: 0, label: "Samsung Galaxy" };
+  if (model.includes("redmi note") || model.includes("poco")) return { button: 53, offset: 1, label: "Redmi/Poco" };
+  if (model.includes("redmi")) return { button: 54, offset: 0, label: "Redmi" };
+  if (model.includes("motorola") || model.includes("moto")) return { button: 55, offset: -1, label: "Motorola" };
+  if (model.includes("realme")) return { button: 54, offset: 0, label: "Realme" };
+  if (model.includes("infinix") || model.includes("tecno")) return { button: 55, offset: 0, label: "Android" };
+  return { button: 55, offset: 0, label: "Android" };
+};
+
+const getButtonSize = () => {
     const model = sensiDevice.toLowerCase();
     let size = model.includes("iphone") ? 58 : model.includes("redmi") || model.includes("poco") ? 53 : model.includes("samsung") || model.includes("galaxy") ? 55 : model.includes("motorola") || model.includes("moto") ? 54 : model.includes("realme") ? 53 : 55;
     if (sensiStyle === "3 dedos") size -= 2;
@@ -102,7 +118,8 @@ export default function PainelPage() {
       const detailedReply = [
         "🎯  CONFIGURAÇÃO ATLAS AI",
         "",
-        "📱 Aparelho: " + model,
+        "📱 APARELHO\n" + model,
+      "🎯 PERFIL DE POSIÇÃO\n" + getDeviceProfile(nextDevice).label,
         "🎮 Estilo: " + sensiStyle,
         "⚙️ DPI: " + sensiDpi,
         "",
@@ -381,7 +398,7 @@ export default function PainelPage() {
                     <button type="button" onClick={resetSensiChat} className="rounded-xl p-2 text-muted-foreground hover:bg-white/10" aria-label="Novo chat"><RotateCcw className="h-4 w-4" /></button>
                   </div>
                 </div>
-                <div className="min-h-[430px] space-y-3 p-3">
+                <div className="min-h-[430px] space-y-3 p-3 [zoom:1]">
                   {sensiMessages.map((message, index) => (
                     <div key={index} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
                       <div className={message.role === "user" ? "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm leading-6 text-primary-foreground" : "max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-sm leading-6"}>{message.text}</div>
