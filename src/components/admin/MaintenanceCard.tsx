@@ -15,19 +15,19 @@ export function MaintenanceCard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [noticeType, setNoticeType] = useState("before_update");
-  const [noticeTitle, setNoticeTitle] = useState("Atlas VIP — Atualização programada");
-  const [noticeBody, setNoticeBody] = useState("O Atlas VIP será atualizado em breve. Salve seu progresso e aguarde o aviso de conclusão.");
+  const [noticeTitle, setNoticeTitle] = useState("🔔 Atualização programada");
+  const [noticeBody, setNoticeBody] = useState("O Atlas VIP será atualizado em breve. Salve seu progresso e aguarde a liberação da nova versão.");
   const [sendingNotice, setSendingNotice] = useState(false);
   const [version, setVersion] = useState("1.0");
   const [versionSaving, setVersionSaving] = useState(false);
 
   const NOTICE_PRESETS: Record<string, { title: string; body: string }> = {
-    before_update: { title: "Atlas VIP — Atualização programada", body: "O Atlas VIP será atualizado em breve. Salve seu progresso e aguarde o aviso de conclusão." },
-    updated: { title: "Atlas VIP — Atualização concluída", body: "O Atlas VIP foi atualizado. Feche e abra o app novamente para carregar a versão mais nova." },
-    maintenance: { title: "Atlas VIP — Manutenção", body: "O Atlas VIP está passando por manutenção. Tente novamente em alguns instantes." },
-    maintenance_end: { title: "Atlas VIP — Manutenção concluída", body: "A manutenção foi concluída e o Atlas VIP já está disponível normalmente." },
-    bug: { title: "Atlas VIP — Instabilidade", body: "Identificamos uma instabilidade no aplicativo. Nossa equipe já está verificando o problema." },
-    bug_fixed: { title: "Atlas VIP — Problema corrigido", body: "O problema identificado foi corrigido. Feche e abra o app novamente para atualizar." },
+    before_update: { title: "🔔 Atualização programada", body: "O Atlas VIP será atualizado em breve. Salve seu progresso e aguarde a liberação da nova versão." },
+    updated: { title: "🚀 Atualização concluída", body: "A atualização do Atlas VIP foi concluída com sucesso. Feche e abra o app para carregar a nova versão." },
+    maintenance: { title: "🛠️ Manutenção iniciada", body: "O Atlas VIP entrou em manutenção para receber melhorias. O acesso será liberado assim que o serviço estiver pronto." },
+    maintenance_end: { title: "✅ Manutenção concluída", body: "A manutenção foi finalizada. O Atlas VIP está disponível novamente e você já pode acessar normalmente." },
+    bug: { title: "⚠️ Instabilidade identificada", body: "Identificamos uma instabilidade no Atlas VIP. Nossa equipe já está trabalhando para normalizar o serviço." },
+    bug_fixed: { title: "🔧 Problema corrigido", body: "A instabilidade identificada foi corrigida. Feche e abra o app novamente para garantir que tudo esteja atualizado." },
   };
 
   const sendNotice = async () => {
@@ -173,8 +173,8 @@ export function MaintenanceCard() {
 
       <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
         <div>
-          <p className="vip-eyebrow mb-1">Avisos de manutenção</p>
-          <p className="text-xs text-muted-foreground">Escolha um aviso, edite o texto e envie para todos os usuários.</p>
+          <p className="vip-eyebrow mb-1">📢 Avisos de manutenção</p>
+          <p className="text-xs text-muted-foreground">Selecione um modelo, personalize o texto e envie o aviso para todos os usuários.</p>
         </div>
         <select
           value={noticeType}
@@ -186,18 +186,18 @@ export function MaintenanceCard() {
           }}
           className="h-10 w-full rounded-xl border border-white/10 bg-background px-3 text-sm outline-none"
         >
-          <option value="before_update">Avisar que vai atualizar</option>
-          <option value="updated">Avisar que atualizou</option>
-          <option value="maintenance">Avisar que entrou em manutenção</option>
-          <option value="maintenance_end">Avisar que saiu da manutenção</option>
-          <option value="bug">Avisar sobre bug / instabilidade</option>
-          <option value="bug_fixed">Avisar que o bug foi corrigido</option>
+          <option value="before_update">🔔 Atualização programada</option>
+          <option value="updated">🚀 Atualização concluída</option>
+          <option value="maintenance">🛠️ Manutenção iniciada</option>
+          <option value="maintenance_end">✅ Manutenção concluída</option>
+          <option value="bug">⚠️ Instabilidade identificada</option>
+          <option value="bug_fixed">🔧 Problema corrigido</option>
         </select>
         <input
           value={noticeTitle}
           onChange={(e) => setNoticeTitle(e.target.value)}
           maxLength={80}
-          placeholder="Título do aviso"
+          placeholder="Título do aviso (ex.: 🔔 Atualização programada)"
           className="h-10 w-full rounded-xl border border-white/10 bg-background px-3 text-sm outline-none focus:border-primary/50"
         />
         <Textarea
@@ -205,7 +205,7 @@ export function MaintenanceCard() {
           onChange={(e) => setNoticeBody(e.target.value)}
           maxLength={500}
           rows={4}
-          placeholder="Texto do aviso"
+          placeholder="Escreva a mensagem que os usuários receberão..."
           className="rounded-xl bg-background border-white/10 resize-none"
         />
         <Button onClick={sendNotice} disabled={sendingNotice || saving} variant="outline" className="w-full rounded-2xl">
