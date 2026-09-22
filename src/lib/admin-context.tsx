@@ -13,7 +13,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeout } from "@/lib/request-timeout";
-import { beginAdminSession, endAdminSession, touchAdminSession, checkAdminDeviceAccess } from "@/lib/admin-devices";
+import { beginAdminSession, endAdminSession, touchAdminSession, checkAdminDeviceAccess, recoverAdminPrimaryDevice } from "@/lib/admin-devices";
 
 const SESSION_KEY = "atlas_vip_admin_pwd";
 
@@ -23,6 +23,7 @@ type Ctx = {
   deviceRegistryError: boolean;
   recognize: (pwd: string) => Promise<boolean>;
   signIn: (pwd: string) => Promise<boolean>;
+  recoverAccess: (pwd: string) => Promise<boolean>;
   signOut: () => void;
 };
 
@@ -104,6 +105,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, [validatedCredential]);
 
+  const recoverAccess = useCallback(async (pwd: string) => {
+    const candidate = await validatedCredential(pwd);
+    if (!candidate) return false;
+    await recoverAdminPrimaryDevice(candidate);
+    sessionStorage.setItem(SESSION_KEY, candidate);
+    beginAdminSession();
+    setPassword(candidate);
+    return true;
+  }, [validatedCredential]);
+
   const signOut = useCallback(() => {
     if (password) void endAdminSession(password).catch(() => {});
     sessionStorage.removeItem(SESSION_KEY);
@@ -111,8 +122,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   }, [password]);
 
   const value = useMemo<Ctx>(
-    () => ({ password, loading, deviceRegistryError, recognize, signIn, signOut }),
-    [password, loading, deviceRegistryError, recognize, signIn, signOut]
+    () => ({ password, loading, deviceRegistryError, recognize, signIn, recoverAccess, signOut }),
+    [password, loading, deviceRegistryError, recognize, signIn, recoverAccess, signOut]
   );
 
   return (
