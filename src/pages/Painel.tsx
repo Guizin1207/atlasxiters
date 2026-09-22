@@ -372,7 +372,7 @@ export default function PainelPage() {
                 </div>
               </div>
             </section>
-          )}}
+          )}
 
         </div>
       </div>
