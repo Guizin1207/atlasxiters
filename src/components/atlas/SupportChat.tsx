@@ -161,7 +161,7 @@ export function SupportChat({ accessKey }: { accessKey?: string | null }) {
               <div key={m.id} className={`flex ${m.sender_type === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.sender_type === "user" ? "bg-white text-black" : "glass"}`}>
                   {isReceipt ? (
-                    <ReceiptImage refValue={receiptRef(m.body)} caption="Comprovante enviado" />
+                    <ReceiptImage refValue={receiptRef(m.body)} caption="Comprovante enviado" auth={{ key: supportKey }} />
                   ) : m.body}
                 </div>
               </div>
