@@ -464,6 +464,33 @@ export async function retireOtherUserPush(nextKey: string) {
 
 export type UserNotifyKind = "reply" | "notice" | "update" | "maintenance" | "maintenance_end";
 
+export type NotificationTestKind =
+  | "user_test"
+  | "message"
+  | "receipt"
+  | "reply"
+  | "notice"
+  | "update"
+  | "maintenance"
+  | "maintenance_end"
+  | "reward_ready"
+  | "coins_added"
+  | "daily_reward"
+  | "expired";
+
+export async function testNotification(
+  password: string,
+  notificationKind: NotificationTestKind,
+  targetKey?: string,
+) {
+  return deliver({
+    kind: "notification_test",
+    password,
+    notificationKind,
+    targetKey: targetKey?.trim().toUpperCase(),
+  });
+}
+
 /**
  * Dispara notificação para os aparelhos dos usuários (somente ADM autenticado).
  * `targetKey` limita o envio a um único cliente. Nunca lança erro.
