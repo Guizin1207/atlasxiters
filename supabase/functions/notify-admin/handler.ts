@@ -260,7 +260,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         if (keysError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar keys." }, 500);
 
         const { data: rewards, error: rewardsError } = await admin
-          .from("atlas_rewards")
+          .from("key_rewards")
           .select("key_id, last_daily_claim");
         if (rewardsError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar recompensas." }, 500);
 
