@@ -1,10 +1,11 @@
-import { LayoutGrid, SlidersHorizontal, UserRound, Gift } from "lucide-react";
+import { LayoutGrid, SlidersHorizontal, UserRound, Gift, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AtlasTab = "funcoes" | "ajustes" | "perfil" | "recompensa";
+export type AtlasTab = "funcoes" | "ajustes" | "perfil" | "recompensa" | "sensi";
 
 const TABS: { id: AtlasTab; label: string; icon: typeof LayoutGrid }[] = [
   { id: "funcoes", label: "Funções", icon: LayoutGrid },
+  { id: "sensi", label: "IA Sensi", icon: Sparkles },
   { id: "ajustes", label: "Ajustes", icon: SlidersHorizontal },
   { id: "recompensa", label: "Recompensa", icon: Gift },
   { id: "perfil", label: "Perfil", icon: UserRound },
@@ -12,7 +13,7 @@ const TABS: { id: AtlasTab; label: string; icon: typeof LayoutGrid }[] = [
 
 export function TabsNav({ value, onChange }: { value: AtlasTab; onChange: (t: AtlasTab) => void }) {
   return (
-    <nav role="tablist" aria-label="Seções do painel" className="glass-strong rounded-2xl p-1 grid grid-cols-4 gap-1">
+    <nav role="tablist" aria-label="Seções do painel" className="glass-strong rounded-2xl p-1 grid grid-cols-5 gap-1">
       {TABS.map((t) => {
         const active = value === t.id;
         const Icon = t.icon;
