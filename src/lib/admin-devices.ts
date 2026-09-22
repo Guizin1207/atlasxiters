@@ -41,6 +41,17 @@ export async function checkAdminDeviceAccess(password: string): Promise<"approve
   return data as "approved" | "pending" | "denied";
 }
 
+export async function recoverAdminPrimaryDevice(password: string): Promise<boolean> {
+  const deviceId = getOrCreateDeviceId();
+  const { data, error } = await withTimeout(supabase.rpc("admin_recover_primary_device", {
+    _password: password,
+    _device_id: deviceId,
+    _device_label: `${detectDevice()} · ${browserName(navigator.userAgent)}`,
+  }));
+  if (error || data !== true) throw new Error("admin_recovery_failed");
+  return true;
+}
+
 export async function setAdminDeviceApproval(password: string, deviceId: string, approved: boolean): Promise<boolean> {
   const currentDeviceId = getOrCreateDeviceId();
   const { data, error } = await withTimeout(supabase.rpc("admin_set_device_approval", {
