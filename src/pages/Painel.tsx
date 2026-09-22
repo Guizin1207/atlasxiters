@@ -313,59 +313,91 @@ export default function PainelPage() {
           {tab === "recompensa" && <RecompensaTab />}
           {tab === "sensi" && (
             <section className="space-y-4">
-              <div className="glass-strong rounded-3xl p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
-                    <Sparkles className="h-5 w-5" />
+              <div className="glass-strong overflow-hidden rounded-3xl">
+                <div className="border-b border-white/10 bg-white/[0.03] p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="vip-eyebrow">Atlas AI</p>
+                      <h2 className="text-xl font-black">IA de Sensi 2026</h2>
+                    </div>
                   </div>
-                  <div>
-                    <p className="vip-eyebrow">Atlas Intelligence</p>
-                    <h2 className="text-xl font-black">IA de Sensi</h2>
-                  </div>
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">Monte uma sensibilidade personalizada para seu estilo de jogo.</p>
-
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  <label className="text-xs text-muted-foreground">Dispositivo
-                    <select value={sensiDevice} onChange={(e) => setSensiDevice(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
-                      <option>Android</option><option>iPhone</option><option>PC/Emulador</option>
-                    </select>
-                  </label>
-                  <label className="text-xs text-muted-foreground">Estilo
-                    <select value={sensiStyle} onChange={(e) => setSensiStyle(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
-                      <option>Capa</option><option>Rush</option><option>Equilibrado</option>
-                    </select>
-                  </label>
-                  <label className="text-xs text-muted-foreground col-span-2">DPI
-                    <select value={sensiDpi} onChange={(e) => setSensiDpi(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
-                      <option>Padrão</option><option>Baixo</option><option>Alto</option>
-                    </select>
-                  </label>
+                  <p className="mt-2 text-sm text-muted-foreground">Converse com a IA e receba uma configuração feita para o seu aparelho.</p>
                 </div>
 
-                <Button onClick={generateSensi} className="mt-4 h-11 w-full rounded-xl gap-2">
-                  <Sparkles className="h-4 w-4" /> Gerar sensibilidade
-                </Button>
+                <div className="space-y-3 p-4">
+                  <div className="rounded-2xl bg-white/5 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">IA Atlas</p>
+                    <p className="mt-1 text-sm">Me diga seu celular e como você joga. Eu monto a sensi e o tamanho do botão de tiro.</p>
+                  </div>
+
+                  <label className="block text-xs font-semibold text-muted-foreground">Modelo do aparelho
+                    <input value={sensiDevice} onChange={(e) => setSensiDevice(e.target.value)} placeholder="Ex.: iPhone 11, Galaxy A15, Redmi Note 13" className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground outline-none focus:border-white/30" />
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-xs font-semibold text-muted-foreground">Dedos
+                      <select value={sensiStyle} onChange={(e) => setSensiStyle(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
+                        <option value="Capa">2 dedos</option><option value="Rush">3 dedos</option><option value="Equilibrado">4 dedos</option>
+                      </select>
+                    </label>
+                    <label className="text-xs font-semibold text-muted-foreground">DPI
+                      <select value={sensiDpi} onChange={(e) => setSensiDpi(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-foreground">
+                        <option>Padrão</option><option>Baixo</option><option>Alto</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {["Quero capa","Quero precisão","Quero sensi rápida"].map((q) => (
+                      <button key={q} type="button" onClick={() => setSensiGenerated(false)} className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10">{q}</button>
+                    ))}
+                  </div>
+
+                  <Button onClick={generateSensi} className="h-11 w-full rounded-xl gap-2">
+                    <Sparkles className="h-4 w-4" /> Analisar meu aparelho
+                  </Button>
+                </div>
               </div>
 
               {sensiGenerated && (
                 <div className="glass-strong rounded-3xl p-5">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="vip-eyebrow">Configuração gerada</p>
-                      <h3 className="text-lg font-black">Sua Sensi</h3>
-                    </div>
+                    <div><p className="vip-eyebrow">Resposta da IA</p><h3 className="text-lg font-black">Configuração personalizada</h3></div>
                     <Crosshair className="h-5 w-5" />
                   </div>
+
                   <div className="mt-4 grid grid-cols-2 gap-2">
-                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Geral</span><strong className="block text-2xl">{sensiValues.geral}</strong></div>
-                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Ponto Vermelho</span><strong className="block text-2xl">{sensiValues.red}</strong></div>
-                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">2x</span><strong className="block text-2xl">{sensiValues.x2}</strong></div>
-                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">4x</span><strong className="block text-2xl">{sensiValues.x4}</strong></div>
-                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">AWM</span><strong className="block text-2xl">{sensiValues.awm}</strong></div>
-                    <div className="rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Olhadinha</span><strong className="block text-2xl">{sensiValues.olhadinha}</strong></div>
+                    {[
+                      ["Geral", sensiValues.geral], ["Ponto Vermelho", sensiValues.red],
+                      ["Mira 2x", sensiValues.x2], ["Mira 4x", sensiValues.x4],
+                      ["Mira AWM", sensiValues.awm], ["Olhadinha", sensiValues.olhadinha]
+                    ].map(([name, value]) => (
+                      <div key={name} className="rounded-2xl bg-white/5 p-3">
+                        <span className="text-xs text-muted-foreground">{name}</span>
+                        <strong className="block text-2xl">{value}</strong>
+                      </div>
+                    ))}
                   </div>
-                  <Button variant="outline" onClick={generateSensi} className="mt-4 h-10 w-full rounded-xl gap-2"><RotateCcw className="h-4 w-4" /> Ajustar e gerar outra</Button>
+
+                  <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold">Botão de tiro</span>
+                      <strong className="text-xl">{sensiDevice.toLowerCase().includes("iphone") ? 58 : sensiDevice.toLowerCase().includes("redmi") ? 52 : 55}%</strong>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-white/10">
+                      <div className="h-2 rounded-full bg-white/60" style={{ width: sensiDevice.toLowerCase().includes("iphone") ? "58%" : sensiDevice.toLowerCase().includes("redmi") ? "52%" : "55%" }} />
+                    </div>
+                    <p className="mt-2 text-[11px] text-muted-foreground">Ajuste inicial para o botão principal de tiro. O HUD do Free Fire permite alterar tamanho e transparência. cite não permitido aqui</p>
+                  </div>
+
+                  <div className="mt-3 rounded-2xl bg-white/5 p-3 text-xs text-muted-foreground">
+                    Base 2026: a configuração é um ponto de partida e deve ser refinada no treinamento conforme tela, FPS, toque e seu arrasto.
+                  </div>
+
+                  <Button variant="outline" onClick={generateSensi} className="mt-4 h-10 w-full rounded-xl gap-2"><RotateCcw className="h-4 w-4" /> Gerar outra configuração</Button>
                 </div>
               )}
             </section>
