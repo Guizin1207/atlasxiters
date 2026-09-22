@@ -156,3 +156,25 @@ REVOKE ALL ON FUNCTION public.admin_check_device_access(text, uuid, text) FROM P
 REVOKE ALL ON FUNCTION public.admin_set_device_approval(text, uuid, uuid, boolean) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_check_device_access(text, uuid, text) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.admin_set_device_approval(text, uuid, uuid, boolean) TO anon, authenticated, service_role;
+
+-- Recuperação do ADM principal: se não existir um principal, o próximo dispositivo autenticado vira principal.
+-- O RPC abaixo também permite ao próprio dono da senha mestra recuperar o principal sem liberar outros dispositivos.
+CREATE OR REPLACE FUNCTION public.admin_recover_primary_device(
+  _password text, _device_id uuid, _device_label text
+) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
+BEGIN
+  PERFORM public._require_admin(_password);
+  IF _device_id IS NULL OR nullif(trim(_device_label), '') IS NULL THEN RAISE EXCEPTION 'invalid_device'; END IF;
+  IF EXISTS (SELECT 1 FROM atlas_private.admin_access_sessions WHERE is_primary = true AND approval_status = 'approved') THEN
+    RETURN EXISTS (SELECT 1 FROM atlas_private.admin_access_sessions WHERE device_id = _device_id AND is_primary = true AND approval_status = 'approved');
+  END IF;
+  INSERT INTO atlas_private.admin_access_sessions
+    (session_id, device_id, device_label, approval_status, is_primary, approved_at, last_seen_at)
+  VALUES (gen_random_uuid(), _device_id, left(trim(_device_label),120), 'approved', true, now(), now())
+  ON CONFLICT (device_id) WHERE device_id IS NOT NULL DO UPDATE SET
+    approval_status='approved', is_primary=true, approved_at=now(), last_seen_at=now(), ended_at=NULL;
+  RETURN true;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.admin_recover_primary_device(text, uuid, text) TO anon, authenticated, service_role;
