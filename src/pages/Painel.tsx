@@ -78,6 +78,8 @@ export default function PainelPage() {
   if (/\b(ip ?15|iphone ?15|15 pro|15 pro max|15\+|15 plus)\b/.test(model)) return { button: 57, offset: 2, label: "iPhone 15 / 15 Pro" };
   if (/\b(ip ?14|iphone ?14|14 pro|14 pro max|14\+|14 plus)\b/.test(model)) return { button: 57, offset: 2, label: "iPhone 14 / 14 Pro" };
   if (/\b(ip ?13|iphone ?13|13 pro|13 pro max|13 mini)\b/.test(model)) return { button: 58, offset: 2, label: "iPhone 13 / 13 Pro" };
+  if (/\b(ip ?xr|iphone ?xr|xr)\b/.test(model)) return { button: 59, offset: 1, label: "iPhone XR" };
+  if (/\b(ip ?xs|iphone ?xs|xs|xs max)\b/.test(model)) return { button: 59, offset: 1, label: "iPhone XS" };
   if (/\b(ip ?12|iphone ?12|12 pro|12 pro max|12 mini)\b/.test(model)) return { button: 59, offset: 1, label: "iPhone 12" };
   if (/\b(ip ?11|iphone ?11|11 pro|11 pro max)\b/.test(model)) return { button: 59, offset: 1, label: "iPhone 11" };
   if (model.includes("iphone")) return { button: 58, offset: 0, label: "iPhone" };
@@ -118,7 +120,7 @@ const getButtonSize = () => {
   const sendSensiMessage = () => {
     const text = sensiInput.trim();
     if (!text || sensiTyping) return;
-    const match = text.match(/(?:iphone|ip ?\d+|galaxy|samsung|s ?\d+|a ?\d+|redmi|rn ?\d+|note ?\d+|poco|motorola|moto ?[a-z]?\d+|g ?\d+|edge ?\d+|realme|infinix|tecno)[^,.!?]*/i);
+    const match = text.match(/(?:iphone|ip ?(?:\d+|xr|xs)|galaxy|samsung|s ?\d+|a ?\d+|redmi|rn ?\d+|note ?\d+|poco|motorola|moto ?[a-z]?\d+|g ?\d+|edge ?\d+|realme|infinix|tecno)[^,.!?]*/i);
     const nextDevice = sensiDevice || (match?.[0] ?? "");
     setSensiDevice(nextDevice);
     setSensiMessages((messages) => [...messages, { role: "user", text }]);
