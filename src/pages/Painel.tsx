@@ -100,13 +100,14 @@ export default function PainelPage() {
       const cfg = getSensiConfig();
       const model = nextDevice || "seu aparelho";
       const detailedReply = [
-        "🎯 CONFIGURAÇÃO ATLAS AI",
+        "🎯  CONFIGURAÇÃO ATLAS AI",
         "",
         "📱 Aparelho: " + model,
         "🎮 Estilo: " + sensiStyle,
         "⚙️ DPI: " + sensiDpi,
         "",
-        "🔥 SENSIBILIDADE",
+        "━━━━━━━━━━━━━━━━",
+        "🔥  SENSIBILIDADE",
         "• Geral: " + cfg.geral,
         "• Ponto Vermelho: " + cfg.red,
         "• Mira 2x: " + cfg.x2,
@@ -114,16 +115,20 @@ export default function PainelPage() {
         "• Mira AWM: " + cfg.awm,
         "• Olhadinha: " + cfg.olhadinha,
         "",
-        "🔘 BOTÃO DE TIRO",
+        "━━━━━━━━━━━━━━━━",
+        "🔘  BOTÃO DE TIRO",
         "• Tamanho recomendado: " + cfg.button + "%",
         "• Comece com esse tamanho e ajuste de 1–2% se necessário.",
         "",
-        "🧠 AJUSTE FINO",
+        "━━━━━━━━━━━━━━━━",
+        "🧠  AJUSTE FINO",
         "• Mira passando da cabeça → diminua Geral e Ponto Vermelho em 2.",
         "• Mira pesada → aumente Geral e Ponto Vermelho em 2.",
         "• Dificuldade para puxar capa → teste +2 no botão de tiro.",
         "",
-        "📌 Essa configuração é uma base inicial para o seu aparelho. O resultado pode variar conforme tela, toque, FPS e estilo de jogo."
+        "━━━━━━━━━━━━━━━━",
+        "📌  OBSERVAÇÃO",
+        "Essa configuração é uma base inicial. Ajuste aos poucos conforme tela, toque, FPS e seu estilo de jogo."
       ].join("\n");
       setSensiMessages((messages) => [...messages, { role: "ai", text: detailedReply }]);
       setSensiSeed((value) => value + 1);
@@ -379,7 +384,7 @@ export default function PainelPage() {
                 <div className="min-h-[430px] space-y-3 p-3">
                   {sensiMessages.map((message, index) => (
                     <div key={index} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                      <div className={message.role === "user" ? "max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "max-w-[88%] rounded-2xl rounded-bl-md bg-white/5 px-3.5 py-2.5 text-sm"}>{message.text}</div>
+                      <div className={message.role === "user" ? "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm leading-6 text-primary-foreground" : "max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-sm leading-6"}>{message.text}</div>
                     </div>
                   ))}
                   {sensiTyping && <div className="flex justify-start"><div className="rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-xs text-muted-foreground">Atlas IA está pensando...</div></div>}
