@@ -51,18 +51,29 @@ export default function LoginPage() {
   const adminEntry = Boolean(adminValue.trim()) && adminRecognition?.value === adminValue && adminRecognition.admin;
 
   useEffect(() => {
-    if (!adminValue.trim()) return;
+    const value = adminValue.trim() ? adminValue : password;
+    if (!value.trim()) return;
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       try {
-        const admin = await recognize(adminValue);
-        if (!cancelled) setAdminRecognition({ value: adminValue, admin });
+        const admin = await recognize(value);
+        if (!cancelled) setAdminRecognition({ value, admin });
       } catch {
-        if (!cancelled) setAdminRecognition({ value: adminValue, admin: false });
+        if (!cancelled) setAdminRecognition({ value, admin: false });
       }
     }, 300);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [adminValue, recognize]);
+  }, [adminValue, password, recognize]);
+
+  const enterAdmin = async (value: string) => {
+    const ok = await adminSignIn(value);
+    if (ok) {
+      navigate("/admin", { replace: true });
+      return true;
+    }
+    setError("Acesso administrativo não confirmado.");
+    return false;
+  };
 
   const handleAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +81,19 @@ export default function LoginPage() {
     setInfo(null);
     setSubmitting(true);
     try {
+      if (mode === "login" && password.trim()) {
+        const isAdminPassword = adminRecognition?.value === password
+          ? adminRecognition.admin
+          : await recognize(password).catch(() => false);
+        if (isAdminPassword) {
+          await enterAdmin(password);
+          return;
+        }
+      }
+      if (!email.trim()) {
+        setError("Informe seu e-mail.");
+        return;
+      }
       if (mode === "signup") {
         if (!name.trim()) {
           setError("Informe seu nome.");
@@ -124,10 +148,8 @@ export default function LoginPage() {
     e.preventDefault();
     if (!adminEntry || submitting) return;
     setSubmitting(true);
-    const ok = await adminSignIn(adminValue);
+    await enterAdmin(adminValue);
     setSubmitting(false);
-    if (ok) navigate("/admin", { replace: true });
-    else setError("Acesso administrativo não confirmado.");
   };
 
   const isExpired = error === ERROR_MESSAGES.expired_key || Boolean(expiredKey);
@@ -170,7 +192,7 @@ export default function LoginPage() {
               <span className="vip-eyebrow block mb-2">E-mail</span>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
+                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required={mode === "signup"} />
               </div>
             </label>
 
