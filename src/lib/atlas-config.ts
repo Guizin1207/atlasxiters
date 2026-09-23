@@ -28,7 +28,7 @@ export const PLANS: PlanInfo[] = [
   { id: "atlas", name: "VIP Atlas", days: 365, tagline: "VIP por 365 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Pacote premium completo", "Sensi Pro+", "IA completa+", "Atendimento VIP exclusivo"] },
 ];
 
-export const PLAN_ORDER: PlanId[] = ["demo", "basic", "pro", "master"];
+export const PLAN_ORDER: PlanId[] = ["demo", "basic", "pro", "bronze", "esmeralda", "rubi", "atlas", "master"];
 
 const PLAN_FALLBACK: PlanInfo = { id: "demo", name: "Demo", days: null, tagline: "Acesso demo ilimitado", price: "Grátis", priceNote: "acesso demo", perks: ["Acesso de demonstração", "Sem expiração"] };
 
