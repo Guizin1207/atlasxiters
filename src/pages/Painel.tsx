@@ -59,6 +59,7 @@ export default function PainelPage() {
   const maintenance = useMaintenance();
   const { expired } = useKeyValidity();
   const { settings: panelSettings } = usePanelSettings();
+  const [injectEnabled, setInjectEnabled] = useState(false);
   const [tab, setTab] = useState<AtlasTab>("funcoes");
   const [sensiDevice, setSensiDevice] = useState("");
   const [sensiStyle, setSensiStyle] = useState("2 dedos");
@@ -228,6 +229,11 @@ const sendSensiMessage = () => {
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
   const [userPushReady, setUserPushReady] = useState(false);
+
+  useEffect(() => {
+    const functions = panelSettings.functions ?? {};
+    setInjectEnabled(Object.values(functions).some(Boolean));
+  }, [panelSettings.functions]);
 
   useEffect(() => {
     if (!loading && keyData && !keyData.is_master) {
@@ -479,7 +485,7 @@ const sendSensiMessage = () => {
         </div>
       </div>
 
-      {tab === "funcoes" && <InjectButton enabled={Object.values(panelSettings.functions ?? {}).some(Boolean)} />}
+      {tab === "funcoes" && <InjectButton enabled={injectEnabled} />}
 
       {!drawerOpen && (
         <div
