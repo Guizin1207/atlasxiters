@@ -141,9 +141,10 @@ export default function LoginPage() {
             return;
           }
           const activated = await redeem(keyValue);
-          if (!activated.ok) {
+          if (activated.ok !== true) {
             setAccountStatus(null);
-            setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
+            const redeemError = activated.error;
+            setError(ERROR_MESSAGES[redeemError] ?? ERROR_MESSAGES.unknown_error);
             return;
           }
           setAccountStatus("validated");
