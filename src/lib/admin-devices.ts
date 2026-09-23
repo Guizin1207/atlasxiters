@@ -12,10 +12,6 @@ export type AdminAccessSession = {
   created_at: string;
   last_seen_at: string;
   ended_at: string | null;
-  approval_status?: "pending" | "approved" | "denied";
-  is_primary?: boolean;
-  approved_at?: string | null;
-  approved_by_device_id?: string | null;
 };
 
 export function currentAdminSessionId(): string | null {
@@ -28,28 +24,6 @@ export function currentAdminDeviceId(): string | null {
 
 export function ensureAdminDeviceId(): string {
   return getOrCreateDeviceId();
-}
-
-export async function checkAdminDeviceAccess(password: string): Promise<"approved" | "pending" | "denied"> {
-  const deviceId = getOrCreateDeviceId();
-  const { data, error } = await withTimeout(supabase.rpc("admin_check_device_access", {
-    _password: password,
-    _device_id: deviceId,
-    _device_label: `${detectDevice()} · ${browserName(navigator.userAgent)}`,
-  }));
-  if (error || !["approved", "pending", "denied"].includes(String(data))) throw new Error("admin_device_approval_unavailable");
-  return data as "approved" | "pending" | "denied";
-}
-
-export async function recoverAdminPrimaryDevice(password: string): Promise<boolean> {
-  const deviceId = getOrCreateDeviceId();
-  const { data, error } = await withTimeout(supabase.rpc("admin_recover_primary_device", {
-    _password: password,
-    _device_id: deviceId,
-    _device_label: `${detectDevice()} · ${browserName(navigator.userAgent)}`,
-  }));
-  if (error || data !== true) throw new Error("admin_recovery_failed");
-  return true;
 }
 
 export async function setAdminDeviceApproval(password: string, deviceId: string, approved: boolean): Promise<boolean> {
