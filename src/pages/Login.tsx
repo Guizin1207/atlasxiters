@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
 import { useAuth } from "@/lib/auth-context";
+import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { NotificationBell } from "@/components/atlas/NotificationBell";
 
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, expiredKey, redeem, loading: keyLoading } = useKey();
   const { session, profile, loading: authLoading, signIn, signUp, signInWithGoogle, signOut } = useAuth();
+  const { recognize, signIn: signInAdmin } = useAdmin();
   const [search] = useSearchParams();
   const switchingUser = search.get("trocar") === "1";
   const [mode, setMode] = useState<Mode>("login");
@@ -37,6 +39,7 @@ export default function LoginPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get("suporte") === "1");
+  const [adminRecognized, setAdminRecognized] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !keyLoading && session && keyData && !switchingUser) {
@@ -44,21 +47,38 @@ export default function LoginPage() {
     }
   }, [authLoading, keyLoading, session, keyData, switchingUser, navigate]);
 
+  const handleAdminPasswordCheck = async () => {
+    if (mode !== "login" || !password.trim() || submitting) return;
+    try {
+      const recognized = await recognize(password);
+      setAdminRecognized(recognized);
+      if (recognized) setError(null);
+    } catch {
+      setAdminRecognized(false);
+    }
+  };
+
+  const handleAdminLogin = async () => {
+    if (!password.trim() || submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const ok = await signInAdmin(password);
+      if (ok) navigate("/admin", { replace: true });
+      else setError("Senha mestra inválida.");
+    } catch {
+      setError("Não foi possível validar o acesso administrativo.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setInfo(null);
     setSubmitting(true);
     try {
-      if (mode === "login" && password.trim()) {
-        const isAdminPassword = adminRecognition?.value === password
-          ? adminRecognition.admin
-          : await recognize(password).catch(() => false);
-        if (isAdminPassword) {
-          await enterAdmin(password);
-          return;
-        }
-      }
       if (!email.trim()) {
         setError("Informe seu e-mail.");
         return;
@@ -161,9 +181,11 @@ export default function LoginPage() {
               <span className="vip-eyebrow block mb-2">Senha</span>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
+                <Input type="password" value={password} onChange={e => { setPassword(e.target.value); setAdminRecognized(false); setError(null); }} onBlur={() => void handleAdminPasswordCheck()} placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
               </div>
             </label>
+
+            {adminRecognized && mode === "login" && <Button type="button" onClick={handleAdminLogin} disabled={submitting} variant="ghost" className="w-full h-11 rounded-2xl border border-white/10 bg-white/5 font-semibold"><ShieldCheck className="w-4 h-4 mr-2" /> Entrar como ADM</Button>}
 
             {error && <p className="text-sm text-status-danger bg-status-danger/10 border border-status-danger/20 rounded-xl px-4 py-3">{error}</p>}
             {info && <p className="text-sm text-muted-foreground bg-white/5 border border-white/10 rounded-xl px-4 py-3">{info}</p>}
