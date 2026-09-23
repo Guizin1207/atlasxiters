@@ -6,7 +6,7 @@ import { gameLaunchUrl, type GameVariant } from "@/lib/game-launch";
 const FILE_READY_KEY = "atlas_injection_file_ready";
 const TEST_FILE_URL = "/atlas-test-files/atlas-config-test.txt";
 
-export function InjectButton() {
+export function InjectButton({ enabled = false }: { enabled?: boolean }) {
   const fallback = new URLSearchParams(window.location.search).get("game_fallback");
   const [open, setOpen] = useState(fallback === "normal" || fallback === "max");
   const [attempted, setAttempted] = useState(fallback === "normal" || fallback === "max");
@@ -95,8 +95,9 @@ export function InjectButton() {
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 px-5 w-full max-w-md">
       <button
         type="button"
+        disabled={!enabled}
         onClick={() => { setOpen(true); setLoaded(false); setLoadingGame(null); setProgress(0); }}
-        className="w-full h-16 rounded-2xl bg-white text-black font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 shadow-elevated active:scale-[0.98] transition-transform"
+        className="w-full h-16 rounded-2xl bg-white text-black font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 shadow-elevated active:scale-[0.98] transition-transform disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale"
       >
         <Rocket className="w-4 h-4" /> Injetar
       </button>
