@@ -46,13 +46,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
-      setSession(data.session);
-      if (data.session?.user) void loadProfile(data.session.user.id);
+      if (data.session?.user?.is_anonymous) {
+        await supabase.auth.signOut();
+        setSession(null);
+        setProfile(null);
+      } else {
+        setSession(data.session);
+        if (data.session?.user) void loadProfile(data.session.user.id);
+      }
       setLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
       if (!mounted) return;
+      if (next?.user?.is_anonymous) {
+        void supabase.auth.signOut();
+        setSession(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
       setSession(next);
       if (next?.user) {
         setTimeout(() => { if (mounted) void loadProfile(next.user.id); }, 0);
