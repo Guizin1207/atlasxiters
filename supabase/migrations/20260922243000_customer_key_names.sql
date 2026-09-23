@@ -5,8 +5,6 @@ alter table public.access_keys
 create index if not exists access_keys_customer_name_idx
   on public.access_keys (customer_name);
 
--- Gera a chave no padrão NOME-PLANO-ATLS.
--- Ex.: João da Silva + Pro -> JOAO-PRO-ATLS
 create or replace function public._customer_key_prefix(_name text)
 returns text
 language plpgsql
@@ -14,21 +12,35 @@ immutable
 as $function$
 declare
   n text;
+  first_name text;
+  last_name text;
+  candidate text;
 begin
   n := upper(trim(coalesce(_name, '')));
   n := translate(n,
     'ÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ',
     'AAAAAEEEEIIIIOOOOOUUUUC');
   n := regexp_replace(n, '[^A-Z0-9 ]+', '', 'g');
-  n := regexp_replace(n, '\\s+', ' ', 'g');
-  -- Usa primeiro nome + sobrenome quando houver.
-  -- Ex.: João da Silva -> JOAO-SILVA
-  if position(' ' in n) > 0 then
-    n := split_part(n, ' ', 1) || '-' || split_part(n, ' ', array_length(string_to_array(n, ' '), 1));
+  n := regexp_replace(n, '\s+', ' ', 'g');
+
+  if n = '' then return 'CLIENTE'; end if;
+
+  first_name := split_part(n, ' ', 1);
+  last_name := split_part(n, ' ', array_length(string_to_array(n, ' '), 1));
+
+  -- Primeiro tenta somente o primeiro nome. Se já existir uma key
+  -- com esse nome, usa o sobrenome para manter a key curta.
+  candidate := first_name;
+  if exists (
+    select 1 from public.access_keys
+    where upper(split_part(key, '-', 1)) = candidate
+  ) and last_name <> first_name then
+    candidate := last_name;
   end if;
-  n := left(regexp_replace(n, '[^A-Z0-9-]+', '', 'g'), 20);
-  if n = '' then n := 'CLIENTE'; end if;
-  return n;
+
+  candidate := left(regexp_replace(candidate, '[^A-Z0-9-]+', '', 'g'), 20);
+  if candidate = '' then candidate := 'CLIENTE'; end if;
+  return candidate;
 end;
 $function$;
 
