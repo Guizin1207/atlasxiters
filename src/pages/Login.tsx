@@ -34,7 +34,6 @@ export default function LoginPage() {
   const switchingUser = search.get("trocar") === "1";
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keyValue, setKeyValue] = useState("");
   const [keyVerified, setKeyVerified] = useState(false);
@@ -115,7 +114,8 @@ export default function LoginPage() {
           setError("A senha precisa ter pelo menos 6 caracteres.");
           return;
         }
-        const result = await signUp(name, email, password);
+        const internalEmail = `${keyValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")}@atlas.local`;
+        const result = await signUp(name, internalEmail, password);
         if (result.error) setError(result.error);
         else if (result.needsConfirmation) setInfo("Conta criada. Confirme seu e-mail para entrar e ativar sua key.");
         else {
