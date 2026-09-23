@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Gift, Coins, Flame, CheckCircle2, XCircle, Clock3, CalendarDays } from "lucide-react";
+import { Gift, Coins, Flame, CheckCircle2, XCircle, Clock3, CalendarDays, Gem, Crown, SlidersHorizontal, Bot, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
-import { rewardApi } from "@/lib/reward-api";
+import { rewardApi } from "@/lib/reward-api";\nimport { supabase } from "@/integrations/supabase/client";
 
 type RewardState = {
   coins: number;
