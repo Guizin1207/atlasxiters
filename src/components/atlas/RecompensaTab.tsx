@@ -3,7 +3,8 @@ import { Gift, Coins, Flame, CheckCircle2, XCircle, Clock3, CalendarDays, Gem, C
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
-import { rewardApi } from "@/lib/reward-api";\nimport { supabase } from "@/integrations/supabase/client";
+import { rewardApi } from "@/lib/reward-api";
+import { supabase } from "@/integrations/supabase/client";\nimport { supabase } from "@/integrations/supabase/client";
 
 type RewardState = {
   coins: number;
@@ -277,6 +278,89 @@ export function RecompensaTab() {
           Ao atingir 100 Atlas Coins, você pode adicionar 30 dias à validade da sua chave.
         </p>
       </div>
+
+      <RewardCatalog keyValue={keyData.key} coins={coins} />
     </section>
+  );
+}
+
+function RewardCatalog({ keyValue, coins }: { keyValue: string; coins: number }) {
+  const [busyReward, setBusyReward] = useState<string | null>(null);
+
+  const rewards = [
+    { id: "diamonds", title: "Diamantes FF", description: "Pacote de diamantes para Free Fire. Entrega confirmada pelo suporte.", cost: 500, icon: Gem },
+    { id: "bronze", title: "VIP Bronze", description: "30 dias de VIP + pacote Sensi Pro e benefícios especiais.", cost: 1000, icon: Crown },
+    { id: "esmeralda", title: "VIP Esmeralda", description: "90 dias de VIP + Sensi Pro avançada + IA mais completa.", cost: 2000, icon: Crown },
+    { id: "rubi", title: "VIP Rubi", description: "180 dias de VIP + configurações avançadas + IA completa.", cost: 3500, icon: Crown },
+    { id: "atlas", title: "VIP Atlas", description: "365 dias do pacote premium + Sensi Pro+ + IA completa+.", cost: 6000, icon: Crown },
+    { id: "sensi", title: "Pacote Sensi Pro", description: "Pacote de sensibilidade e configurações avançadas do Atlas.", cost: 750, icon: SlidersHorizontal },
+    { id: "ai", title: "Atlas IA Plus", description: "Acesso à modalidade de IA mais completa disponível no Atlas.", cost: 1500, icon: Bot },
+  ];
+
+  const request = async (reward: typeof rewards[number]) => {
+    if (busyReward || coins < reward.cost) return;
+    setBusyReward(reward.id);
+    const body = [
+      "SOLICITAÇÃO DE RESGATE",
+      `Prêmio: ${reward.title}`,
+      `Custo: ${reward.cost} Atlas Coins`,
+      `Saldo no momento: ${coins} Atlas Coins`,
+      `Key: ${keyValue}`,
+    ].join("\n");
+    const { error } = await supabase.rpc("support_send_message", { _key: keyValue, _body: body });
+    setBusyReward(null);
+    if (error) {
+      toast.error("Não foi possível enviar a solicitação ao suporte.");
+      return;
+    }
+    toast.success("Solicitação enviada ao suporte.");
+  };
+
+  return (
+    <div className="glass-strong rounded-2xl p-5 space-y-4">
+      <div>
+        <p className="vip-eyebrow mb-1">Loja de recompensas</p>
+        <h3 className="font-bold">Prêmios disponíveis para resgate</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Escolha um prêmio. O pedido é enviado ao suporte para conferência e entrega.
+        </p>
+      </div>
+
+      <div className="space-y-2.5">
+        {rewards.map((reward) => {
+          const Icon = reward.icon;
+          const canRedeem = coins >= reward.cost;
+          return (
+            <div key={reward.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-white/10 p-2.5 shrink-0">
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-sm">{reward.title}</p>
+                    <span className="text-xs font-bold whitespace-nowrap">{reward.cost} Coins</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{reward.description}</p>
+                  <Button
+                    onClick={() => void request(reward)}
+                    disabled={!canRedeem || busyReward !== null}
+                    variant="outline"
+                    className="mt-3 h-9 rounded-xl border-white/10 text-xs"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+                    {busyReward === reward.id ? "Enviando..." : canRedeem ? "Solicitar resgate" : `Faltam ${reward.cost - coins} Coins`}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="text-[10px] text-muted-foreground">
+        Os prêmios de Free Fire, VIP, Sensi Pro e IA são processados pelo suporte após a conferência do resgate.
+      </p>
+    </div>
   );
 }
