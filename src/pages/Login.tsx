@@ -119,19 +119,15 @@ export default function LoginPage() {
           return;
         }
         const internalEmail = `${keyValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")}@atlasvip.app`;
-        const result = await signUp(name, internalEmail, password);
+        const result = await signUp(name, internalEmail, password, keyValue);
         if (result.error) {
           const message = result.error.toLowerCase();
           setError(message.includes("weak") || message.includes("easy to guess")
             ? "Essa senha é considerada fraca ou fácil de adivinhar. Escolha uma senha mais forte, com letras, números e caracteres diferentes."
             : result.error);
         }
-        else if (result.needsConfirmation) setInfo("Conta criada. Aguarde um instante e tente entrar novamente.");
-        else {
-          const activated = await redeem(keyValue);
-          if (activated.ok) navigate("/painel", { replace: true });
-          else setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
-        }
+        else if (result.hasSession) navigate("/painel", { replace: true });
+        else setInfo("Conta criada. Agora entre usando seu usuário e senha. A key já ficou vinculada à sua conta.");
       } else {
         if (!name.trim()) {
           setError("Informe seu usuário.");
@@ -195,6 +191,11 @@ export default function LoginPage() {
             </div>
 
             {mode === "signup" && !keyVerified && (
+              <div className="space-y-3">
+              <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
+                <p className="vip-eyebrow">1. Key de cadastro</p>
+                <p className="text-sm text-muted-foreground mt-1">Use sua key uma única vez para liberar a criação da conta.</p>
+              </div>
               <label className="block">
                 <span className="vip-eyebrow block mb-2">Key de acesso</span>
                 <div className="relative">
@@ -202,13 +203,14 @@ export default function LoginPage() {
                   <Input value={keyValue} onChange={e => { setKeyValue(e.target.value); setKeyVerified(false); setError(null); }} placeholder="ATLS-XXXX-XXXX" autoCapitalize="characters" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10 font-mono tracking-wider" required />
                 </div>
               </label>
+              </div>
             )}
 
 {mode === "signup" && keyVerified && (
               <>
                 <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                  <p className="vip-eyebrow">Acesso liberado</p>
-                  <p className="font-semibold mt-1">Key validada com sucesso.</p>
+                  <p className="vip-eyebrow">2. Conta liberada</p>
+                  <p className="font-semibold mt-1">A key foi validada e será vinculada automaticamente a esta conta.</p>
                 </div>
                 <label className="block">
                   <span className="vip-eyebrow block mb-2">Usuário</span>
@@ -242,7 +244,7 @@ export default function LoginPage() {
             {info && <p className="text-sm text-muted-foreground bg-white/5 border border-white/10 rounded-xl px-4 py-3">{info}</p>}
 
             <Button disabled={submitting} className="w-full h-12 rounded-2xl bg-white text-black font-bold">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "login" ? "Entrar" : keyVerified ? "Criar conta e liberar painel" : "Validar key de acesso"}
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "login" ? "Entrar" : keyVerified ? "Criar minha conta" : "Validar key e continuar"}
             </Button>
 
           </form>
