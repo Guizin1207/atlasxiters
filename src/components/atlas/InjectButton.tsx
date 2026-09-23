@@ -1,7 +1,10 @@
 import { useRef, useState } from "react";
-import { Rocket, Loader2, CheckCircle2, FileText } from "lucide-react";
+import { Rocket, Loader2, CheckCircle2, FileText, Download, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { gameLaunchUrl, type GameVariant } from "@/lib/game-launch";
+
+const FILE_READY_KEY = "atlas_injection_file_ready";
+const TEST_FILE_URL = "/atlas-test-files/atlas-config-test.txt";
 
 /** O navegador lê somente o TXT escolhido pelo usuário e tenta abrir o jogo. */
 export function InjectButton() {
@@ -13,7 +16,13 @@ export function InjectButton() {
   const [fileText, setFileText] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [fileReady, setFileReady] = useState(() => localStorage.getItem(FILE_READY_KEY) === "1");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const markFileReady = () => {
+    localStorage.setItem(FILE_READY_KEY, "1");
+    setFileReady(true);
+  };
 
   const chooseGame = (game: GameVariant) => {
     setAttempted(true);
@@ -22,7 +31,6 @@ export function InjectButton() {
     setFileText("");
     setLoaded(false);
     setProgress(0);
-    requestAnimationFrame(() => fileInputRef.current?.click());
   };
 
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,6 +50,7 @@ export function InjectButton() {
       const text = await file.text();
       setSelectedFile(file);
       setFileText(text);
+      markFileReady();
 
       const href = loadingGame ? gameLaunchUrl(loadingGame, navigator.userAgent, window.location.href) : null;
       const started = performance.now();
@@ -69,6 +78,11 @@ export function InjectButton() {
     }
   };
 
+  const resetDownload = () => {
+    localStorage.removeItem(FILE_READY_KEY);
+    setFileReady(false);
+  };
+
   return <>
     <input
       ref={fileInputRef}
@@ -91,23 +105,58 @@ export function InjectButton() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="rounded-3xl max-w-sm">
         <DialogHeader>
-          <DialogTitle>{loadingGame ? "Escolha o arquivo" : "Escolha o jogo"}</DialogTitle>
+          <DialogTitle>
+            {loadingGame ? "Arquivo necessário" : "Escolha o jogo"}
+          </DialogTitle>
           <DialogDescription>
-            {loadingGame ? "Selecione o arquivo TXT do dispositivo para continuar." : "Toque na versão instalada para continuar."}
+            {loadingGame
+              ? "Baixe o arquivo de teste uma vez e depois selecione o TXT no seu dispositivo."
+              : "Toque na versão instalada para continuar."}
           </DialogDescription>
         </DialogHeader>
 
         {loadingGame ? (
-          <div className="py-8 text-center space-y-5">
+          <div className="py-5 text-center space-y-4">
             {!selectedFile && !loaded ? (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-28 rounded-2xl glass flex flex-col items-center justify-center gap-3 font-bold text-sm"
-              >
-                <FileText className="w-8 h-8" />
-                Selecionar arquivo .TXT
-              </button>
+              <>
+                {!fileReady ? (
+                  <a
+                    href={TEST_FILE_URL}
+                    download="atlas-config-test.txt"
+                    onClick={markFileReady}
+                    className="w-full h-16 rounded-2xl bg-white text-black flex items-center justify-center gap-3 font-bold"
+                  >
+                    <Download className="w-5 h-5" />
+                    Baixar arquivo necessário
+                  </a>
+                ) : (
+                  <div className="rounded-2xl glass p-4 text-left">
+                    <p className="font-bold">Arquivo já baixado</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      O Atlas registrou este dispositivo. Você não precisa baixar novamente.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-16 rounded-2xl glass flex items-center justify-center gap-3 font-bold text-sm"
+                >
+                  <FileText className="w-5 h-5" />
+                  {fileReady ? "Selecionar arquivo .TXT" : "Depois do download, selecionar TXT"}
+                </button>
+
+                {fileReady && (
+                  <button
+                    type="button"
+                    onClick={resetDownload}
+                    className="mx-auto text-xs text-muted-foreground flex items-center gap-1"
+                  >
+                    <RotateCcw className="w-3 h-3" /> Refazer download
+                  </button>
+                )}
+              </>
             ) : (
               <>
                 <div className="relative mx-auto w-20 h-20 rounded-full glass flex items-center justify-center">
@@ -123,6 +172,9 @@ export function InjectButton() {
                 <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                   <div className="h-full bg-white transition-[width] duration-100" style={{ width: `${loaded ? 100 : progress}%` }} />
                 </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {fileText.length.toLocaleString("pt-BR")} caracteres lidos
+                </p>
               </>
             )}
           </div>
