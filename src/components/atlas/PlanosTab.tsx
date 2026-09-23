@@ -116,14 +116,14 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
             <div
               key={p.id}
               className={cn(
-                "rounded-2xl p-5 space-y-4 border transition-colors",
+                "rounded-2xl p-4 space-y-3 border transition-colors",
                 isCurrent ? "glass-strong border-white/25" : "glass border-white/10"
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center">
-                    <Icon className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Icon className="w-3.5 h-3.5" />
                   </div>
                   <div>
                     <p className="font-bold leading-tight">{p.name}</p>
@@ -144,9 +144,9 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
                 )}
               </div>
 
-              <ul className="space-y-1.5">
+              <ul className="space-y-1">
                 {p.perks.map((perk) => (
-                  <li key={perk} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <li key={perk} className="flex items-center gap-2 text-[11px] text-muted-foreground">
                     <Check className="w-3.5 h-3.5 text-status-active shrink-0" />
                     {perk}
                   </li>
