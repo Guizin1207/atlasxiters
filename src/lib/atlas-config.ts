@@ -6,7 +6,7 @@ const SUPPORT_MESSAGE = "Olá! Preciso de ajuda com o Atlas VIP.";
 export const SUPPORT_URL = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(SUPPORT_MESSAGE)}`;
 export const SUPPORT_LABEL = "Falar com o suporte";
 
-export type PlanId = "demo" | "basic" | "pro" | "master";
+export type PlanId = "demo" | "basic" | "pro" | "master" | "bronze" | "esmeralda" | "rubi" | "atlas";
 
 export type PlanInfo = {
   id: PlanId;
@@ -19,9 +19,13 @@ export type PlanInfo = {
 };
 
 export const PLANS: PlanInfo[] = [
-  { id: "basic", name: "Basic", days: 30, tagline: "30 dias de acesso", price: "R$ 39,99", priceNote: "por mês", perks: ["Funções essenciais", "1 dispositivo", "Suporte padrão"] },
-  { id: "pro", name: "Pro", days: 90, tagline: "90 dias de acesso", price: "R$ 85,99", priceNote: "a cada 3 meses", perks: ["Todas as funções", "1 dispositivo", "Suporte prioritário"] },
-  { id: "master", name: "Master", days: null, tagline: "Acesso vitalício", price: "R$ 149,99", priceNote: "pagamento único", perks: ["Todas as funções", "Sem expiração", "Suporte VIP"] },
+  { id: "basic", name: "Basic", days: 30, tagline: "30 dias de acesso", price: "R$ 39,99", priceNote: "por mês", perks: ["Funções essenciais", "1 dispositivo", "IA básica", "Suporte padrão"] },
+  { id: "pro", name: "Pro", days: 90, tagline: "90 dias de acesso", price: "R$ 85,99", priceNote: "a cada 3 meses", perks: ["Todas as funções", "1 dispositivo", "IA aprimorada", "Suporte prioritário"] },
+  { id: "master", name: "Master", days: null, tagline: "Acesso vitalício", price: "R$ 149,99", priceNote: "pagamento único", perks: ["Todas as funções", "Sem expiração", "IA completa", "Suporte VIP"] },
+  { id: "bronze", name: "VIP Bronze", days: 30, tagline: "VIP por 30 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Benefícios VIP", "Pacote Sensi Pro", "IA aprimorada", "Suporte prioritário"] },
+  { id: "esmeralda", name: "VIP Esmeralda", days: 90, tagline: "VIP por 90 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Benefícios VIP+", "Sensi Pro avançada", "IA mais completa", "Suporte prioritário"] },
+  { id: "rubi", name: "VIP Rubi", days: 180, tagline: "VIP por 180 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Benefícios premium", "Configs Sensi avançadas", "IA completa", "Atendimento VIP"] },
+  { id: "atlas", name: "VIP Atlas", days: 365, tagline: "VIP por 365 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Pacote premium completo", "Sensi Pro+", "IA completa+", "Atendimento VIP exclusivo"] },
 ];
 
 export const PLAN_ORDER: PlanId[] = ["demo", "basic", "pro", "master"];
