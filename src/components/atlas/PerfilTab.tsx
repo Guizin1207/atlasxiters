@@ -146,21 +146,6 @@ export function PerfilTab() {
         )}
       </div>
 
-      {/* Plano / upgrade compacto */}
-      {!adminPreview && (
-        <div className="glass-strong rounded-2xl p-4 space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="vip-eyebrow mb-1">Assinatura</p>
-              <h3 className="text-base font-bold truncate">Plano atual</h3>
-            </div>
-            <PlanBadge plan={keyData.plan} isMaster={keyData.is_master} />
-          </div>
-          <p className="text-xs text-muted-foreground">Veja os planos disponíveis e solicite uma mudança pelo suporte.</p>
-          <button type="button" onClick={() => setSupportOpen(true)} className="w-full h-10 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-[0.1em] hover:bg-white/90 transition-colors">Falar com suporte</button>
-        </div>
-      )}
-
       {!adminPreview && (
         <button
           type="button"
