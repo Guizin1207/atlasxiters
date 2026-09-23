@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function PanelHeader() {
   const navigate = useNavigate();
-  const { adminPreview, closeAdminPanel } = useKey();
+  const { keyData, adminPreview, closeAdminPanel } = useKey();
   const [version, setVersion] = useState("1.0");
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function PanelHeader() {
         <div>
           <p className="vip-eyebrow">Painel</p>
           <h1 className="vip-title text-lg leading-none">Atlas VIP</h1>
-          <p className="text-[10px] text-muted-foreground mt-1">Versão {version}</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Versão {version}</p>\n          {!adminPreview && keyData?.customer_name && (\n            <p className="text-[10px] font-semibold text-foreground/80 mt-0.5 truncate max-w-[180px]">Cliente: {keyData.customer_name}</p>\n          )}
         </div>
       </div>
 
