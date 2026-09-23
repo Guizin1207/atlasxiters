@@ -70,19 +70,6 @@ export function usePanelSettings() {
     };
   }, [keyData]);
 
-  useEffect(() => {
-    if (!keyData) return;
-
-    const clearFunctions = () => {
-      const cleared = { ...readLocal(keyData.key), functions: {} };
-      setSettings((current) => ({ ...current, functions: {} }));
-      localStorage.setItem(localKey(keyData.key), JSON.stringify(cleared));
-      void supabase.rpc("save_settings", {
-        _key: keyData.key,
-        _settings: cleared as never,
-      });
-    };
-
 
 
   const update = useCallback(
