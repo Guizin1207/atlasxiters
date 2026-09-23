@@ -155,6 +155,7 @@ export default function LoginPage() {
             invalid_username: "O usuário precisa ter entre 2 e 40 caracteres.",
             weak_password: "Use uma senha com 8+ caracteres, incluindo letra maiúscula, minúscula e número.",
             account_already_exists: "Esta conta já foi criada com essa key.",
+            profile_creation_failed: "A conta foi criada, mas o perfil não pôde ser salvo. Tente novamente.",
           };
           setError(detailMap[detail] ?? "Não foi possível criar a conta agora. Verifique os dados e tente novamente.");
           return;
