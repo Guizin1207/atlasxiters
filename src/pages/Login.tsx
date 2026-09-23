@@ -110,13 +110,22 @@ export default function LoginPage() {
           setError("Informe seu nome.");
           return;
         }
-        if (password.length < 6) {
-          setError("A senha precisa ter pelo menos 6 caracteres.");
+        if (password.length < 8) {
+          setError("A senha precisa ter pelo menos 8 caracteres.");
+          return;
+        }
+        if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
+          setError("Use uma senha com 8+ caracteres, incluindo letra maiúscula, minúscula e número.");
           return;
         }
         const internalEmail = `${keyValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")}@atlasvip.app`;
         const result = await signUp(name, internalEmail, password);
-        if (result.error) setError(result.error);
+        if (result.error) {
+          const message = result.error.toLowerCase();
+          setError(message.includes("weak") || message.includes("easy to guess")
+            ? "Essa senha é considerada fraca ou fácil de adivinhar. Escolha uma senha mais forte, com letras, números e caracteres diferentes."
+            : result.error);
+        }
         else if (result.needsConfirmation) setInfo("Conta criada. Confirme seu e-mail para entrar e ativar sua key.");
         else {
           const activated = await redeem(keyValue);
