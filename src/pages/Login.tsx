@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert, Mail, Lock, UserRound, Chrome } from "lucide-react";
+import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert, Mail, Lock, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
@@ -26,7 +26,7 @@ type Mode = "login" | "signup";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, expiredKey, redeem, loading: keyLoading } = useKey();
-  const { session, profile, loading: authLoading, signIn, signUp, signInWithGoogle, signOut } = useAuth();
+  const { session, profile, loading: authLoading, signIn, signUp, signOut } = useAuth();
   const { recognize, signIn: signInAdmin } = useAdmin();
   const [search] = useSearchParams();
   const switchingUser = search.get("trocar") === "1";
@@ -101,16 +101,6 @@ export default function LoginPage() {
         if (result.error) setError(result.error);
       }
     } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleGoogle = async () => {
-    setError(null);
-    setSubmitting(true);
-    const result = await signInWithGoogle();
-    if (result.error) {
-      setError(result.error);
       setSubmitting(false);
     }
   };
@@ -194,14 +184,6 @@ export default function LoginPage() {
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "login" ? "Entrar" : "Criar minha conta"}
             </Button>
 
-            <div className="relative py-1">
-              <div className="border-t border-white/10" />
-              <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 px-3 bg-background text-[10px] text-muted-foreground uppercase">ou</span>
-            </div>
-
-            <Button type="button" variant="ghost" onClick={handleGoogle} disabled={submitting} className="w-full h-12 rounded-2xl border border-white/10 bg-white/5">
-              <Chrome className="w-4 h-4 mr-2" /> Continuar com Google
-            </Button>
           </form>
         ) : !keyData ? (
           <form onSubmit={handleKey} className="glass-strong rounded-3xl p-6 space-y-5">
