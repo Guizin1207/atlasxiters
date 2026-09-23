@@ -10,9 +10,10 @@ export function InjectButton() {
   const [attempted, setAttempted] = useState(fallback === "normal" || fallback === "max");
   const [loadingGame, setLoadingGame] = useState<GameVariant | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [progress, setProgress] = useState(0);
   return <>
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 px-5 w-full max-w-md">
-      <button type="button" onClick={() => { setOpen(true); setLoaded(false); setLoadingGame(null); }} className="w-full h-16 rounded-2xl bg-white text-black font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 shadow-elevated active:scale-[0.98] transition-transform">
+      <button type="button" onClick={() => { setOpen(true); setLoaded(false); setLoadingGame(null); setProgress(0); }} className="w-full h-16 rounded-2xl bg-white text-black font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 shadow-elevated active:scale-[0.98] transition-transform">
         <Rocket className="w-4 h-4" /> Injetar
       </button>
     </div>
@@ -21,8 +22,9 @@ export function InjectButton() {
         <DialogHeader><DialogTitle>Escolha o jogo</DialogTitle><DialogDescription>Toque na versão instalada para tentar abrir o jogo.</DialogDescription></DialogHeader>
         {loadingGame ? (
           <div className="py-8 text-center space-y-5">
-            <div className="mx-auto w-16 h-16 rounded-2xl glass flex items-center justify-center">
-              {loaded ? <CheckCircle2 className="w-8 h-8" /> : <Loader2 className="w-8 h-8 animate-spin" />}
+            <div className="relative mx-auto w-20 h-20 rounded-full glass flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-2 border-white/10 border-t-white animate-spin" />
+              {loaded ? <CheckCircle2 className="w-8 h-8 animate-in zoom-in" /> : <Loader2 className="w-8 h-8 animate-spin" />}
             </div>
             <div>
               <p className="font-bold">{loaded ? "Arquivos carregados" : "Carregando arquivos..."}</p>
@@ -31,7 +33,7 @@ export function InjectButton() {
               </p>
             </div>
             <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-              <div className={`h-full bg-white transition-all duration-[1800ms] ${loaded ? "w-full" : "w-[85%]"}`} />
+              <div className="h-full bg-white transition-[width] duration-100" style={{ width: `${loaded ? 100 : progress}%` }} />
             </div>
           </div>
         ) : null}
@@ -46,10 +48,19 @@ export function InjectButton() {
                 event.preventDefault();
                 setLoadingGame(game);
                 setLoaded(false);
-                window.setTimeout(() => {
-                  setLoaded(true);
-                  window.setTimeout(() => { window.location.href = href; }, 700);
-                }, 1800);
+                setProgress(0);
+                const started = performance.now();
+                const duration = 3200;
+                const tick = (time: number) => {
+                  const value = Math.min(100, ((time - started) / duration) * 100);
+                  setProgress(value);
+                  if (value < 100) requestAnimationFrame(tick);
+                  else {
+                    setLoaded(true);
+                    window.setTimeout(() => { window.location.href = href; }, 1200);
+                  }
+                };
+                requestAnimationFrame(tick);
               }} className="h-24 rounded-2xl glass flex flex-col items-center justify-center gap-2 font-bold text-sm hover:bg-white/10 active:scale-[0.98] transition-all">
               <Rocket className="w-5 h-5" />{game === "max" ? "Free Fire MAX" : "Free Fire"}
             </a>;
