@@ -76,3 +76,33 @@ end;
 $$;
 grant execute on function public.validate_key(text,text) to anon, authenticated;
 grant select, insert, update on public.profiles to authenticated;
+
+
+-- Login: resolve a conta existente pela key sem expor a tabela de usuários
+create or replace function public.get_login_email_by_key(_key text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare result_email text;
+begin
+  select u.email into result_email
+  from public.access_keys k
+  join auth.users u on u.id = k.user_id
+  where k.key = upper(trim(_key))
+    and k.user_id is not null
+    and k.revoked = false
+    and (k.expires_at is null or k.expires_at >= now())
+  limit 1;
+
+  if result_email is null then
+    raise exception 'invalid_key';
+  end if;
+
+  return result_email;
+end;
+$$;
+
+revoke all on function public.get_login_email_by_key(text) from public;
+grant execute on function public.get_login_email_by_key(text) to anon, authenticated;
