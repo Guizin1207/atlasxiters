@@ -140,7 +140,7 @@ export function RecompensaTab() {
       })
       .map((c) => c.day)
   );
-  const monthLabel = now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const monthLabel = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", month: "long", year: "numeric" }).format(new Date(`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-01T12:00:00`));
 
   return (
     <section aria-label="Recompensa" className="space-y-5">
