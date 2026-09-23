@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useKey } from "@/lib/key-context";
 import { useMaintenance } from "@/hooks/use-maintenance";
 import { useKeyValidity } from "@/hooks/use-key-validity";
+import { usePanelSettings } from "@/hooks/use-panel-settings";
 import { PanelHeader } from "@/components/atlas/PanelHeader";
 import { TabsNav, type AtlasTab } from "@/components/atlas/TabsNav";
 import { FuncoesTab } from "@/components/atlas/FuncoesTab";
@@ -57,6 +58,7 @@ export default function PainelPage() {
   const { keyData, loading } = useKey();
   const maintenance = useMaintenance();
   const { expired } = useKeyValidity();
+  const { settings: panelSettings } = usePanelSettings();
   const [tab, setTab] = useState<AtlasTab>("funcoes");
   const [sensiDevice, setSensiDevice] = useState("");
   const [sensiStyle, setSensiStyle] = useState("2 dedos");
@@ -477,7 +479,7 @@ const sendSensiMessage = () => {
         </div>
       </div>
 
-      {tab === "funcoes" && <InjectButton />}
+      {tab === "funcoes" && <InjectButton enabled={Object.values(panelSettings.functions ?? {}).some(Boolean)} />}
 
       {!drawerOpen && (
         <div
