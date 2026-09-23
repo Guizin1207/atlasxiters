@@ -148,8 +148,11 @@ export default function LoginPage() {
             return;
           }
           setAccountStatus("validated");
-          setInfo("Conta validada. Sua key foi vinculada e o acesso está liberado.");
-          setTimeout(() => navigate("/painel", { replace: true }), 500);
+          await signOut();
+          setMode("login");
+          setPassword("");
+          setKeyVerified(false);
+          setInfo("Conta validada. Sua key foi vinculada e o acesso está liberado. Agora entre com seu usuário e senha.");
         }
       } else {
         if (!name.trim()) {
