@@ -24,8 +24,11 @@ function message(error: unknown) {
   if (lower.includes("invalid login credentials")) return "Usuário ou senha incorretos.";
   if (lower.includes("user already registered")) return "Esta conta já está cadastrada.";
   if (lower.includes("password should be at least")) return "A senha precisa ter pelo menos 6 caracteres.";
-  if (lower.includes("email not confirmed")) return "Não foi possível liberar a sessão desta conta. Tente criar a conta novamente.";
-  return text || "Não foi possível concluir agora.";
+  if (lower.includes("email not confirmed")) return "A confirmação de e-mail ainda está ativa no Supabase.";
+  if (lower.includes("rate limit")) return "Muitas tentativas. Aguarde alguns segundos e tente novamente.";
+  if (lower.includes("signup is disabled")) return "O cadastro de usuários está desativado no Supabase.";
+  if (lower.includes("email provider is disabled")) return "O provedor de e-mail do Supabase está desativado.";
+  return text || "Não foi possível concluir o cadastro.";
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -85,7 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: undefined,
           data: {
             full_name: name.trim(),
             name: name.trim(),
@@ -95,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return {
         error: error ? message(error) : null,
-        needsConfirmation: false,
+        needsConfirmation: !Boolean(data.session) && Boolean(data.user),
         hasSession: Boolean(data.session),
       };
     },
