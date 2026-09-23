@@ -143,19 +143,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       const cronToken = typeof raw?.cronToken === "string" ? raw.cronToken : "";
       const eventId = typeof raw?.eventId === "string" ? raw.eventId.trim() : "";
 
-      if (kind === "notification_test") {
-        if (!password) return json({ error: "Senha ausente." }, 400);
-        const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
-        if (adminError || isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Senha inválida." }, 403);
-
-        const testKind = String(raw?.notificationKind ?? "");
-        const targetTestKey = typeof raw?.targetKey === "string" ? raw.targetKey.trim() : "";
-        if (!TESTABLE_KINDS.has(testKind) || testKind === "admin_test") {
-          return json({ error: "Tipo de teste inválido." }, 400);
-        }
-
-        const testContent = CONTENT[testKind];
-        if (kind === "security") {
+      if (kind === "security") {
         if (!eventId) return json({ error: "Evento de segurança ausente." }, 400);
         const { data: event, error: eventError } = await admin
           .from("security_events")
@@ -167,8 +155,10 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           return json({ sent: 0, code: "EVENT_ALREADY_PROCESSED" });
         }
 
-        query = query.eq("scope", "admin");
-        const { data: securitySubs, error: securitySubsError } = await query;
+        const { data: securitySubs, error: securitySubsError } = await admin
+          .from("push_subscriptions")
+          .select("id, endpoint, p256dh, auth, key_id")
+          .eq("scope", "admin");
         if (securitySubsError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar aparelhos do ADM." }, 500);
         if (!securitySubs?.length) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
 
@@ -176,6 +166,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           invalid_key: "key inválida/aleatória",
           revoked_key: "key revogada",
           device_mismatch: "key usada em outro dispositivo",
+          account_mismatch: "key usada em outra conta",
         };
         const payload = JSON.stringify({
           title: "Atlas VIP — 🚨 Alerta de segurança",
@@ -200,13 +191,23 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           }
         }
         if (stale.length) await admin.from("push_subscriptions").delete().in("id", stale);
-        if (sent > 0) {
-          await admin.rpc("mark_security_event_notified", { _event_id: eventId });
-        }
+        if (sent > 0) await admin.rpc("mark_security_event_notified", { _event_id: eventId });
         return json({ sent, failed, removed: stale.length });
       }
 
-      let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
+      if (kind === "notification_test") {
+        if (!password) return json({ error: "Senha ausente." }, 400);
+        const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
+        if (adminError || isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Senha inválida." }, 403);
+
+        const testKind = String(raw?.notificationKind ?? "");
+        const targetTestKey = typeof raw?.targetKey === "string" ? raw.targetKey.trim() : "";
+        if (!TESTABLE_KINDS.has(testKind) || testKind === "admin_test") {
+          return json({ error: "Tipo de teste inválido." }, 400);
+        }
+
+        const testContent = CONTENT[testKind];
+        let query = admin.from("push_subscriptions").select("id, endpoint, p256dh, auth, key_id");
         if (testContent.audience === "admin") {
           query = query.eq("scope", "admin");
         } else {

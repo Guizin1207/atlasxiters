@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock3, ShieldCheck, ShieldX, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdmin } from "@/lib/admin-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import {
   clearAdminDevices,
   currentAdminDeviceId,
   listAdminSessions,
+  setAdminDeviceApproval,
   type AdminAccessSession,
 } from "@/lib/admin-devices";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export function AdminDevicesCard() {
   const [cleaning, setCleaning] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [keysByDevice, setKeysByDevice] = useState<Record<string, string[]>>({});
+  const [processingDevice, setProcessingDevice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!password) return;
@@ -84,6 +86,20 @@ export function AdminDevicesCard() {
       toast.error("Não foi possível limpar os dispositivos. Atualize o painel e tente novamente.");
     } finally {
       setCleaning(false);
+    }
+  };
+
+  const approveDevice = async (deviceId: string, approved: boolean) => {
+    if (!password || processingDevice) return;
+    setProcessingDevice(deviceId);
+    try {
+      await setAdminDeviceApproval(password, deviceId, approved);
+      toast.success(approved ? "Dispositivo aprovado." : "Dispositivo bloqueado.");
+      setRefresh((value) => value + 1);
+    } catch {
+      toast.error("Não foi possível atualizar este dispositivo.");
+    } finally {
+      setProcessingDevice(null);
     }
   };
 

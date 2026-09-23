@@ -105,6 +105,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           id: string
           target_key_id: string | null
           title: string
@@ -112,6 +113,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           target_key_id?: string | null
           title: string
@@ -119,6 +121,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           target_key_id?: string | null
           title?: string
@@ -310,6 +313,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -382,6 +406,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          device: string | null
+          device_id: string | null
+          id: string
+          key_hash: string | null
+          key_hint: string | null
+          notified_at: string | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          device_id?: string | null
+          id?: string
+          key_hash?: string | null
+          key_hint?: string | null
+          notified_at?: string | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          device_id?: string | null
+          id?: string
+          key_hash?: string | null
+          key_hint?: string | null
+          notified_at?: string | null
+          reason?: string
+        }
+        Relationships: []
       }
       support_messages: {
         Row: {
@@ -557,6 +614,10 @@ export type Database = {
         Returns: boolean
       }
       admin_device_stats: { Args: { _password: string }; Returns: Json }
+      admin_edit_message: {
+        Args: { _body: string; _id: string; _password: string; _title: string }
+        Returns: Json
+      }
       admin_end_access_session: {
         Args: { _password: string; _session_id: string }
         Returns: boolean
@@ -630,6 +691,18 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      admin_list_security_events: {
+        Args: { _password: string }
+        Returns: {
+          created_at: string
+          device: string
+          device_id: string
+          id: string
+          key_hint: string
+          notified_at: string
+          reason: string
+        }[]
       }
       admin_list_upgrade_requests: {
         Args: { _password: string }
@@ -779,6 +852,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_set_app_version: {
+        Args: { _password: string; _version: string }
+        Returns: string
+      }
       admin_set_device: {
         Args: { _device: string; _id: string; _password: string }
         Returns: {
@@ -801,6 +878,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_set_device_approval: {
+        Args: {
+          _approved: boolean
+          _current_device_id: string
+          _device_id: string
+          _password: string
+        }
+        Returns: boolean
       }
       admin_set_expiration: {
         Args: { _expires_at: string; _id: string; _password: string }
@@ -1000,6 +1086,7 @@ export type Database = {
       }
       claim_daily_reward: { Args: { _key: string }; Returns: Json }
       count_unread_messages: { Args: { _key: string }; Returns: number }
+      get_app_version: { Args: never; Returns: string }
       get_daily_reward: { Args: { _key: string }; Returns: Json }
       get_maintenance: { Args: never; Returns: Json }
       get_settings: { Args: { _key: string }; Returns: Json }
@@ -1011,7 +1098,20 @@ export type Database = {
         Args: { _ids: string[]; _key: string }
         Returns: number
       }
+      mark_security_event_notified: {
+        Args: { _event_id: string }
+        Returns: boolean
+      }
       notify_expired_keys: { Args: never; Returns: number }
+      record_security_event: {
+        Args: {
+          _device: string
+          _device_id: string
+          _key: string
+          _reason: string
+        }
+        Returns: string
+      }
       redeem_atlas_coins: { Args: { _key: string }; Returns: Json }
       redeem_key: {
         Args: { _device: string; _device_id: string; _key: string }
