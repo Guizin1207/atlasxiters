@@ -48,7 +48,7 @@ export function KeysListCard() {
       if (!q) return true;
       return (
         k.key.toLowerCase().includes(q) ||
-        (k.note ?? "").toLowerCase().includes(q)
+        (k.note ?? "").toLowerCase().includes(q) ||\n        (k.customer_name ?? "").toLowerCase().includes(q)
       );
     });
   }, [keys, filter, query]);
@@ -68,7 +68,7 @@ export function KeysListCard() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar chave ou nota…"
+            placeholder="Buscar chave, cliente ou nota…"
             className="pl-9 rounded-xl bg-white/5 border-white/10 h-10"
           />
         </div>
