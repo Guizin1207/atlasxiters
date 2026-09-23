@@ -96,8 +96,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const candidate = await validatedCredential(pwd);
     if (!candidate) return false;
     const access = await checkAdminDeviceAccess(candidate);
-    if (access === "pending") throw new Error("admin_access_pending");
-    if (access === "denied") throw new Error("admin_access_denied");
+    if (access === "pending" || access === "denied") {
+      // Recuperação automática somente após validar a senha mestra.
+      // Se já existir outro ADM principal, a recuperação não assume o dispositivo.
+      const recovered = await recoverAdminPrimaryDevice(candidate);
+      if (!recovered) {
+        if (access === "pending") throw new Error("admin_access_pending");
+        throw new Error("admin_access_denied");
+      }
+    }
     // As próximas RPCs precisam usar exatamente a credencial aceita.
     sessionStorage.setItem(SESSION_KEY, candidate);
     beginAdminSession();
