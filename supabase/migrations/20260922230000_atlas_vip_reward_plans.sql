@@ -20,7 +20,7 @@ begin
       k:=public._gen_key();
       begin
         insert into public.access_keys(key,duration_days,note,plan,is_master)
-        values(k,dur,nullif(trim(coalesce(_note,'')),''),pl,pl='master')
+        values(k,dur,nullif(trim(coalesce(_note,'')),''),pl,false)
         returning * into rec;
         exit;
       exception when unique_violation then null;
@@ -31,3 +31,9 @@ begin
   return out;
 end;
 $function$;
+
+-- Plano Master comercial NÃO é chave administrativa.
+-- A chave administrativa é identificada separadamente por is_master=true.
+update public.access_keys
+set is_master = false
+where lower(coalesce(plan, '')) = 'master';
