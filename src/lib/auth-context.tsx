@@ -21,10 +21,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function message(error: unknown) {
   const text = error instanceof Error ? error.message : String(error ?? "");
   const lower = text.toLowerCase();
-  if (lower.includes("invalid login credentials")) return "E-mail ou senha incorretos.";
-  if (lower.includes("user already registered")) return "Este e-mail já está cadastrado.";
+  if (lower.includes("invalid login credentials")) return "Usuário ou senha incorretos.";
+  if (lower.includes("user already registered")) return "Esta conta já está cadastrada.";
   if (lower.includes("password should be at least")) return "A senha precisa ter pelo menos 6 caracteres.";
-  if (lower.includes("email not confirmed")) return "Confirme seu e-mail antes de entrar.";
+  if (lower.includes("email not confirmed")) return "Não foi possível liberar a sessão desta conta. Tente criar a conta novamente.";
   return text || "Não foi possível concluir agora.";
 }
 
@@ -34,11 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .eq("id", userId)
-      .maybeSingle();
+    const { data } = await supabase.from("profiles").select("id, full_name").eq("id", userId).maybeSingle();
     setProfile(data ?? null);
   };
 
@@ -67,18 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       setSession(next);
-      if (next?.user) {
-        setTimeout(() => { if (mounted) void loadProfile(next.user.id); }, 0);
-      } else {
-        setProfile(null);
-      }
+      if (next?.user) setTimeout(() => { if (mounted) void loadProfile(next.user.id); }, 0);
+      else setProfile(null);
       setLoading(false);
     });
 
-    return () => {
-      mounted = false;
-      listener.subscription.unsubscribe();
-    };
+    return () => { mounted = false; listener.subscription.unsubscribe(); };
   }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -95,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: email.trim(),
         password,
         options: {
+          emailRedirectTo: undefined,
           data: {
             full_name: name.trim(),
             name: name.trim(),
@@ -104,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return {
         error: error ? message(error) : null,
-        needsConfirmation: !error && !data.session,
+        needsConfirmation: false,
         hasSession: Boolean(data.session),
       };
     },
@@ -119,9 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
       setProfile(null);
     },
-    refreshProfile: async () => {
-      if (session?.user) await loadProfile(session.user.id);
-    },
+    refreshProfile: async () => { if (session?.user) await loadProfile(session.user.id); },
   }), [session, profile, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
