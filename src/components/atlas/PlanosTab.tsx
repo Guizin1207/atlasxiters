@@ -14,6 +14,10 @@ const ICONS: Record<PlanId, typeof Zap> = {
   demo: FlaskConical,
   basic: Zap,
   pro: Sparkles,
+  bronze: Crown,
+  esmeralda: Crown,
+  rubi: Crown,
+  atlas: Crown,
   master: Crown,
 };
 
