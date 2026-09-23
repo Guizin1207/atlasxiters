@@ -192,7 +192,7 @@ export default function LoginPage() {
               <span className="vip-eyebrow block mb-2">E-mail</span>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
+                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required={mode === "signup"} />
               </div>
             </label>
 
