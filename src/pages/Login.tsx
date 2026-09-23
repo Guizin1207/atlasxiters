@@ -114,7 +114,7 @@ export default function LoginPage() {
           setError("A senha precisa ter pelo menos 6 caracteres.");
           return;
         }
-        const internalEmail = `${keyValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")}@atlas.local`;
+        const internalEmail = `${keyValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")}@atlasvip.app`;
         const result = await signUp(name, internalEmail, password);
         if (result.error) setError(result.error);
         else if (result.needsConfirmation) setInfo("Conta criada. Confirme seu e-mail para entrar e ativar sua key.");
