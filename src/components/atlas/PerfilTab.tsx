@@ -157,14 +157,7 @@ export function PerfilTab() {
             <PlanBadge plan={keyData.plan} isMaster={keyData.is_master} />
           </div>
           <p className="text-xs text-muted-foreground">Veja os planos disponíveis e solicite uma mudança pelo suporte.</p>
-          <button type="button" onClick={() => navigate("/planos")} className="w-full h-10 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-[0.1em] hover:bg-white/90 transition-colors">Ver planos</button>
-        </div>
-      )}
-
-      {!adminPreview && (
-        <div className="space-y-3">
-          <p className="vip-eyebrow">Assinatura & planos</p>
-          <PlanosTab embedded />
+          <button type="button" onClick={() => setSupportOpen(true)} className="w-full h-10 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-[0.1em] hover:bg-white/90 transition-colors">Falar com suporte</button>
         </div>
       )}
 
