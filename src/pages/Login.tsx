@@ -51,18 +51,29 @@ export default function LoginPage() {
   const adminEntry = Boolean(adminValue.trim()) && adminRecognition?.value === adminValue && adminRecognition.admin;
 
   useEffect(() => {
-    if (!adminValue.trim()) return;
+    const value = adminValue.trim() ? adminValue : password;
+    if (!value.trim()) return;
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       try {
-        const admin = await recognize(adminValue);
-        if (!cancelled) setAdminRecognition({ value: adminValue, admin });
+        const admin = await recognize(value);
+        if (!cancelled) setAdminRecognition({ value, admin });
       } catch {
-        if (!cancelled) setAdminRecognition({ value: adminValue, admin: false });
+        if (!cancelled) setAdminRecognition({ value, admin: false });
       }
     }, 300);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [adminValue, recognize]);
+  }, [adminValue, password, recognize]);
+
+  const enterAdmin = async (value: string) => {
+    const ok = await adminSignIn(value);
+    if (ok) {
+      navigate("/admin", { replace: true });
+      return true;
+    }
+    setError("Acesso administrativo não confirmado.");
+    return false;
+  };
 
   const handleAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +81,19 @@ export default function LoginPage() {
     setInfo(null);
     setSubmitting(true);
     try {
+      if (mode === "login" && password.trim()) {
+        const isAdminPassword = adminRecognition?.value === password
+          ? adminRecognition.admin
+          : await recognize(password).catch(() => false);
+        if (isAdminPassword) {
+          await enterAdmin(password);
+          return;
+        }
+      }
+      if (!email.trim()) {
+        setError("Informe seu e-mail.");
+        return;
+      }
       if (mode === "signup") {
         if (!name.trim()) {
           setError("Informe seu nome.");
