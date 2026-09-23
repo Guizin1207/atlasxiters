@@ -19,13 +19,13 @@ export type PlanInfo = {
 };
 
 export const PLANS: PlanInfo[] = [
-  { id: "basic", name: "Basic", days: 30, tagline: "30 dias de acesso", price: "R$ 39,99", priceNote: "por mês", perks: ["Funções essenciais", "1 dispositivo", "IA básica", "Suporte padrão"] },
-  { id: "pro", name: "Pro", days: 90, tagline: "90 dias de acesso", price: "R$ 85,99", priceNote: "a cada 3 meses", perks: ["Todas as funções", "1 dispositivo", "IA aprimorada", "Suporte prioritário"] },
-  { id: "master", name: "Master", days: null, tagline: "Acesso vitalício", price: "R$ 149,99", priceNote: "pagamento único", perks: ["Todas as funções", "Sem expiração", "IA completa", "Suporte VIP"] },
+  { id: "basic", name: "Basic", days: 30, tagline: "30 dias de acesso", price: "R$ 19,90", priceNote: "por mês", perks: ["Funções essenciais", "1 dispositivo", "IA básica", "Suporte padrão"] },
+  { id: "pro", name: "Pro", days: 60, tagline: "60 dias de acesso", price: "R$ 34,90", priceNote: "a cada 2 meses", perks: ["Todas as funções", "1 dispositivo", "IA aprimorada", "Suporte prioritário"] },
+  { id: "master", name: "Master", days: 90, tagline: "90 dias de acesso", price: "R$ 49,90", priceNote: "a cada 3 meses", perks: ["Todas as funções", "Sem expiração", "IA completa", "Suporte VIP"] },
   { id: "bronze", name: "VIP Bronze", days: 30, tagline: "VIP por 30 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Benefícios VIP", "Pacote Sensi Pro", "IA aprimorada", "Suporte prioritário"] },
-  { id: "esmeralda", name: "VIP Esmeralda", days: 90, tagline: "VIP por 90 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Benefícios VIP+", "Sensi Pro avançada", "IA mais completa", "Suporte prioritário"] },
-  { id: "rubi", name: "VIP Rubi", days: 180, tagline: "VIP por 180 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Benefícios premium", "Configs Sensi avançadas", "IA completa", "Atendimento VIP"] },
-  { id: "atlas", name: "VIP Atlas", days: 365, tagline: "VIP por 365 dias", price: "Sob consulta", priceNote: "pelo suporte", perks: ["Pacote premium completo", "Sensi Pro+", "IA completa+", "Atendimento VIP exclusivo"] },
+  { id: "esmeralda", name: "VIP Esmeralda", days: 60, tagline: "VIP por 60 dias", price: "R$ 54,90", priceNote: "pelo suporte", perks: ["Benefícios VIP+", "Sensi Pro avançada", "IA mais completa", "Suporte prioritário"] },
+  { id: "rubi", name: "VIP Rubi", days: 90, tagline: "VIP por 90 dias", price: "R$ 79,90", priceNote: "pelo suporte", perks: ["Benefícios premium", "Configs Sensi avançadas", "IA completa", "Atendimento VIP"] },
+  { id: "atlas", name: "VIP Atlas", days: 180, tagline: "VIP por 180 dias", price: "R$ 139,90", priceNote: "pelo suporte", perks: ["Pacote premium completo", "Sensi Pro+", "IA completa+", "Atendimento VIP exclusivo"] },
 ];
 
 export const PLAN_ORDER: PlanId[] = ["demo", "basic", "pro", "bronze", "esmeralda", "rubi", "atlas", "master"];
