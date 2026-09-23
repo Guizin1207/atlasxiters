@@ -48,7 +48,8 @@ export function KeysListCard() {
       if (!q) return true;
       return (
         k.key.toLowerCase().includes(q) ||
-        (k.note ?? "").toLowerCase().includes(q) ||\n        (k.customer_name ?? "").toLowerCase().includes(q)
+        (k.note ?? "").toLowerCase().includes(q) ||
+        (k.customer_name ?? "").toLowerCase().includes(q)
       );
     });
   }, [keys, filter, query]);

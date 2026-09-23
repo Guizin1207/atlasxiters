@@ -156,7 +156,11 @@ export function KeyRowItem({
             )}
           </div>
 
-          {data.customer_name && (\n            <div className="text-sm font-semibold text-foreground">Cliente: {data.customer_name}</div>\n          )}\n\n          {/* Linha 2: dispositivo + duração + nota */}
+          {data.customer_name && (
+            <div className="text-sm font-semibold text-foreground">Cliente: {data.customer_name}</div>
+          )}
+
+          {/* Linha 2: dispositivo + duração + nota */}
           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             <span className="inline-flex items-center gap-1.5">
               <DeviceIcon className="w-3.5 h-3.5" />
