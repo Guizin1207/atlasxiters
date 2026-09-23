@@ -132,7 +132,19 @@ export default function LoginPage() {
 
         if (signupError) {
           setAccountStatus(null);
-          setError("Não foi possível criar a conta agora. Tente novamente.");
+          const detail = String(
+            (signupError as any)?.context?.body?.error ??
+            signupError.message ??
+            ""
+          );
+          const detailMap: Record<string, string> = {
+            server_configuration_error: "O serviço de cadastro do Atlas não está configurado corretamente.",
+            invalid_request: "Os dados enviados para o cadastro são inválidos.",
+            signup_failed: "O Supabase recusou a criação da conta. Tente novamente.",
+            database_error: "Não foi possível acessar os dados da key.",
+            key_already_linked: ERROR_MESSAGES.key_already_linked,
+          };
+          setError(detailMap[detail] ?? "Não foi possível criar a conta agora. Verifique os dados e tente novamente.");
           return;
         }
 
@@ -159,14 +171,9 @@ export default function LoginPage() {
           return;
         }
 
-        const activated = await redeem(keyValue);
-        if (activated.ok !== true) {
-          setAccountStatus(null);
-          const redeemError = activated.error;
-          setError(ERROR_MESSAGES[redeemError] ?? ERROR_MESSAGES.unknown_error);
-          return;
-        }
-
+        // A Edge Function já vinculou a key à conta durante a criação.
+        // Não chame redeem novamente aqui, pois isso tentaria reivindicar
+        // uma key que acabou de ser vinculada ao mesmo usuário.
         setAccountStatus("validated");
         await signOut();
         setMode("login");
