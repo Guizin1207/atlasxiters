@@ -42,6 +42,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get("suporte") === "1");
   const [adminRecognized, setAdminRecognized] = useState(false);
+  const [accountStatus, setAccountStatus] = useState<"validating" | "validated" | null>(null);
 
   useEffect(() => {
     if (!authLoading && !keyLoading && session && keyData && !switchingUser) {
@@ -119,15 +120,36 @@ export default function LoginPage() {
           return;
         }
         const internalEmail = `${keyValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")}@atlasvip.app`;
+        setAccountStatus("validating");
+        setInfo("Validando conta e vinculando sua key...");
         const result = await signUp(name, internalEmail, password, keyValue);
         if (result.error) {
+          setAccountStatus(null);
           const message = result.error.toLowerCase();
           setError(message.includes("weak") || message.includes("easy to guess")
             ? "Essa senha é considerada fraca ou fácil de adivinhar. Escolha uma senha mais forte, com letras, números e caracteres diferentes."
             : result.error);
+        } else {
+          let activeSession = result.hasSession;
+          if (!activeSession) {
+            const loginResult = await signIn(internalEmail, password);
+            activeSession = !loginResult.error;
+          }
+          if (!activeSession) {
+            setAccountStatus(null);
+            setInfo("Conta criada, mas não foi possível liberar a sessão automaticamente. Tente entrar com seu usuário e senha.");
+            return;
+          }
+          const activated = await redeem(keyValue);
+          if (!activated.ok) {
+            setAccountStatus(null);
+            setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
+            return;
+          }
+          setAccountStatus("validated");
+          setInfo("Conta validada. Sua key foi vinculada e o acesso está liberado.");
+          setTimeout(() => navigate("/painel", { replace: true }), 500);
         }
-        else if (result.hasSession) navigate("/painel", { replace: true });
-        else setInfo("Conta criada. Agora entre usando seu usuário e senha. A key já ficou vinculada à sua conta.");
       } else {
         if (!name.trim()) {
           setError("Informe seu usuário.");
@@ -239,6 +261,16 @@ export default function LoginPage() {
             </label>}
 
             {adminRecognized && mode === "login" && <Button type="button" onClick={handleAdminLogin} disabled={submitting} variant="ghost" className="w-full h-11 rounded-2xl border border-white/10 bg-white/5 font-semibold"><ShieldCheck className="w-4 h-4 mr-2" /> Entrar como ADM</Button>}
+
+            {accountStatus && (
+              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-3">
+                {accountStatus === "validating" ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                <div>
+                  <p className="text-sm font-semibold">{accountStatus === "validating" ? "Validando conta..." : "Conta validada"}</p>
+                  <p className="text-xs text-muted-foreground">{accountStatus === "validating" ? "Vinculando sua key e liberando o acesso." : "Acesso liberado com sucesso."}</p>
+                </div>
+              </div>
+            )}
 
             {error && <p className="text-sm text-status-danger bg-status-danger/10 border border-status-danger/20 rounded-xl px-4 py-3">{error}</p>}
             {info && <p className="text-sm text-muted-foreground bg-white/5 border border-white/10 rounded-xl px-4 py-3">{info}</p>}
