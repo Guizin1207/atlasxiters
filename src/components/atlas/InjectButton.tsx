@@ -16,6 +16,7 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
   const [loaded, setLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
   const [fileReady, setFileReady] = useState(() => localStorage.getItem(FILE_READY_KEY) === "1");
+  const [successNotice, setSuccessNotice] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const markFileReady = () => {
@@ -70,6 +71,7 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
           requestAnimationFrame(tick);
         } else {
           setLoaded(true);
+          setSuccessNotice(true);
           window.setTimeout(() => {
             if (href) window.location.href = href;
           }, 1200);
@@ -96,7 +98,7 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
       <button
         type="button"
         disabled={!enabled}
-        onClick={() => { setOpen(true); setLoaded(false); setLoadingGame(null); setProgress(0); }}
+        onClick={() => { setOpen(true); setLoaded(false); setSuccessNotice(false); setLoadingGame(null); setProgress(0); }}
         className="w-full h-16 rounded-2xl bg-white text-black font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 shadow-elevated active:scale-[0.98] transition-transform disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale"
       >
         <Rocket className="w-4 h-4" /> Injetar
@@ -173,6 +175,13 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
             </button>
           ))}
         </div>
+
+        {successNotice && (
+          <div role="status" className="rounded-2xl glass p-4 text-center animate-in slide-in-from-bottom-2 fade-in">
+            <p className="font-bold">Arquivos ativados!</p>
+            <p className="text-xs text-muted-foreground mt-1">Tudo pronto. Bom jogo!</p>
+          </div>
+        )}
 
         {attempted && !loadingGame && (
           <p role="status" className="text-sm text-muted-foreground">Se o jogo não abrir, abra-o pelo ícone no aparelho. Alguns navegadores não permitem abertura por link.</p>
