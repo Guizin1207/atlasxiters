@@ -12,6 +12,7 @@ type RewardState = {
   current_streak: number;
   best_streak: number;
   claimed_today: boolean;
+  today?: string;
   claims?: ClaimDay[];
 };
 type ClaimDay = { day: number; date: string; coins: number };
@@ -117,15 +118,16 @@ export function RecompensaTab() {
   // Não use new Date("YYYY-MM-DD"), pois o JavaScript interpreta a string em UTC
   // e, à noite no Brasil, isso pode cair no dia anterior no calendário.
   const now = new Date();
+  const serverToday = reward?.today ? String(reward.today).slice(0, 10) : "";
   const saoPauloDate = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).formatToParts(now);
-  const currentYear = Number(saoPauloDate.find((p) => p.type === "year")?.value);
-  const currentMonth = Number(saoPauloDate.find((p) => p.type === "month")?.value) - 1;
-  const currentDay = Number(saoPauloDate.find((p) => p.type === "day")?.value);
+  const currentYear = serverToday ? Number(serverToday.slice(0, 4)) : Number(saoPauloDate.find((p) => p.type === "year")?.value);
+  const currentMonth = serverToday ? Number(serverToday.slice(5, 7)) - 1 : Number(saoPauloDate.find((p) => p.type === "month")?.value) - 1;
+  const currentDay = serverToday ? Number(serverToday.slice(8, 10)) : Number(saoPauloDate.find((p) => p.type === "day")?.value);
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const days = new Date(currentYear, currentMonth + 1, 0).getDate();
   const claimed = new Set(
