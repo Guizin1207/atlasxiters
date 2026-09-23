@@ -30,7 +30,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
     const effectiveNote = mode === "demo" ? ["DEMO", note.trim()].filter(Boolean).join(" — ") : note;
     const { data, error } = await supabase.rpc("admin_create_keys", {
       _count: count, _duration_days: effectiveDays, _note: effectiveNote,
-      _password: password, _plan: effectivePlan, _customer_name: null,
+      _password: password, _plan: effectivePlan,
     });
     setBusy(false);
     if (error) { toast.error("Falha ao gerar", { description: error.message }); return; }
