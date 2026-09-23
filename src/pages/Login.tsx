@@ -121,46 +121,58 @@ export default function LoginPage() {
         }
         const internalEmail = `${keyValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")}@atlasvip.app`;
         setAccountStatus("validating");
-        setInfo("Validando conta e vinculando sua key...");
-        const result = await signUp(name, internalEmail, password, keyValue);
-        if (result.error) {
+        setInfo("Criando conta e vinculando sua key...");
+        
+        // O cadastro do Atlas usa uma Edge Function administrativa para criar o
+        // usuário já confirmado. Assim, o login não depende de e-mail de confirmação
+        // nem da configuração "Confirm email" do projeto Supabase.
+        const { data: signupData, error: signupError } = await supabase.functions.invoke("atlas-signup", {
+          body: { key: keyValue, name, password },
+        });
+
+        if (signupError) {
           setAccountStatus(null);
-          const message = result.error.toLowerCase();
-          setError(message.includes("weak") || message.includes("easy to guess")
-            ? "Essa senha é considerada fraca ou fácil de adivinhar. Escolha uma senha mais forte, com letras, números e caracteres diferentes."
-            : result.error);
-        } else {
-          let activeSession = result.hasSession;
-          if (!activeSession) {
-            const loginResult = await signIn(internalEmail, password);
-            activeSession = !loginResult.error;
-          }
-          if (!activeSession) {
-            // O Supabase pode devolver a sessão alguns instantes depois da confirmação automática.
-            // Faz uma segunda tentativa antes de pedir ao usuário para entrar manualmente.
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const retry = await signIn(internalEmail, password);
-            activeSession = !retry.error;
-            if (!activeSession) {
-              setAccountStatus(null);
-              setError(retry.error || "Não foi possível liberar a sessão da conta.");
-              return;
-            }
-          }
-          const activated = await redeem(keyValue);
-          if (activated.ok !== true) {
-            setAccountStatus(null);
-            const redeemError = activated.error;
-            setError(ERROR_MESSAGES[redeemError] ?? ERROR_MESSAGES.unknown_error);
-            return;
-          }
-          setAccountStatus("validated");
-          await signOut();
-          setMode("login");
-          setPassword("");
-          setKeyVerified(false);
-          setInfo("Conta validada. Sua key foi vinculada e o acesso está liberado. Agora entre com seu usuário e senha.");
+          setError("Não foi possível criar a conta agora. Tente novamente.");
+          return;
         }
+
+        const functionError = String(signupData?.error ?? "");
+        if (!signupData?.ok) {
+          setAccountStatus(null);
+          const messages: Record<string, string> = {
+            invalid_key: ERROR_MESSAGES.invalid_key,
+            key_already_linked: ERROR_MESSAGES.key_already_linked,
+            invalid_username: "O usuário precisa ter entre 2 e 40 caracteres.",
+            weak_password: "Use uma senha com 8+ caracteres, incluindo letra maiúscula, minúscula e número.",
+            account_already_exists: "Esta conta já foi criada com essa key.",
+            signup_failed: "Não foi possível criar a conta. Tente novamente.",
+            database_error: "Não foi possível validar a key. Tente novamente.",
+          };
+          setError(messages[functionError] ?? "Não foi possível criar a conta. Tente novamente.");
+          return;
+        }
+
+        const loginResult = await signIn(internalEmail, password);
+        if (loginResult.error) {
+          setAccountStatus(null);
+          setError("A conta foi criada, mas o login automático falhou. Entre novamente com seu usuário e senha.");
+          return;
+        }
+
+        const activated = await redeem(keyValue);
+        if (activated.ok !== true) {
+          setAccountStatus(null);
+          const redeemError = activated.error;
+          setError(ERROR_MESSAGES[redeemError] ?? ERROR_MESSAGES.unknown_error);
+          return;
+        }
+
+        setAccountStatus("validated");
+        await signOut();
+        setMode("login");
+        setPassword("");
+        setKeyVerified(false);
+        setInfo("Conta criada e key vinculada com sucesso. Agora entre com seu usuário e senha.");
       } else {
         if (!name.trim()) {
           setError("Informe seu usuário.");
