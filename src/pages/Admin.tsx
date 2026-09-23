@@ -17,6 +17,7 @@ import {
   LifeBuoy,
   Wrench,
   ShieldCheck,
+  BarChart3,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import { SupportAdminCard } from "@/components/admin/SupportAdminCard";
 import { PushNotificationsCard } from "@/components/admin/PushNotificationsCard";
 import { AdminRewardsCard } from "@/components/admin/AdminRewardsCard";
 import { SecurityCard } from "@/components/admin/SecurityCard";
+import { FinanceAdminCard } from "@/components/admin/FinanceAdminCard";
 import { getKeyStatus } from "@/lib/key-status";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,6 +45,7 @@ type AdminFunction = {
 
 const adminFunctions: AdminFunction[] = [
   { id: "overview", title: "Visão geral", icon: LayoutGrid },
+  { id: "finance", title: "Financeiro", icon: BarChart3 },
   { id: "keys", title: "Keys", icon: KeyRound },
   { id: "devices", title: "Dispositivos", icon: Smartphone },
   { id: "rewards", title: "Recompensas", icon: Coins },
@@ -99,7 +102,7 @@ export default function AdminPage() {
 
   const selected = adminFunctions.find((item) => item.id === selectedFunction);
   const adminGroups = [
-    { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "keys", "devices", "rewards", "security"].includes(item.id)) },
+    { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
     { title: "Atendimento", functions: adminFunctions.filter((item) => ["notifications", "messages", "support"].includes(item.id)) },
     { title: "Sistema", functions: adminFunctions.filter((item) => item.id === "maintenance") },
   ];
@@ -303,7 +306,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {selectedFunction === "keys" && (
+          {selectedFunction === "finance" && (\n            <div className="space-y-4">\n              <div>\n                <p className="vip-eyebrow">Gestão</p>\n                <h2 className="text-xl font-bold">Financeiro</h2>\n              </div>\n              <FinanceAdminCard password={password} />\n            </div>\n          )}\n\n          {selectedFunction === "keys" && (
             <div className="space-y-5">
               <div>
                 <p className="vip-eyebrow">Gerenciamento</p>
