@@ -72,7 +72,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
       </div>
 
       <Field label="Tipo de acesso">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <ModeButton active={mode === "normal"} onClick={() => setMode("normal")} icon={<KeyRound className="w-3.5 h-3.5" />}>
             Normal
           </ModeButton>
