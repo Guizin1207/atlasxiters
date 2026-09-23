@@ -113,16 +113,27 @@ export function RecompensaTab() {
 
   const coins = reward?.coins ?? 0;
   const progress = Math.min(coins, 100);
+  // As datas da recompensa são DATE (sem horário) no fuso de São Paulo.
+  // Não use new Date("YYYY-MM-DD"), pois o JavaScript interpreta a string em UTC
+  // e, à noite no Brasil, isso pode cair no dia anterior no calendário.
   const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
-  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const saoPauloDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const currentYear = Number(saoPauloDate.find((p) => p.type === "year")?.value);
+  const currentMonth = Number(saoPauloDate.find((p) => p.type === "month")?.value) - 1;
+  const currentDay = Number(saoPauloDate.find((p) => p.type === "day")?.value);
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const days = new Date(currentYear, currentMonth + 1, 0).getDate();
   const claimed = new Set(
     claims
       .filter((c) => {
-        const date = new Date(c.date);
-        return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
+        const date = String(c.date).slice(0, 10);
+        const [year, month] = date.split("-").map(Number);
+        return year === currentYear && month - 1 === currentMonth;
       })
       .map((c) => c.day)
   );
@@ -196,8 +207,8 @@ export function RecompensaTab() {
             {Array.from({ length: days }, (_, i) => {
               const day = i + 1;
               const isClaimed = claimed.has(day);
-              const isToday = day === now.getDate();
-              const isPastOrToday = day <= now.getDate();
+              const isToday = day === currentDay;
+              const isPastOrToday = day <= currentDay;
 
               return (
                 <div
