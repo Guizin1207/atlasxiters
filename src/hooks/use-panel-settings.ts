@@ -83,19 +83,7 @@ export function usePanelSettings() {
       });
     };
 
-    const handlePageHide = () => clearFunctions();
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") clearFunctions();
-    };
 
-    window.addEventListener("pagehide", handlePageHide);
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      window.removeEventListener("pagehide", handlePageHide);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [keyData]);
 
   const update = useCallback(
     async (patch: Partial<PanelSettings>) => {
