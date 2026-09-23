@@ -19,8 +19,14 @@ begin
   n := translate(n,
     'ÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ',
     'AAAAAEEEEIIIIOOOOOUUUUC');
-  n := regexp_replace(n, '[^A-Z0-9]+', '', 'g');
-  n := left(n, 12);
+  n := regexp_replace(n, '[^A-Z0-9 ]+', '', 'g');
+  n := regexp_replace(n, '\\s+', ' ', 'g');
+  -- Usa primeiro nome + sobrenome quando houver.
+  -- Ex.: João da Silva -> JOAO-SILVA
+  if position(' ' in n) > 0 then
+    n := split_part(n, ' ', 1) || '-' || split_part(n, ' ', array_length(string_to_array(n, ' '), 1));
+  end if;
+  n := left(regexp_replace(n, '[^A-Z0-9-]+', '', 'g'), 20);
   if n = '' then n := 'CLIENTE'; end if;
   return n;
 end;
