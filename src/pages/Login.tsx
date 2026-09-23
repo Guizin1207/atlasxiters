@@ -98,7 +98,7 @@ export default function LoginPage() {
     } finally { setSubmitting(false); }
   };
 
-  const handleAccount = async (e: React.FormEvent) =>
+  const handleAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setInfo(null);
@@ -205,21 +205,21 @@ export default function LoginPage() {
               </>
             )}
 
-                        <label className="block">
-              <span className="vip-eyebrow block mb-2">E-mail</span>
+                        {(mode === "login" || keyVerified) && <label className="block">
+              <span className="vip-eyebrow block mb-2">{mode === "signup" ? "E-mail da conta" : "E-mail"}</span>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required={mode === "signup"} />
               </div>
-            </label>
+            </label>}
 
-            <label className="block">
+            {(mode === "login" || keyVerified) && <label className="block">
               <span className="vip-eyebrow block mb-2">Senha</span>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input type="password" value={password} onChange={e => { setPassword(e.target.value); setAdminRecognized(false); setError(null); }} onBlur={() => void handleAdminPasswordCheck()} placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
               </div>
-            </label>
+            </label>}
 
             {adminRecognized && mode === "login" && <Button type="button" onClick={handleAdminLogin} disabled={submitting} variant="ghost" className="w-full h-11 rounded-2xl border border-white/10 bg-white/5 font-semibold"><ShieldCheck className="w-4 h-4 mr-2" /> Entrar como ADM</Button>}
 
@@ -227,7 +227,7 @@ export default function LoginPage() {
             {info && <p className="text-sm text-muted-foreground bg-white/5 border border-white/10 rounded-xl px-4 py-3">{info}</p>}
 
             <Button disabled={submitting} className="w-full h-12 rounded-2xl bg-white text-black font-bold">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "login" ? "Entrar" : "Criar minha conta"}
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "login" ? "Entrar" : keyVerified ? "Criar conta e liberar painel" : "Validar key de acesso"}
             </Button>
 
           </form>
