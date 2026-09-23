@@ -306,7 +306,17 @@ export default function AdminPage() {
             </div>
           )}
 
-          {selectedFunction === "finance" && (\n            <div className="space-y-4">\n              <div>\n                <p className="vip-eyebrow">Gestão</p>\n                <h2 className="text-xl font-bold">Financeiro</h2>\n              </div>\n              <FinanceAdminCard password={password} />\n            </div>\n          )}\n\n          {selectedFunction === "keys" && (
+          {selectedFunction === "finance" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Gestão</p>
+                <h2 className="text-xl font-bold">Financeiro</h2>
+              </div>
+              <FinanceAdminCard password={password} />
+            </div>
+          )}
+
+          {selectedFunction === "keys" && (
             <div className="space-y-5">
               <div>
                 <p className="vip-eyebrow">Gerenciamento</p>

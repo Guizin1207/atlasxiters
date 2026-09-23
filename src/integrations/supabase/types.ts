@@ -28,7 +28,6 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
-          user_id: string | null
         }
         Insert: {
           activated_at?: string | null
@@ -43,7 +42,6 @@ export type Database = {
           note?: string | null
           plan?: string
           revoked?: boolean
-          user_id?: string | null
         }
         Update: {
           activated_at?: string | null
@@ -58,27 +56,6 @@ export type Database = {
           note?: string | null
           plan?: string
           revoked?: boolean
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          id: string
-          full_name: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          full_name?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          full_name?: string
-          created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1036,10 +1013,6 @@ export type Database = {
       }
       notify_expired_keys: { Args: never; Returns: number }
       redeem_atlas_coins: { Args: { _key: string }; Returns: Json }
-      record_security_event: {
-        Args: { _device: string; _device_id: string; _key: string; _reason: string }
-        Returns: string
-      }
       redeem_key: {
         Args: { _device: string; _device_id: string; _key: string }
         Returns: Json
