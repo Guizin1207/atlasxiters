@@ -20,6 +20,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   login_required: "Entre na sua conta antes de ativar a key.",
   network_error: "Sem conexão. Tente novamente.",
   unknown_error: "Algo deu errado. Tente novamente em instantes.",
+  anonymous_signins_disabled: "Não foi possível iniciar a sessão com essa key. Verifique a key e tente novamente.",
 };
 
 type Mode = "login" | "signup";
@@ -123,9 +124,20 @@ export default function LoginPage() {
           else setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
         }
       } else {
-        const { data, error: rpcError } = await supabase.rpc("validate_key", { _key: keyValue.trim().toUpperCase(), _device_id: null });
-        if (rpcError || !data) { setError(ERROR_MESSAGES.invalid_key); return; }
-        const result = await signIn(email, password);
+        const key = keyValue.trim().toUpperCase();
+        const { data: keyData, error: keyError } = await supabase.rpc("validate_key", { _key: key, _device_id: null });
+        if (keyError || !keyData) {
+          const message = keyError?.message?.toLowerCase() ?? "";
+          const code = Object.keys(ERROR_MESSAGES).find(k => message.includes(k));
+          setError(ERROR_MESSAGES[code ?? "invalid_key"]);
+          return;
+        }
+        const { data: loginEmail, error: lookupError } = await supabase.rpc("get_login_email_by_key", { _key: key });
+        if (lookupError || !loginEmail) {
+          setError("Essa key ainda não está vinculada a uma conta. Use Criar conta primeiro.");
+          return;
+        }
+        const result = await signIn(String(loginEmail), password);
         if (result.error) setError(result.error);
       }
     } finally {
@@ -194,10 +206,10 @@ export default function LoginPage() {
                   <p className="font-semibold mt-1">Key validada com sucesso.</p>
                 </div>
                 <label className="block">
-                  <span className="vip-eyebrow block mb-2">Nome completo</span>
+                  <span className="vip-eyebrow block mb-2">Usuário</span>
                   <div className="relative">
                     <UserRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
+                    <Input value={name} onChange={e => setName(e.target.value)} placeholder="Seu usuário" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
                   </div>
                 </label>
               </>
