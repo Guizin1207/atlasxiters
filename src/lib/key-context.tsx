@@ -34,6 +34,7 @@ export type KeyData = {
   revoked: boolean;
   created_at: string;
   plan?: string | null;
+  customer_name?: string | null;
 };
 
 type RedeemError =
