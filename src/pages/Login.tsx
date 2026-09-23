@@ -4,7 +4,6 @@ import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert, Mail, Loc
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
-import { useAdmin } from "@/lib/admin-context";
 import { useAuth } from "@/lib/auth-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { NotificationBell } from "@/components/atlas/NotificationBell";
@@ -26,7 +25,6 @@ type Mode = "login" | "signup";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, expiredKey, redeem, loading: keyLoading } = useKey();
-  const { recognize, signIn: adminSignIn } = useAdmin();
   const { session, profile, loading: authLoading, signIn, signUp, signInWithGoogle, signOut } = useAuth();
   const [search] = useSearchParams();
   const switchingUser = search.get("trocar") === "1";
@@ -35,8 +33,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keyValue, setKeyValue] = useState("");
-  const [adminValue, setAdminValue] = useState("");
-  const [adminRecognition, setAdminRecognition] = useState<{ value: string; admin: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -47,33 +43,6 @@ export default function LoginPage() {
       navigate("/painel", { replace: true });
     }
   }, [authLoading, keyLoading, session, keyData, switchingUser, navigate]);
-
-  const adminEntry = Boolean(adminValue.trim()) && adminRecognition?.value === adminValue && adminRecognition.admin;
-
-  useEffect(() => {
-    const value = adminValue.trim() ? adminValue : password;
-    if (!value.trim()) return;
-    let cancelled = false;
-    const timer = window.setTimeout(async () => {
-      try {
-        const admin = await recognize(value);
-        if (!cancelled) setAdminRecognition({ value, admin });
-      } catch {
-        if (!cancelled) setAdminRecognition({ value, admin: false });
-      }
-    }, 300);
-    return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [adminValue, password, recognize]);
-
-  const enterAdmin = async (value: string) => {
-    const ok = await adminSignIn(value);
-    if (ok) {
-      navigate("/admin", { replace: true });
-      return true;
-    }
-    setError("Acesso administrativo não confirmado.");
-    return false;
-  };
 
   const handleAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,14 +111,6 @@ export default function LoginPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!adminEntry || submitting) return;
-    setSubmitting(true);
-    await enterAdmin(adminValue);
-    setSubmitting(false);
   };
 
   const isExpired = error === ERROR_MESSAGES.expired_key || Boolean(expiredKey);
@@ -242,14 +203,7 @@ export default function LoginPage() {
           </form>
         ) : null}
 
-        {!session && (
-          <form onSubmit={handleAdmin} className="mt-5">
-            <Input type="password" value={adminValue} onChange={e => { setAdminValue(e.target.value); setAdminRecognition(null); }} placeholder="Acesso administrativo" className="h-10 rounded-xl bg-transparent border-transparent text-center text-[10px] opacity-20 focus:opacity-100" aria-label="Acesso administrativo" />
-            {adminEntry && <Button type="submit" disabled={submitting} className="mt-2 w-full h-10 rounded-xl bg-white text-black text-xs">Entrar como ADM</Button>}
-          </form>
-        )}
-
-        <div className="mt-8 text-center space-y-3">
+<div className="mt-8 text-center space-y-3">
           <p className="text-xs text-muted-foreground/60">Precisa de ajuda? Fale com o suporte.</p>
           <Button type="button" onClick={() => setSupportOpen(true)} className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-white text-sm font-semibold">
             <MessageCircle className="w-4 h-4" /> Falar com suporte
