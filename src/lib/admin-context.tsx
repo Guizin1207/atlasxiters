@@ -1,6 +1,6 @@
 /**
- * Sessão admin: senha mestra mantida em sessionStorage (não localStorage,
- * pra exigir nova autenticação ao fechar a aba).
+ * Sessão admin: a senha mestra fica somente em memória enquanto a página está aberta.
+ * Não é persistida em localStorage, sessionStorage, cookies ou URL.
  * NUNCA usada para autorização no cliente — toda RPC revalida no servidor.
  */
 import {
@@ -14,8 +14,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeout } from "@/lib/request-timeout";
 import { beginAdminSession, endAdminSession, touchAdminSession } from "@/lib/admin-devices";
-
-const SESSION_KEY = "atlas_vip_admin_pwd";
 
 type Ctx = {
   password: string | null;
@@ -58,21 +56,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return () => { live = false; window.clearInterval(timer); };
   }, [password]);
 
-  // Restaura sessão e revalida no servidor
-  useEffect(() => {
-    const stored = sessionStorage.getItem(SESSION_KEY);
-    if (!stored) {
-      setLoading(false);
-      return;
-    }
-    (async () => {
-      try {
-        if (await checkAdmin(stored)) setPassword(stored);
-        else sessionStorage.removeItem(SESSION_KEY);
-      } catch { /* O usuário pode tentar o login novamente quando a conexão voltar. */ }
-      finally { setLoading(false); }
-    })();
-  }, []);
+  // A senha não é restaurada do navegador. Ao recarregar a página, o ADM precisa autenticar novamente.
+  useEffect(() => { setLoading(false); }, []);
 
   const validatedCredential = useCallback(async (pwd: string): Promise<string | null> => {
     const entered = pwd.trim();
@@ -95,7 +80,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const candidate = await validatedCredential(pwd);
     if (!candidate) return false;
     // As próximas RPCs precisam usar exatamente a credencial aceita.
-    sessionStorage.setItem(SESSION_KEY, candidate);
     beginAdminSession();
     setPassword(candidate);
     return true;
@@ -103,7 +87,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(() => {
     if (password) void endAdminSession(password).catch(() => {});
-    sessionStorage.removeItem(SESSION_KEY);
     setPassword(null);
   }, [password]);
 
