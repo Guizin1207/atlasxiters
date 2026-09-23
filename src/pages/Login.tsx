@@ -148,10 +148,8 @@ export default function LoginPage() {
     e.preventDefault();
     if (!adminEntry || submitting) return;
     setSubmitting(true);
-    const ok = await adminSignIn(adminValue);
+    await enterAdmin(adminValue);
     setSubmitting(false);
-    if (ok) navigate("/admin", { replace: true });
-    else setError("Acesso administrativo não confirmado.");
   };
 
   const isExpired = error === ERROR_MESSAGES.expired_key || Boolean(expiredKey);
