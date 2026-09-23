@@ -133,17 +133,13 @@ export default function LoginPage() {
           else setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
         }
       } else {
-        const key = keyValue.trim().toUpperCase();
-        const { data: keyData, error: keyError } = await supabase.rpc("validate_key", { _key: key, _device_id: null });
-        if (keyError || !keyData) {
-          const message = keyError?.message?.toLowerCase() ?? "";
-          const code = Object.keys(ERROR_MESSAGES).find(k => message.includes(k));
-          setError(ERROR_MESSAGES[code ?? "invalid_key"]);
+        if (!name.trim()) {
+          setError("Informe seu usuário.");
           return;
         }
-        const { data: loginEmail, error: lookupError } = await supabase.rpc("get_login_email_by_key", { _key: key });
+        const { data: loginEmail, error: lookupError } = await supabase.rpc("get_login_email_by_username", { _username: name.trim() });
         if (lookupError || !loginEmail) {
-          setError("Essa key ainda não está vinculada a uma conta. Crie sua conta primeiro usando essa key.");
+          setError("Usuário ou senha incorretos.");
           return;
         }
         const result = await signIn(String(loginEmail), password);
@@ -225,10 +221,10 @@ export default function LoginPage() {
             )}
 
                         {mode === "login" && <label className="block">
-              <span className="vip-eyebrow block mb-2">Key de acesso</span>
+              <span className="vip-eyebrow block mb-2">Usuário</span>
               <div className="relative">
-                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={keyValue} onChange={e => { setKeyValue(e.target.value); setError(null); }} placeholder="ATLS-XXXX-XXXX" autoCapitalize="characters" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10 font-mono tracking-wider" required />
+                <UserRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={name} onChange={e => { setName(e.target.value); setError(null); }} placeholder="Seu usuário" autoComplete="username" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
               </div>
             </label>}
 
