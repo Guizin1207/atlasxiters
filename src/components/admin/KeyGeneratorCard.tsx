@@ -18,12 +18,17 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
   const [mode, setMode] = useState<KeyMode>("normal");
   const [plan, setPlan] = useState<PlanId>("basic");
   const [days, setDays] = useState(30);
+  const [customerName, setCustomerName] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] = useState<KeyData[]>([]);
 
   const generate = async () => {
     if (!password) return;
+    if (mode !== "demo" && !customerName.trim()) {
+      toast.error("Informe o nome do cliente");
+      return;
+    }
     setBusy(true);
     const effectiveDays = mode === "normal" ? days : mode === "demo" ? 0 : 1;
     const effectivePlan: PlanId = mode === "demo" ? "demo" : plan;
@@ -36,6 +41,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
       _note: effectiveNote,
       _password: password,
       _plan: effectivePlan,
+      _customer_name: customerName.trim() || null,
     });
     setBusy(false);
     if (error) {
@@ -71,7 +77,7 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
         </h2>
       </div>
 
-      <Field label="Tipo de acesso">
+      <Field label="Nome do cliente">\n        <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ex: João Silva" className="rounded-xl bg-white/5 border-white/10 h-11" />\n        <p className="text-[11px] text-muted-foreground mt-2">A chave será criada automaticamente como NOME-PLANO-ATLS.</p>\n      </Field>\n\n      <Field label="Tipo de acesso">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <ModeButton active={mode === "normal"} onClick={() => setMode("normal")} icon={<KeyRound className="w-3.5 h-3.5" />}>
             Normal
