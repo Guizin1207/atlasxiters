@@ -10,7 +10,7 @@ type AuthContextValue = {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (name: string, email: string, password: string) => Promise<{ error: string | null; needsConfirmation: boolean }>;
+  signUp: (name: string, email: string, password: string, signupKey?: string) => Promise<{ error: string | null; needsConfirmation: boolean; hasSession: boolean }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -90,15 +90,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       return { error: error ? message(error) : null };
     },
-    signUp: async (name, email, password) => {
+    signUp: async (name, email, password, signupKey) => {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { full_name: name.trim(), name: name.trim() } },
+        options: {
+          data: {
+            full_name: name.trim(),
+            name: name.trim(),
+            ...(signupKey ? { atlas_signup_key: signupKey.trim().toUpperCase() } : {}),
+          },
+        },
       });
       return {
         error: error ? message(error) : null,
         needsConfirmation: !error && !data.session,
+        hasSession: Boolean(data.session),
       };
     },
     signInWithGoogle: async () => {
