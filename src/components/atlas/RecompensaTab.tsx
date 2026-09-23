@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
 import { rewardApi } from "@/lib/reward-api";
-import { supabase } from "@/integrations/supabase/client";\nimport { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 type RewardState = {
   coins: number;
