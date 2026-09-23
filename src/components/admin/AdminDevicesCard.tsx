@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Trash2, ShieldCheck, ShieldX, Clock3 } from "lucide-react";
+import { CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdmin } from "@/lib/admin-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   clearAdminDevices,
   currentAdminDeviceId,
-  setAdminDeviceApproval,
   listAdminSessions,
   type AdminAccessSession,
 } from "@/lib/admin-devices";
@@ -20,7 +19,6 @@ export function AdminDevicesCard() {
   const [cleaning, setCleaning] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [keysByDevice, setKeysByDevice] = useState<Record<string, string[]>>({});
-  const [processingDevice, setProcessingDevice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!password) return;
@@ -91,19 +89,6 @@ export function AdminDevicesCard() {
 
   const date = (value: string) => new Date(value).toLocaleString("pt-BR");
 
-  const approveDevice = async (deviceId: string, approved: boolean) => {
-    if (!password || processingDevice) return;
-    setProcessingDevice(deviceId);
-    try {
-      await setAdminDeviceApproval(password, deviceId, approved);
-      toast.success(approved ? "Dispositivo ADM aprovado." : "Dispositivo ADM bloqueado.");
-      setRefresh((value) => value + 1);
-    } catch {
-      toast.error("Somente o ADM principal pode aprovar ou bloquear dispositivos.");
-    } finally {
-      setProcessingDevice(null);
-    }
-  };
   const currentDeviceId = currentAdminDeviceId();
 
   return (
@@ -113,7 +98,7 @@ export function AdminDevicesCard() {
           <p className="vip-eyebrow">Segurança</p>
           <h2 className="font-bold">Dispositivos ADM</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            O primeiro dispositivo aprovado é o ADM principal. Novos dispositivos precisam de aprovação antes de entrar.
+            O acesso ADM é protegido pela senha mestra. Esta lista serve apenas para visualizar os dispositivos que acessaram o painel.
           </p>
         </div>
         <div className="flex gap-2">
@@ -145,7 +130,7 @@ export function AdminDevicesCard() {
                 <th className="p-2">Primeiro registro</th>
                 <th className="p-2">Última atividade</th>
                 <th className="p-2">Status</th>
-                <th className="p-2">Aprovação</th>
+                
               </tr>
             </thead>
             <tbody>
@@ -155,15 +140,7 @@ export function AdminDevicesCard() {
 
                 return (
                   <tr key={row.device_id ?? row.session_id} className="border-b border-white/5">
-                    <td className="p-2">
-                      <span className="block font-medium">
-                        {row.device_label}
-                        {isCurrent ? " · Este dispositivo" : ""}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ID {row.device_id?.slice(0, 8) ?? "não informado"}
-                      </span>
-                    </td>
+
                     <td className="p-2">
                       <div className="font-medium">ADM</div>
                       {(keysByDevice[row.device_id ?? ""] ?? []).length > 0 && (
