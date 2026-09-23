@@ -136,9 +136,16 @@ export default function LoginPage() {
             activeSession = !loginResult.error;
           }
           if (!activeSession) {
-            setAccountStatus(null);
-            setInfo("Conta criada, mas não foi possível liberar a sessão automaticamente. Tente entrar com seu usuário e senha.");
-            return;
+            // O Supabase pode devolver a sessão alguns instantes depois da confirmação automática.
+            // Faz uma segunda tentativa antes de pedir ao usuário para entrar manualmente.
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const retry = await signIn(internalEmail, password);
+            activeSession = !retry.error;
+            if (!activeSession) {
+              setAccountStatus(null);
+              setError(retry.error || "Não foi possível liberar a sessão da conta.");
+              return;
+            }
           }
           const activated = await redeem(keyValue);
           if (activated.ok !== true) {
@@ -165,7 +172,22 @@ export default function LoginPage() {
           return;
         }
         const result = await signIn(String(loginEmail), password);
-        if (result.error) setError(result.error);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        // Se a sessão entrou mas o KeyProvider ainda não atualizou, tenta
+        // vincular/validar a key salva localmente antes de abrir o painel.
+        const savedKey = localStorage.getItem("atlas_vip_key");
+        if (savedKey) {
+          const activated = await redeem(savedKey);
+          if (!activated.ok) {
+            setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
+            return;
+          }
+        }
+        navigate("/painel", { replace: true });
       }
     } finally {
       setSubmitting(false);
