@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, DollarSign, Package, TrendingUp } from "lucide-react";
-import { Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 
 type Row = { id: string; name: string; price: number; sold: number; cost: number };
@@ -69,12 +69,12 @@ export function FinanceAdminCard({ password }: { password: string }) {
     <div className="space-y-5">
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          ["Produtos registrados", String(totals.sold), Package],
-          ["Faturamento", money(totals.revenue), DollarSign],
-          ["Custos", money(totals.cost), TrendingUp],
-          ["Lucro estimado", money(totals.revenue - totals.cost), BarChart3],
-        ].map(([label, value, Icon]) => (
-          <div key={String(label)} className="glass-strong rounded-2xl p-4">
+          { label: "Produtos registrados", value: String(totals.sold), Icon: Package },
+          { label: "Faturamento", value: money(totals.revenue), Icon: DollarSign },
+          { label: "Custos", value: money(totals.cost), Icon: TrendingUp },
+          { label: "Lucro estimado", value: money(totals.revenue - totals.cost), Icon: BarChart3 },
+        ].map(({ label, value, Icon }) => (
+          <div key={label} className="glass-strong rounded-2xl p-4">
             <Icon className="h-4 w-4 text-muted-foreground" />
             <p className="mt-2 text-xs text-muted-foreground">{label}</p>
             <p className="mt-1 text-lg font-black">{value}</p>

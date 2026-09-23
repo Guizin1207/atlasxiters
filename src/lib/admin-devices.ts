@@ -12,6 +12,8 @@ export type AdminAccessSession = {
   created_at: string;
   last_seen_at: string;
   ended_at: string | null;
+  approval_status?: "pending" | "approved" | "denied" | null;
+  is_primary?: boolean | null;
 };
 
 export function currentAdminSessionId(): string | null {

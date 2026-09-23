@@ -29,7 +29,7 @@ export function SecurityCard() {
     if (!password) return;
     setLoading(true);
     const { data } = await supabase.rpc("admin_list_security_events", { _password: password });
-    setEvents((data ?? []) as SecurityEvent[]);
+    setEvents((data ?? []) as unknown as SecurityEvent[]);
     setLoading(false);
   }, [password]);
 

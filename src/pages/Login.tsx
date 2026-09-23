@@ -111,7 +111,8 @@ export default function LoginPage() {
     try {
       const result = await redeem(keyValue);
       if (result.ok) navigate("/painel", { replace: true });
-      else setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
+      else if ("error" in result) setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
+      else setError(ERROR_MESSAGES.unknown_error);
     } catch {
       setError(ERROR_MESSAGES.unknown_error);
     } finally {
