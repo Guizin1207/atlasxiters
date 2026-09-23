@@ -28,7 +28,7 @@ type Mode = "login" | "signup";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, expiredKey, redeem, loading: keyLoading } = useKey();
-  const { session, profile, loading: authLoading, signIn, signUp, signOut } = useAuth();
+  const { session, profile, loading: authLoading, signIn, signOut } = useAuth();
   const { recognize, signIn: signInAdmin } = useAdmin();
   const [search] = useSearchParams();
   const switchingUser = search.get("trocar") === "1";
