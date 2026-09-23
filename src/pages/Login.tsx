@@ -132,17 +132,29 @@ export default function LoginPage() {
 
         if (signupError) {
           setAccountStatus(null);
-          const detail = String(
-            (signupError as any)?.context?.body?.error ??
-            signupError.message ??
-            ""
-          );
+          let detail = "";
+          try {
+            const response = (signupError as any)?.context;
+            if (response && typeof response.clone === "function") {
+              const body = await response.clone().json();
+              detail = String(body?.error ?? "");
+            }
+          } catch {
+            detail = "";
+          }
+          if (!detail) {
+            detail = String(signupError.message ?? "");
+          }
           const detailMap: Record<string, string> = {
             server_configuration_error: "O serviço de cadastro do Atlas não está configurado corretamente.",
             invalid_request: "Os dados enviados para o cadastro são inválidos.",
             signup_failed: "O Supabase recusou a criação da conta. Tente novamente.",
             database_error: "Não foi possível acessar os dados da key.",
             key_already_linked: ERROR_MESSAGES.key_already_linked,
+            invalid_key: ERROR_MESSAGES.invalid_key,
+            invalid_username: "O usuário precisa ter entre 2 e 40 caracteres.",
+            weak_password: "Use uma senha com 8+ caracteres, incluindo letra maiúscula, minúscula e número.",
+            account_already_exists: "Esta conta já foi criada com essa key.",
           };
           setError(detailMap[detail] ?? "Não foi possível criar a conta agora. Verifique os dados e tente novamente.");
           return;
