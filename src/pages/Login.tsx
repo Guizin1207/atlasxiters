@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, KeyRound, ShieldCheck, MessageCircle, TriangleAlert, Mail, Lock, UserRound } from "lucide-react";
+import { Loader2, KeyRound, ShieldCheck, MessageCircle, Mail, Lock, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
@@ -105,10 +105,6 @@ export default function LoginPage() {
     if (mode === "signup" && !keyVerified) { await verifySignupKey(); return; }
     setSubmitting(true);
     try {
-      if (!email.trim()) {
-        setError("Informe seu e-mail.");
-        return;
-      }
       if (mode === "signup") {
         if (!name.trim()) {
           setError("Informe seu nome.");
@@ -127,6 +123,8 @@ export default function LoginPage() {
           else setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
         }
       } else {
+        const { data, error: rpcError } = await supabase.rpc("validate_key", { _key: keyValue.trim().toUpperCase(), _device_id: null });
+        if (rpcError || !data) { setError(ERROR_MESSAGES.invalid_key); return; }
         const result = await signIn(email, password);
         if (result.error) setError(result.error);
       }
@@ -205,11 +203,11 @@ export default function LoginPage() {
               </>
             )}
 
-                        {(mode === "login" || keyVerified) && <label className="block">
-              <span className="vip-eyebrow block mb-2">{mode === "signup" ? "E-mail da conta" : "E-mail"}</span>
+                        {mode === "login" && <label className="block">
+              <span className="vip-eyebrow block mb-2">Key de acesso</span>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required={mode === "signup"} />
+                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={keyValue} onChange={e => { setKeyValue(e.target.value); setError(null); }} placeholder="ATLS-XXXX-XXXX" autoCapitalize="characters" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10 font-mono tracking-wider" required />
               </div>
             </label>}
 
