@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
 import { useNavigate } from "react-router-dom";
-import { PlanosTab } from "@/components/atlas/PlanosTab";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { useTicker } from "@/hooks/use-ticker";
 import {
@@ -147,7 +146,21 @@ export function PerfilTab() {
         )}
       </div>
 
-      {/* Planos / upgrade */}
+      {/* Plano / upgrade compacto */}
+      {!adminPreview && (
+        <div className="glass-strong rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="vip-eyebrow mb-1">Assinatura</p>
+              <h3 className="text-base font-bold truncate">Plano atual</h3>
+            </div>
+            <PlanBadge plan={keyData.plan} isMaster={keyData.is_master} />
+          </div>
+          <p className="text-xs text-muted-foreground">Veja os planos disponíveis e solicite uma mudança pelo suporte.</p>
+          <button type="button" onClick={() => navigate("/planos")} className="w-full h-10 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-[0.1em] hover:bg-white/90 transition-colors">Ver planos</button>
+        </div>
+      )}
+
       {!adminPreview && (
         <div className="space-y-3">
           <p className="vip-eyebrow">Assinatura & planos</p>
@@ -207,6 +220,13 @@ export function PerfilTab() {
       </Button>
     </section>
   );
+}
+
+
+function PlanBadge({ plan, isMaster }: { plan?: string | null; isMaster?: boolean }) {
+  const names: Record<string, string> = { demo: "Demo", basic: "Basic", pro: "Pro", bronze: "VIP Bronze", esmeralda: "VIP Esmeralda", rubi: "VIP Rubi", atlas: "VIP Atlas", master: "Master" };
+  const label = isMaster ? "Master" : names[String(plan ?? "basic")] ?? "Basic";
+  return <span className="shrink-0 rounded-full bg-white text-black px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]">{label}</span>;
 }
 
 function Stat({
