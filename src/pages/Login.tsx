@@ -126,7 +126,7 @@ export default function LoginPage() {
             ? "Essa senha é considerada fraca ou fácil de adivinhar. Escolha uma senha mais forte, com letras, números e caracteres diferentes."
             : result.error);
         }
-        else if (result.needsConfirmation) setInfo("Conta criada. Confirme seu e-mail para entrar e ativar sua key.");
+        else if (result.needsConfirmation) setInfo("Conta criada. Aguarde um instante e tente entrar novamente.");
         else {
           const activated = await redeem(keyValue);
           if (activated.ok) navigate("/painel", { replace: true });
@@ -143,7 +143,7 @@ export default function LoginPage() {
         }
         const { data: loginEmail, error: lookupError } = await supabase.rpc("get_login_email_by_key", { _key: key });
         if (lookupError || !loginEmail) {
-          setError("Essa key ainda não está vinculada a uma conta. Use Criar conta primeiro.");
+          setError("Essa key ainda não está vinculada a uma conta. Crie sua conta primeiro usando essa key.");
           return;
         }
         const result = await signIn(String(loginEmail), password);
