@@ -1,0 +1,4 @@
+ATLAS_TEST_FILE
+version=1.0
+status=ready
+Este arquivo e somente para teste do fluxo de selecao e leitura do Atlas VIP.
