@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { NotificationBell } from "@/components/atlas/NotificationBell";
+import { supabase } from "@/integrations/supabase/client";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_key: "Chave inválida. Verifique e tente novamente.",
@@ -35,6 +36,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keyValue, setKeyValue] = useState("");
+  const [keyVerified, setKeyVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -73,10 +75,34 @@ export default function LoginPage() {
     }
   };
 
-  const handleAccount = async (e: React.FormEvent) => {
+  const verifySignupKey = async () => {
+    const key = keyValue.trim().toUpperCase();
+    if (!key) { setError("Informe sua key de acesso."); return false; }
+    setError(null); setInfo(null); setSubmitting(true);
+    try {
+      const { data, error: rpcError } = await supabase.rpc("validate_key", { _key: key, _device_id: null });
+      if (rpcError || !data) {
+        const message = rpcError?.message?.toLowerCase() ?? "";
+        const code = Object.keys(ERROR_MESSAGES).find(k => message.includes(k));
+        setError(ERROR_MESSAGES[code ?? "invalid_key"]);
+        setKeyVerified(false);
+        return false;
+      }
+      setKeyVerified(true);
+      setInfo("Key válida. Agora preencha seus dados para criar a conta.");
+      return true;
+    } catch {
+      setError(ERROR_MESSAGES.network_error);
+      setKeyVerified(false);
+      return false;
+    } finally { setSubmitting(false); }
+  };
+
+  const handleAccount = async (e: React.FormEvent) =>
     e.preventDefault();
     setError(null);
     setInfo(null);
+    if (mode === "signup" && !keyVerified) { await verifySignupKey(); return; }
     setSubmitting(true);
     try {
       if (!email.trim()) {
@@ -94,8 +120,12 @@ export default function LoginPage() {
         }
         const result = await signUp(name, email, password);
         if (result.error) setError(result.error);
-        else if (result.needsConfirmation) setInfo("Conta criada. Confirme seu e-mail para entrar.");
-        else setInfo("Conta criada. Agora ative sua key.");
+        else if (result.needsConfirmation) setInfo("Conta criada. Confirme seu e-mail para entrar e ativar sua key.");
+        else {
+          const activated = await redeem(keyValue);
+          if (activated.ok) navigate("/painel", { replace: true });
+          else setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
+        }
       } else {
         const result = await signIn(email, password);
         if (result.error) setError(result.error);
@@ -149,17 +179,33 @@ export default function LoginPage() {
               <button type="button" onClick={() => { setMode("signup"); setError(null); }} className={mode === "signup" ? "h-10 rounded-xl bg-white text-black text-sm font-bold" : "h-10 rounded-xl text-sm text-muted-foreground"}>Criar conta</button>
             </div>
 
-            {mode === "signup" && (
+            {mode === "signup" && !keyVerified && (
               <label className="block">
-                <span className="vip-eyebrow block mb-2">Nome completo</span>
+                <span className="vip-eyebrow block mb-2">Key de acesso</span>
                 <div className="relative">
-                  <UserRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" />
+                  <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input value={keyValue} onChange={e => { setKeyValue(e.target.value); setKeyVerified(false); setError(null); }} placeholder="ATLS-XXXX-XXXX" autoCapitalize="characters" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10 font-mono tracking-wider" required />
                 </div>
               </label>
             )}
 
-            <label className="block">
+{mode === "signup" && keyVerified && (
+              <>
+                <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
+                  <p className="vip-eyebrow">Acesso liberado</p>
+                  <p className="font-semibold mt-1">Key validada com sucesso.</p>
+                </div>
+                <label className="block">
+                  <span className="vip-eyebrow block mb-2">Nome completo</span>
+                  <div className="relative">
+                    <UserRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
+                  </div>
+                </label>
+              </>
+            )}
+
+                        <label className="block">
               <span className="vip-eyebrow block mb-2">E-mail</span>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
