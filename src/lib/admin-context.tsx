@@ -13,7 +13,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeout } from "@/lib/request-timeout";
-import { beginAdminSession, endAdminSession, touchAdminSession, checkAdminDeviceAccess, recoverAdminPrimaryDevice } from "@/lib/admin-devices";
+import { beginAdminSession, endAdminSession, touchAdminSession } from "@/lib/admin-devices";
 
 const SESSION_KEY = "atlas_vip_admin_pwd";
 
@@ -23,7 +23,6 @@ type Ctx = {
   deviceRegistryError: boolean;
   recognize: (pwd: string) => Promise<boolean>;
   signIn: (pwd: string) => Promise<boolean>;
-  recoverAccess: (pwd: string) => Promise<boolean>;
   signOut: () => void;
 };
 
@@ -95,27 +94,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async (pwd: string) => {
     const candidate = await validatedCredential(pwd);
     if (!candidate) return false;
-    const access = await checkAdminDeviceAccess(candidate);
-    if (access === "pending" || access === "denied") {
-      // Recuperação automática somente após validar a senha mestra.
-      // Se já existir outro ADM principal, a recuperação não assume o dispositivo.
-      const recovered = await recoverAdminPrimaryDevice(candidate);
-      if (!recovered) {
-        if (access === "pending") throw new Error("admin_access_pending");
-        throw new Error("admin_access_denied");
-      }
-    }
     // As próximas RPCs precisam usar exatamente a credencial aceita.
-    sessionStorage.setItem(SESSION_KEY, candidate);
-    beginAdminSession();
-    setPassword(candidate);
-    return true;
-  }, [validatedCredential]);
-
-  const recoverAccess = useCallback(async (pwd: string) => {
-    const candidate = await validatedCredential(pwd);
-    if (!candidate) return false;
-    await recoverAdminPrimaryDevice(candidate);
     sessionStorage.setItem(SESSION_KEY, candidate);
     beginAdminSession();
     setPassword(candidate);
@@ -129,8 +108,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   }, [password]);
 
   const value = useMemo<Ctx>(
-    () => ({ password, loading, deviceRegistryError, recognize, signIn, recoverAccess, signOut }),
-    [password, loading, deviceRegistryError, recognize, signIn, recoverAccess, signOut]
+    () => ({ password, loading, deviceRegistryError, recognize, signIn, signOut }),
+    [password, loading, deviceRegistryError, recognize, signIn, signOut]
   );
 
   return (
