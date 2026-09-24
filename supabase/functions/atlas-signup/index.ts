@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
   if (createErr || !created.user) {
     console.error("createUser", createErr?.message);
     const msg = (createErr?.message ?? "").toLowerCase();
-    return json({ ok: false, error: msg.includes("already") ? "account_already_exists" : "signup_failed", detail: createErr?.message }, 400);
+    return json({ ok: false, error: msg.includes("already") ? "account_already_exists" : (msg.includes("weak") || msg.includes("password")) ? "leaked_password" : "signup_failed" }, 400);
   }
   const uid = created.user.id;
 
