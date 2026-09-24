@@ -28,6 +28,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         Insert: {
           activated_at?: string | null
@@ -42,6 +43,7 @@ export type Database = {
           note?: string | null
           plan?: string
           revoked?: boolean
+          user_id?: string | null
         }
         Update: {
           activated_at?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           note?: string | null
           plan?: string
           revoked?: boolean
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -575,6 +578,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -637,6 +641,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -662,6 +667,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }[]
         SetofOptions: {
           from: "*"
@@ -723,6 +729,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -746,6 +753,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -773,6 +781,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -871,6 +880,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -903,6 +913,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -935,6 +946,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -1047,6 +1059,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -1076,6 +1089,7 @@ export type Database = {
           note: string | null
           plan: string
           revoked: boolean
+          user_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -1088,8 +1102,11 @@ export type Database = {
       count_unread_messages: { Args: { _key: string }; Returns: number }
       get_app_version: { Args: never; Returns: string }
       get_daily_reward: { Args: { _key: string }; Returns: Json }
+      get_login_email_by_username: {
+        Args: { _username: string }
+        Returns: string
+      }
       get_maintenance: { Args: never; Returns: Json }
-      get_login_email_by_username: { Args: { _username: string }; Returns: string }
       get_settings: { Args: { _key: string }; Returns: Json }
       is_master_key: { Args: { _key: string }; Returns: boolean }
       list_my_messages: { Args: { _key: string }; Returns: Json }
