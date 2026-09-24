@@ -34,15 +34,25 @@ Deno.serve(async (req) => {
   if (taken && taken.length) return json({ ok: false, error: "username_taken" }, 409);
 
   const email = `${key.replace(/[^A-Z0-9]/g, "")}@atlasvip.app`.toLowerCase();
-  const { data: created, error: createErr } = await db.auth.admin.createUser({
-    email, password, email_confirm: true, user_metadata: { full_name: name, name },
-  });
+  const attrs = { password, email_confirm: true, user_metadata: { full_name: name, name } };
+  const errCode = (m: string) => { const msg = m.toLowerCase(); return (msg.includes("weak") || msg.includes("password")) ? "leaked_password" : "signup_failed"; };
+  let uid: string;
+  const { data: created, error: createErr } = await db.auth.admin.createUser({ email, ...attrs });
   if (createErr || !created.user) {
     console.error("createUser", createErr?.message);
-    const msg = (createErr?.message ?? "").toLowerCase();
-    return json({ ok: false, error: msg.includes("already") ? "account_already_exists" : (msg.includes("weak") || msg.includes("password")) ? "leaked_password" : "signup_failed" }, 400);
-  }
-  const uid = created.user.id;
+    if (!(createErr?.message ?? "").toLowerCase().includes("already")) return json({ ok: false, error: errCode(createErr?.message ?? "") }, 400);
+    // Conta órfã de tentativa anterior (key ainda não vinculada): reaproveita.
+    let found: string | null = null;
+    for (let page = 1; page <= 20 && !found; page++) {
+      const { data: list } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+      if (!list?.users.length) break;
+      found = list.users.find((u) => u.email?.toLowerCase() === email)?.id ?? null;
+    }
+    if (!found) return json({ ok: false, error: "account_already_exists" }, 400);
+    const { error: updErr } = await db.auth.admin.updateUserById(found, attrs);
+    if (updErr) return json({ ok: false, error: errCode(updErr.message) }, 400);
+    uid = found;
+  } else uid = created.user.id;
 
   const { error: profErr } = await db.from("profiles").upsert({ id: uid, full_name: name, updated_at: new Date().toISOString() });
   if (profErr) { await db.auth.admin.deleteUser(uid); return json({ ok: false, error: "profile_creation_failed" }, 500); }
