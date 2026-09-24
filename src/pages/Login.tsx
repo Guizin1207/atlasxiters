@@ -240,12 +240,9 @@ export default function LoginPage() {
           setError("Informe seu usuário.");
           return;
         }
-        const { data: loginEmail, error: lookupError } = await supabase.rpc("get_login_email_by_username", { _username: name.trim() });
-        if (lookupError || !loginEmail) {
-          setError("Usuário ou senha incorretos.");
-          return;
-        }
-        const result = await signIn(String(loginEmail), password);
+        // signIn aceita tanto usuário quanto e-mail e resolve o usuário
+        // pelo RPC do banco antes de autenticar no Supabase Auth.
+        const result = await signIn(name.trim(), password);
         if (result.error) {
           setError(result.error);
           return;
