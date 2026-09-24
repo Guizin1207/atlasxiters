@@ -90,13 +90,74 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       }
 
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) { setKeyData(null); setLoading(false); return; }
+
+      // Depois que a conta é criada, a key já pertence ao usuário.
+      // O login deve recuperar essa key pelo usuário autenticado, sem pedir
+      // que a pessoa digite a key novamente. O localStorage fica apenas como
+      // cache para acelerar os próximos acessos.
+      if (!stored) {
+        const { data: accountKey, error: accountKeyError } = await withTimeout(
+          supabase.rpc("get_my_access_key")
+        );
+        if (version !== requestVersion.current) return;
+        if (accountKeyError) {
+          setKeyData(null);
+          setLoading(false);
+          return;
+        }
+        if (!accountKey) {
+          setKeyData(null);
+          setLoading(false);
+          return;
+        }
+        const linkedKey = accountKey as KeyData;
+        if (linkedKey.revoked) {
+          setKeyData(null);
+          setLoading(false);
+          return;
+        }
+        if (linkedKey.expires_at && Date.parse(linkedKey.expires_at) < Date.now()) {
+          expireKey(linkedKey.key);
+          void notifyExpired(linkedKey.key);
+          return;
+        }
+        clearExpiry();
+        resetExpiryNotification(linkedKey.key);
+        localStorage.setItem(STORAGE_KEY, linkedKey.key);
+        setKeyData(linkedKey);
+        await retireOtherUserPush(linkedKey.key);
+        return;
+      }
 
       const { data, error } = await withTimeout(supabase.rpc("validate_key", { _key: stored, _device_id: deviceIdRef.current }));
       if (version !== requestVersion.current) return;
       if (error) {
         const reason = parseError(error.message);
         if (["invalid_key", "revoked_key", "device_mismatch", "account_mismatch"].includes(reason)) {
+          // Se a key local ficou inválida/trocou de dispositivo, tenta recuperar
+          // a key vinculada à conta antes de bloquear o usuário.
+          const { data: accountKey } = await withTimeout(supabase.rpc("get_my_access_key"));
+          if (version !== requestVersion.current) return;
+          if (accountKey) {
+            const linkedKey = accountKey as KeyData;
+            if (linkedKey.revoked) {
+              localStorage.removeItem(STORAGE_KEY);
+              clearExpiry();
+              setKeyData(null);
+              return;
+            }
+            if (linkedKey.expires_at && Date.parse(linkedKey.expires_at) < Date.now()) {
+              expireKey(linkedKey.key);
+              void notifyExpired(linkedKey.key);
+              return;
+            }
+            clearExpiry();
+            resetExpiryNotification(linkedKey.key);
+            localStorage.setItem(STORAGE_KEY, linkedKey.key);
+            setKeyData(linkedKey);
+            await retireOtherUserPush(linkedKey.key);
+            return;
+          }
           void (async () => {
             const { data: eventId } = await supabase.rpc("record_security_event", { _key: stored, _device_id: deviceIdRef.current, _device: deviceRef.current, _reason: reason });
             if (eventId) void notifySecurity(String(eventId));
