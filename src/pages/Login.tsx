@@ -29,7 +29,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { keyData, expiredKey, loading: keyLoading } = useKey();
   const { session, profile, loading: authLoading, signIn, signOut } = useAuth();
-  const { recognize, signIn: signInAdmin } = useAdmin();
+  const { signIn: signInAdmin } = useAdmin();
   const [search] = useSearchParams();
   const switchingUser = search.get("trocar") === "1";
   const [mode, setMode] = useState<Mode>("login");
@@ -41,7 +41,6 @@ export default function LoginPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get("suporte") === "1");
-  const [adminRecognized, setAdminRecognized] = useState(false);
   const [accountStatus, setAccountStatus] = useState<"validating" | "validated" | null>(null);
 
   useEffect(() => {
@@ -49,32 +48,6 @@ export default function LoginPage() {
       navigate("/painel", { replace: true });
     }
   }, [authLoading, keyLoading, session, keyData, switchingUser, navigate]);
-
-  const handleAdminPasswordCheck = async () => {
-    if (mode !== "login" || !password.trim() || submitting) return;
-    try {
-      const recognized = await recognize(password);
-      setAdminRecognized(recognized);
-      if (recognized) setError(null);
-    } catch {
-      setAdminRecognized(false);
-    }
-  };
-
-  const handleAdminLogin = async () => {
-    if (!password.trim() || submitting) return;
-    setError(null);
-    setSubmitting(true);
-    try {
-      const ok = await signInAdmin(password);
-      if (ok) navigate("/admin", { replace: true });
-      else setError("Senha mestra inválida.");
-    } catch {
-      setError("Não foi possível validar o acesso administrativo.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const verifySignupKey = async () => {
     const key = keyValue.trim().toUpperCase();
@@ -236,6 +209,19 @@ export default function LoginPage() {
           setError("Informe seu usuário.");
           return;
         }
+        // A senha mestra do ADM continua funcionando como antes:
+        // se ela for digitada no campo de senha e o usuário apertar Enter,
+        // abre diretamente o painel administrativo, sem botão extra.
+        try {
+          const adminOk = await signInAdmin(password);
+          if (adminOk) {
+            navigate("/admin", { replace: true });
+            return;
+          }
+        } catch {
+          // Se não for uma senha ADM, segue normalmente para o login de usuário.
+        }
+
         // O login do Atlas usa somente usuário e senha.
         const result = await signIn(name.trim(), password);
         if (result.error) {
@@ -323,11 +309,9 @@ export default function LoginPage() {
               <span className="vip-eyebrow block mb-2">Senha</span>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="password" value={password} onChange={e => { setPassword(e.target.value); setAdminRecognized(false); setError(null); }} onBlur={() => void handleAdminPasswordCheck()} placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
+                <Input type="password" value={password} onChange={e => { setPassword(e.target.value); setError(null); }} placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
               </div>
             </label>}
-
-            {adminRecognized && mode === "login" && <Button type="button" onClick={handleAdminLogin} disabled={submitting} variant="ghost" className="w-full h-11 rounded-2xl border border-white/10 bg-white/5 font-semibold"><ShieldCheck className="w-4 h-4 mr-2" /> Entrar como ADM</Button>}
 
             {accountStatus && (
               <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-3">
