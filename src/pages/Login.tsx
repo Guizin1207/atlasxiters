@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { NotificationBell } from "@/components/atlas/NotificationBell";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "@/integrations/supabase/client";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_key: "Chave inválida. Verifique e tente novamente.",
