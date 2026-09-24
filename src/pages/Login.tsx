@@ -176,6 +176,9 @@ export default function LoginPage() {
             account_already_exists: "Esta conta já foi criada com essa key.",
             signup_failed: "Não foi possível criar a conta. Tente novamente.",
             database_error: "Não foi possível validar a key. Tente novamente.",
+            server_configuration_error: "Serviço de cadastro não configurado.",
+            invalid_request: "Dados de cadastro inválidos.",
+            profile_creation_failed: "Não foi possível salvar seu perfil.",
           };
           setError(messages[functionError] ?? "Não foi possível criar a conta. Tente novamente.");
           return;
