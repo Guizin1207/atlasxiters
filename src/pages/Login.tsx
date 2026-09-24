@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, KeyRound, ShieldCheck, MessageCircle, Mail, Lock, UserRound } from "lucide-react";
+import { Loader2, KeyRound, ShieldCheck, MessageCircle, Lock, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKey } from "@/lib/key-context";
@@ -119,13 +119,9 @@ export default function LoginPage() {
           setError("Use uma senha com 8+ caracteres, incluindo letra maiúscula, minúscula e número.");
           return;
         }
-        const internalEmail = `${keyValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "")}@atlasvip.app`;
         setAccountStatus("validating");
         setInfo("Criando conta e vinculando sua key...");
         
-        // O cadastro do Atlas usa uma Edge Function administrativa para criar o
-        // usuário já confirmado. Assim, o login não depende de e-mail de confirmação
-        // nem da configuração "Confirm email" do projeto Supabase.
         let signupData: any = null;
         let signupError: any = null;
 
@@ -219,7 +215,7 @@ export default function LoginPage() {
         }
 
         localStorage.setItem("atlas_vip_key", keyValue.trim().toUpperCase());
-        const loginResult = await signIn(String(signupData?.email ?? internalEmail), password);
+        const loginResult = await signIn(name.trim(), password);
         if (loginResult.error) {
           setAccountStatus(null);
           setError("A conta foi criada, mas o login automático falhou. Entre novamente com seu usuário e senha.");
@@ -240,8 +236,7 @@ export default function LoginPage() {
           setError("Informe seu usuário.");
           return;
         }
-        // signIn aceita tanto usuário quanto e-mail e resolve o usuário
-        // pelo RPC do banco antes de autenticar no Supabase Auth.
+        // O login do Atlas usa somente usuário e senha.
         const result = await signIn(name.trim(), password);
         if (result.error) {
           setError(result.error);
@@ -356,7 +351,7 @@ export default function LoginPage() {
           <div className="glass-strong rounded-3xl p-6 space-y-4">
             <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
               <p className="vip-eyebrow">Conta</p>
-              <p className="font-semibold mt-1">{profile?.full_name || session.user.email}</p>
+              <p className="font-semibold mt-1">{profile?.full_name || "Conta Atlas"}</p>
               <p className="text-sm text-muted-foreground mt-2">Sua key vinculada está sendo carregada automaticamente. Não é necessário informar a key novamente.</p>
             </div>
             {error && <p className="text-sm text-status-danger bg-status-danger/10 border border-status-danger/20 rounded-xl px-4 py-3">{error}</p>}
