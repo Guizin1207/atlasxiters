@@ -126,9 +126,43 @@ export default function LoginPage() {
         // O cadastro do Atlas usa uma Edge Function administrativa para criar o
         // usuário já confirmado. Assim, o login não depende de e-mail de confirmação
         // nem da configuração "Confirm email" do projeto Supabase.
-        const { data: signupData, error: signupError } = await supabase.functions.invoke("atlas-signup", {
-          body: { key: keyValue, name, password },
-        });
+        let signupData: any = null;
+        let signupError: any = null;
+
+        try {
+          const result = await supabase.functions.invoke("atlas-signup", {
+            body: { key: keyValue, name, password },
+          });
+          signupData = result.data;
+          signupError = result.error;
+
+          // Fallback direto para a Edge Function caso o client SDK falhe no transporte.
+          if (signupError) {
+            const baseUrl = String(import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\\/$/, "");
+            const apiKey = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "");
+            if (baseUrl && apiKey) {
+              try {
+                const response = await fetch(baseUrl + "/functions/v1/atlas-signup", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    apikey: apiKey,
+                  },
+                  body: JSON.stringify({ key: keyValue, name, password }),
+                });
+                const fallbackData = await response.json().catch(() => null);
+                if (fallbackData) {
+                  signupData = fallbackData;
+                  signupError = null;
+                }
+              } catch {
+                // mantém o erro original para a mensagem abaixo
+              }
+            }
+          }
+        } catch (invokeError) {
+          signupError = invokeError;
+        }
 
         if (signupError) {
           setAccountStatus(null);
