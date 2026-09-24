@@ -153,6 +153,7 @@ export default function LoginPage() {
             key_already_linked: ERROR_MESSAGES.key_already_linked,
             invalid_key: ERROR_MESSAGES.invalid_key,
             invalid_username: "O usuário precisa ter entre 2 e 40 caracteres.",
+            username_taken: "Esse nome de usuário já está em uso.",
             weak_password: "Use uma senha com 8+ caracteres, incluindo letra maiúscula, minúscula e número.",
             account_already_exists: "Esta conta já foi criada com essa key.",
             profile_creation_failed: "A conta foi criada, mas o perfil não pôde ser salvo. Tente novamente.",
@@ -168,6 +169,7 @@ export default function LoginPage() {
             invalid_key: ERROR_MESSAGES.invalid_key,
             key_already_linked: ERROR_MESSAGES.key_already_linked,
             invalid_username: "O usuário precisa ter entre 2 e 40 caracteres.",
+            username_taken: "Esse nome de usuário já está em uso.",
             weak_password: "Use uma senha com 8+ caracteres, incluindo letra maiúscula, minúscula e número.",
             account_already_exists: "Esta conta já foi criada com essa key.",
             signup_failed: "Não foi possível criar a conta. Tente novamente.",
@@ -177,7 +179,8 @@ export default function LoginPage() {
           return;
         }
 
-        const loginResult = await signIn(internalEmail, password);
+        localStorage.setItem("atlas_vip_key", keyValue.trim().toUpperCase());
+        const loginResult = await signIn(String(signupData?.email ?? internalEmail), password);
         if (loginResult.error) {
           setAccountStatus(null);
           setError("A conta foi criada, mas o login automático falhou. Entre novamente com seu usuário e senha.");
@@ -214,7 +217,7 @@ export default function LoginPage() {
         const savedKey = localStorage.getItem("atlas_vip_key");
         if (savedKey) {
           const activated = await redeem(savedKey);
-          if (!activated.ok) {
+          if (activated.ok === false) {
             setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
             return;
           }
