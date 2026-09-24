@@ -134,8 +134,8 @@ export default function LoginPage() {
 
           // Fallback direto para a Edge Function caso o client SDK falhe no transporte.
           if (signupError) {
-            const baseUrl = String(import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\\/$/, "");
-            const apiKey = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "");
+            const baseUrl = SUPABASE_URL.replace(/\\/$/, "");
+            const apiKey = SUPABASE_PUBLISHABLE_KEY;
             if (baseUrl && apiKey) {
               try {
                 const response = await fetch(baseUrl + "/functions/v1/atlas-signup", {
