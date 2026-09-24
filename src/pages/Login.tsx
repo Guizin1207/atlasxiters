@@ -214,16 +214,8 @@ export default function LoginPage() {
           return;
         }
 
-        // Se a sessão entrou mas o KeyProvider ainda não atualizou, tenta
-        // vincular/validar a key salva localmente antes de abrir o painel.
-        const savedKey = localStorage.getItem("atlas_vip_key");
-        if (savedKey) {
-          const activated = await redeem(savedKey);
-          if (activated.ok === false) {
-            setError(ERROR_MESSAGES[activated.error] ?? ERROR_MESSAGES.unknown_error);
-            return;
-          }
-        }
+        // A key já está vinculada à conta. O KeyProvider recupera a key
+        // automaticamente pelo usuário autenticado; não pedimos a key novamente.
         navigate("/painel", { replace: true });
       }
     } finally {
