@@ -22,7 +22,7 @@ function message(error: unknown) {
   const text = error instanceof Error ? error.message : String(error ?? "");
   const lower = text.toLowerCase();
   if (lower.includes("invalid login credentials")) return "Usuário ou senha incorretos.";
-  if (lower.includes("invalid_username")) return "Usuário ou senha incorretos.";
+  if (lower.includes("invalid_username") || lower.includes("username")) return "Usuário ou senha incorretos.";
   if (lower.includes("user already registered")) return "Esta conta já está cadastrada.";
   if (lower.includes("password should be at least")) return "A senha precisa ter pelo menos 6 caracteres.";
   if (lower.includes("email not confirmed")) return "A confirmação de e-mail ainda está ativa no Supabase.";
@@ -30,6 +30,18 @@ function message(error: unknown) {
   if (lower.includes("signup is disabled")) return "O cadastro de usuários está desativado no Supabase.";
   if (lower.includes("email provider is disabled")) return "O provedor de e-mail do Supabase está desativado.";
   return text || "Não foi possível concluir a operação.";
+}
+
+async function resolveLoginEmail(identifier: string) {
+  if (identifier.includes("@")) return identifier;
+
+  const { data, error } = await supabase.rpc("get_login_email_by_username", {
+    _username: identifier,
+  });
+
+  if (error || !data) return null;
+  const email = String(data).trim();
+  return email.includes("@") ? email : null;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -84,42 +96,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const identifier = emailOrUsername.trim();
       if (!identifier || !password) return { error: "Informe seu usuário e senha." };
 
-      let email = identifier;
-      if (!identifier.includes("@")) {
-        const { data, error: lookupError } = await supabase.rpc("get_login_email_by_username", {
-          _username: identifier,
-        });
-        if (lookupError || !data) return { error: "Usuário ou senha incorretos." };
-        email = String(data).trim();
-      }
+      try {
+        const email = await resolveLoginEmail(identifier);
+        if (!email) return { error: "Usuário ou senha incorretos." };
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error: error ? message(error) : null };
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        return { error: error ? message(error) : null };
+      } catch {
+        return { error: "Não foi possível conectar ao servidor. Tente novamente." };
+      }
     },
     signUp: async (name, email, password, signupKey) => {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            full_name: name.trim(),
-            name: name.trim(),
-            ...(signupKey ? { atlas_signup_key: signupKey.trim().toUpperCase() } : {}),
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              full_name: name.trim(),
+              name: name.trim(),
+              ...(signupKey ? { atlas_signup_key: signupKey.trim().toUpperCase() } : {}),
+            },
           },
-        },
-      });
-      return {
-        error: error ? message(error) : null,
-        needsConfirmation: !Boolean(data.session) && Boolean(data.user),
-        hasSession: Boolean(data.session),
-      };
+        });
+        return {
+          error: error ? message(error) : null,
+          needsConfirmation: !Boolean(data.session) && Boolean(data.user),
+          hasSession: Boolean(data.session),
+        };
+      } catch (error) {
+        return { error: message(error), needsConfirmation: false, hasSession: false };
+      }
     },
     signInWithGoogle: async () => {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: window.location.origin + "/login" },
-      });
-      return { error: error ? message(error) : null };
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: window.location.origin + "/login" },
+        });
+        return { error: error ? message(error) : null };
+      } catch (error) {
+        return { error: message(error) };
+      }
     },
     signOut: async () => {
       await supabase.auth.signOut();
