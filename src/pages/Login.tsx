@@ -27,7 +27,7 @@ type Mode = "login" | "signup";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { keyData, expiredKey, redeem, loading: keyLoading } = useKey();
+  const { keyData, expiredKey, loading: keyLoading } = useKey();
   const { session, profile, loading: authLoading, signIn, signOut } = useAuth();
   const { recognize, signIn: signInAdmin } = useAdmin();
   const [search] = useSearchParams();
@@ -223,23 +223,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session || submitting || !keyValue.trim()) return;
-    setError(null);
-    setInfo(null);
-    setSubmitting(true);
-    try {
-      const result = await redeem(keyValue);
-      if (result.ok) navigate("/painel", { replace: true });
-      else if ("error" in result) setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown_error);
-      else setError(ERROR_MESSAGES.unknown_error);
-    } catch {
-      setError(ERROR_MESSAGES.unknown_error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const isExpired = error === ERROR_MESSAGES.expired_key || Boolean(expiredKey);
   const supportKey = expiredKey || keyValue.trim().toUpperCase();
@@ -336,25 +319,15 @@ export default function LoginPage() {
 
           </form>
         ) : !keyData ? (
-          <form onSubmit={handleKey} className="glass-strong rounded-3xl p-6 space-y-5">
+          <div className="glass-strong rounded-3xl p-6 space-y-4">
             <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
               <p className="vip-eyebrow">Conta</p>
               <p className="font-semibold mt-1">{profile?.full_name || session.user.email}</p>
-              <p className="text-xs text-muted-foreground mt-1">A key ativada ficará vinculada a esta conta.</p>
+              <p className="text-sm text-muted-foreground mt-2">Sua key vinculada está sendo carregada automaticamente. Não é necessário informar a key novamente.</p>
             </div>
-            <label className="block">
-              <span className="vip-eyebrow block mb-3">Key de acesso</span>
-              <div className="relative">
-                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={keyValue} onChange={e => { setKeyValue(e.target.value); setError(null); }} placeholder="ATLS-XXXX-XXXX" autoCapitalize="characters" className="h-14 pl-11 rounded-2xl bg-white/5 border-white/10 font-mono tracking-wider" required />
-              </div>
-            </label>
             {error && <p className="text-sm text-status-danger bg-status-danger/10 border border-status-danger/20 rounded-xl px-4 py-3">{error}</p>}
-            <Button disabled={submitting} className="w-full h-14 rounded-2xl bg-white text-black font-bold uppercase tracking-[0.12em]">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ativar key"}
-            </Button>
             <Button type="button" variant="ghost" onClick={() => void signOut()} className="w-full rounded-2xl text-muted-foreground">Sair da conta</Button>
-          </form>
+          </div>
         ) : null}
 
 <div className="mt-8 text-center space-y-3">
