@@ -1089,7 +1089,6 @@ export type Database = {
       get_app_version: { Args: never; Returns: string }
       get_daily_reward: { Args: { _key: string }; Returns: Json }
       get_maintenance: { Args: never; Returns: Json }
-      get_login_email_by_username: { Args: { _username: string }; Returns: string }
       get_settings: { Args: { _key: string }; Returns: Json }
       is_master_key: { Args: { _key: string }; Returns: boolean }
       list_my_messages: { Args: { _key: string }; Returns: Json }
