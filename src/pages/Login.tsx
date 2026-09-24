@@ -360,6 +360,7 @@ export default function LoginPage() {
         ) : null}
 
 <div className="mt-8 text-center space-y-3">
+          <button type="button" onClick={() => navigate("/admin/login")} className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors">Acesso administrativo</button>
           <p className="text-xs text-muted-foreground/60">Precisa de ajuda? Fale com o suporte.</p>
           <Button type="button" onClick={() => setSupportOpen(true)} className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-white text-sm font-semibold">
             <MessageCircle className="w-4 h-4" /> Falar com suporte
