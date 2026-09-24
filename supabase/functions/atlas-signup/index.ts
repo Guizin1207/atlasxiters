@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     email, password, email_confirm: true, user_metadata: { full_name: name, name },
   });
   if (createErr || !created.user) {
+    console.error("createUser", createErr?.message);
     const msg = (createErr?.message ?? "").toLowerCase();
     return json({ ok: false, error: msg.includes("already") ? "account_already_exists" : "signup_failed" }, 400);
   }
