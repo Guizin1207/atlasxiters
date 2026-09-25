@@ -46,7 +46,7 @@ type AdminFunction = {
 
 const adminFunctions: AdminFunction[] = [
   { id: "overview", title: "Visão geral", icon: LayoutGrid },
-  { id: "users", title: "Usuários", icon: Users },
+  { id: "users", title: "Contas", icon: Users },
   { id: "finance", title: "Financeiro", icon: BarChart3 },
   { id: "keys", title: "Keys", icon: KeyRound },
   { id: "devices", title: "Dispositivos", icon: Smartphone },
@@ -119,7 +119,7 @@ export default function AdminPage() {
 
   const selected = adminFunctions.find((item) => item.id === selectedFunction);
   const adminGroups = [
-    { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
+    { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "users", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
     { title: "Atendimento", functions: adminFunctions.filter((item) => ["notifications", "messages", "support"].includes(item.id)) },
     { title: "Sistema", functions: adminFunctions.filter((item) => item.id === "maintenance") },
   ];
@@ -345,8 +345,8 @@ export default function AdminPage() {
             <div className="space-y-5">
               <div>
                 <p className="vip-eyebrow">Contas</p>
-                <h2 className="text-xl font-bold">Usuários</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Contas cadastradas e keys vinculadas.</p>
+                <h2 className="text-xl font-bold">Contas criadas</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Veja os usuários criados, suas keys vinculadas e o status de cada conta.</p>
               </div>
               <section className="glass-strong rounded-3xl p-4 sm:p-5">
                 {usersLoading ? (
@@ -373,7 +373,7 @@ export default function AdminPage() {
                           <span>Ativada: {u.key_activated_at ? new Date(u.key_activated_at).toLocaleDateString("pt-BR") : "—"}</span>
                           <span>Último acesso: {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}</span>
                         </div>
-                        <p className="mt-3 text-xs text-muted-foreground">Senha: ••••••••</p>
+                        <p className="mt-3 text-xs text-muted-foreground">Senha: protegida pelo sistema de autenticação</p>
                       </div>
                     ))}
                   </div>
