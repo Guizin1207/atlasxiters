@@ -300,7 +300,7 @@ export default function LoginPage() {
               <span className="vip-eyebrow block mb-2">Usuário</span>
               <div className="relative">
                 <UserRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={name} onChange={e => { setName(e.target.value); setError(null); }} placeholder="Seu usuário" autoComplete="username" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
+                <Input value={name} onChange={e => { setName(e.target.value); setError(null); }} placeholder="Seu usuário" autoComplete="username" className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" />
               </div>
             </label>}
 
