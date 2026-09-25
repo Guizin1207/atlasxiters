@@ -18,6 +18,7 @@ import {
   Wrench,
   ShieldCheck,
   BarChart3,
+  Users,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ type AdminFunction = {
 
 const adminFunctions: AdminFunction[] = [
   { id: "overview", title: "Visão geral", icon: LayoutGrid },
+  { id: "users", title: "Usuários", icon: Users },
   { id: "finance", title: "Financeiro", icon: BarChart3 },
   { id: "keys", title: "Keys", icon: KeyRound },
   { id: "devices", title: "Dispositivos", icon: Smartphone },
@@ -63,6 +65,8 @@ export default function AdminPage() {
   const [openingPanel, setOpeningPanel] = useState(false);
   const [selectedFunction, setSelectedFunction] = useState("overview");
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [overviewStats, setOverviewStats] = useState({ totalKeys: 0, activeKeys: 0, unusedKeys: 0, expiredKeys: 0, revokedKeys: 0, loading: true });
   const touchStartRef = useRef({ x: 0, y: 0 });
 
@@ -89,6 +93,19 @@ export default function AdminPage() {
     return () => { mounted = false; window.clearInterval(timer); };
   }, [password]);
 
+  useEffect(() => {
+    if (!password || selectedFunction !== "users") return;
+    let mounted = true;
+    setUsersLoading(true);
+    const loadUsers = async () => {
+      const { data, error } = await supabase.rpc("admin_list_users", { _password: password });
+      if (!mounted) return;
+      setUsers(Array.isArray(data) && !error ? data : []);
+      setUsersLoading(false);
+    };
+    void loadUsers();
+    return () => { mounted = false; };
+  }, [password, selectedFunction]);
 
   if (loading) {
     return (
@@ -303,6 +320,46 @@ export default function AdminPage() {
               </section>
 
               <DeviceStatsCard />
+            </div>
+          )}
+
+          {selectedFunction === "users" && (
+            <div className="space-y-5">
+              <div>
+                <p className="vip-eyebrow">Contas</p>
+                <h2 className="text-xl font-bold">Usuários</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Contas cadastradas e keys vinculadas.</p>
+              </div>
+              <section className="glass-strong rounded-3xl p-4 sm:p-5">
+                {usersLoading ? (
+                  <div className="flex items-center gap-2 py-8 justify-center text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Carregando usuários...</div>
+                ) : users.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Nenhum usuário cadastrado.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {users.map((u) => (
+                      <div key={u.user_id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-semibold truncate">{u.username || "Sem usuário"}</p>
+                            <p className="mt-1 font-mono text-xs text-muted-foreground">
+                              {u.key ? `${String(u.key).slice(0, 5)}••••••••${String(u.key).slice(-4)}` : "Sem key"}
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px] uppercase">{u.status === "active" ? "Ativo" : u.status === "expired" ? "Expirada" : u.status === "revoked" ? "Revogada" : "Sem key"}</span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
+                          <span>Criado: {u.created_at ? new Date(u.created_at).toLocaleDateString("pt-BR") : "—"}</span>
+                          <span>Expira: {u.key_expires_at ? new Date(u.key_expires_at).toLocaleDateString("pt-BR") : "—"}</span>
+                          <span>Ativada: {u.key_activated_at ? new Date(u.key_activated_at).toLocaleDateString("pt-BR") : "—"}</span>
+                          <span>Último acesso: {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}</span>
+                        </div>
+                        <p className="mt-3 text-xs text-muted-foreground">Senha: ••••••••</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           )}
 
