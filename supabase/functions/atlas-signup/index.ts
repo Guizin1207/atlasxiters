@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "weak_password" }, 400);
 
   const { data: rec, error: keyErr } = await db.from("access_keys")
-    .select("id, revoked, is_master, user_id, expires_at").eq("key", key).maybeSingle();
+    .select("id, revoked, is_master, user_id, expires_at, duration_days").eq("key", key).maybeSingle();
   if (keyErr) return json({ ok: false, error: "database_error" }, 500);
   if (!rec || rec.revoked || rec.is_master) return json({ ok: false, error: "invalid_key" }, 400);
   if (rec.expires_at && new Date(rec.expires_at).getTime() < Date.now()) return json({ ok: false, error: "invalid_key" }, 400);
