@@ -58,8 +58,13 @@ Deno.serve(async (req) => {
   if (profErr) { await db.auth.admin.deleteUser(uid); return json({ ok: false, error: "profile_creation_failed" }, 500); }
 
   // Vínculo atômico: só grava se ninguém vinculou a key nesse meio tempo.
+  const activation = new Date();
+  const expiresAt = rec.duration_days
+    ? new Date(activation.getTime() + rec.duration_days * 24 * 60 * 60 * 1000).toISOString()
+    : rec.expires_at;
   const { data: bound, error: bindErr } = await db.from("access_keys")
-    .update({ user_id: uid }).eq("id", rec.id).is("user_id", null).select("id");
+    .update({ user_id: uid, activated_at: activation.toISOString(), expires_at: expiresAt })
+    .eq("id", rec.id).is("user_id", null).select("id");
   if (bindErr || !bound?.length) {
     await db.auth.admin.deleteUser(uid);
     return json({ ok: false, error: bindErr ? "database_error" : "key_already_linked" }, 409);
