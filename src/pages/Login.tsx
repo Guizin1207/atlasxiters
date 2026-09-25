@@ -232,7 +232,7 @@ export default function LoginPage() {
             return;
           }
           const redeemed = await redeem(password.trim());
-          if (!redeemed.ok) {
+          if (redeemed.ok === false) {
             setError(ERROR_MESSAGES[redeemed.error] ?? ERROR_MESSAGES.unknown_error);
             return;
           }
