@@ -189,6 +189,17 @@ export default function AdminPage() {
               <span className="hidden sm:inline">Painel</span>
             </Button>
             <Button
+              variant="outline"
+              size="sm"
+              className="hidden rounded-xl sm:inline-flex"
+              onClick={() => {
+                if (adminPreview) closeAdminPanel();
+                navigate("/login?trocar=1");
+              }}
+            >
+              Acesso usuário
+            </Button>
+            <Button
               variant="ghost"
               size="icon"
               onClick={() => {
