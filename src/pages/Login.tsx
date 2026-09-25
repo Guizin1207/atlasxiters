@@ -100,7 +100,7 @@ export default function LoginPage() {
 
         try {
           const result = await supabase.functions.invoke("atlas-signup", {
-            body: { key: keyValue, name, password },
+            body: { key: keyValue, name, password, device, device_id: deviceId },
           });
           signupData = result.data;
           signupError = result.error;
