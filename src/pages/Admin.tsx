@@ -170,17 +170,6 @@ export default function AdminPage() {
 
           <div className="flex shrink-0 items-center gap-1.5">
             <Button
-              variant="outline"
-              size="sm"
-              className="hidden rounded-xl sm:inline-flex"
-              onClick={() => {
-                if (adminPreview) closeAdminPanel();
-                navigate("/login?trocar=1");
-              }}
-            >
-              Acesso usuário
-            </Button>
-            <Button
               size="sm"
               className="rounded-xl"
               onClick={async () => {
