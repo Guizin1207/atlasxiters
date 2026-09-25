@@ -27,7 +27,7 @@ type Mode = "login" | "signup";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { keyData, expiredKey, loading: keyLoading, redeem } = useKey();
+  const { keyData, expiredKey, loading: keyLoading, redeem, device, deviceId } = useKey();
   const { session, profile, loading: authLoading, signIn, signOut } = useAuth();
   const { signIn: signInAdmin } = useAdmin();
   const [search] = useSearchParams();
@@ -117,7 +117,7 @@ export default function LoginPage() {
                     "Content-Type": "application/json",
                     apikey: apiKey,
                   },
-                  body: JSON.stringify({ key: keyValue, name, password }),
+                  body: JSON.stringify({ key: keyValue, name, password, device, device_id: deviceId }),
                 });
                 const fallbackData = await response.json().catch(() => null);
                 if (fallbackData) {
