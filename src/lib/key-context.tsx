@@ -97,7 +97,7 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       // cache para acelerar os próximos acessos.
       if (!stored) {
         const { data: accountKey, error: accountKeyError } = await withTimeout(
-          supabase.rpc("get_my_access_key")
+          (supabase.rpc as any)("get_my_access_key")
         );
         if (version !== requestVersion.current) return;
         if (accountKeyError) {
@@ -136,7 +136,7 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
         if (["invalid_key", "revoked_key", "device_mismatch", "account_mismatch"].includes(reason)) {
           // Se a key local ficou inválida/trocou de dispositivo, tenta recuperar
           // a key vinculada à conta antes de bloquear o usuário.
-          const { data: accountKey } = await withTimeout(supabase.rpc("get_my_access_key"));
+          const { data: accountKey } = await withTimeout((supabase.rpc as any)("get_my_access_key"));
           if (version !== requestVersion.current) return;
           if (accountKey) {
             const linkedKey = accountKey as KeyData;
