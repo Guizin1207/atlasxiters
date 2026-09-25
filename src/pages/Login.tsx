@@ -195,9 +195,15 @@ export default function LoginPage() {
           return;
         }
 
-        // A Edge Function já vinculou a key à conta durante a criação.
-        // Não chame redeem novamente aqui, pois isso tentaria reivindicar
-        // uma key que acabou de ser vinculada ao mesmo usuário.
+        // Reforça a vinculação do dispositivo após o login. A Edge Function cria
+        // a conta e vincula a key; o redeem completa device/device_id usando
+        // a sessão autenticada atual.
+        const deviceResult = await redeem(keyValue.trim().toUpperCase());
+        if (deviceResult.ok === false) {
+          setAccountStatus(null);
+          setError(ERROR_MESSAGES[deviceResult.error] ?? "Conta criada, mas não foi possível vincular o dispositivo.");
+          return;
+        }
         setAccountStatus("validated");
         await signOut();
         setMode("login");
