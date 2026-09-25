@@ -214,6 +214,24 @@ export default function AdminPage() {
           </div>
         </header>
 
+        <nav className="hidden md:flex overflow-x-auto gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-2">
+          {adminFunctions.map((item) => {
+            const Icon = item.icon;
+            const active = selectedFunction === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSelectedFunction(item.id)}
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-white text-black" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"}`}
+              >
+                <Icon className="h-4 w-4" />
+                {item.title}
+              </button>
+            );
+          })}
+        </nav>
+
         <div className="md:hidden">
           <div
             aria-hidden="true"
