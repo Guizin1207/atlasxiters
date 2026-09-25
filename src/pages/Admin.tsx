@@ -373,7 +373,35 @@ export default function AdminPage() {
                           <span>Ativada: {u.key_activated_at ? new Date(u.key_activated_at).toLocaleDateString("pt-BR") : "—"}</span>
                           <span>Último acesso: {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}</span>
                         </div>
-                        <p className="mt-3 text-xs text-muted-foreground">Senha: protegida pelo sistema de autenticação</p>
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-xs text-muted-foreground">Senha: protegida pelo sistema de autenticação</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl"
+                            onClick={async () => {
+                              const newPassword = window.prompt(
+                                `Nova senha para ${u.username || "este usuário"}:\n\nUse 8+ caracteres, com maiúscula, minúscula e número.`
+                              );
+                              if (newPassword === null) return;
+                              if (newPassword.length < 8 || newPassword.length > 72 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/\d/.test(newPassword)) {
+                                window.alert("Senha inválida. Use 8+ caracteres, com maiúscula, minúscula e número.");
+                                return;
+                              }
+                              const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+                                body: { admin_password: password, user_id: u.user_id, new_password: newPassword },
+                              });
+                              if (error || !data?.ok) {
+                                window.alert("Não foi possível redefinir a senha.");
+                                return;
+                              }
+                              window.alert("Senha redefinida com sucesso.");
+                            }}
+                          >
+                            Redefinir senha
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
