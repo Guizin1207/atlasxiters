@@ -205,21 +205,20 @@ export default function LoginPage() {
         setKeyVerified(false);
         setInfo("Conta criada e key vinculada com sucesso. Agora entre com seu usuário e senha.");
       } else {
+        // Senha mestra do ADM: validada no servidor, abre /admin sem exigir usuário.
+        if (password.trim()) {
+          try {
+            if (await signInAdmin(password)) {
+              navigate("/admin", { replace: true });
+              return;
+            }
+          } catch {
+            // Não é senha ADM ou validação indisponível: segue para o login normal.
+          }
+        }
         if (!name.trim()) {
           setError("Informe seu usuário.");
           return;
-        }
-        // A senha mestra do ADM continua funcionando como antes:
-        // se ela for digitada no campo de senha e o usuário apertar Enter,
-        // abre diretamente o painel administrativo, sem botão extra.
-        try {
-          const adminOk = await signInAdmin(password);
-          if (adminOk) {
-            navigate("/admin", { replace: true });
-            return;
-          }
-        } catch {
-          // Se não for uma senha ADM, segue normalmente para o login de usuário.
         }
 
         // O login do Atlas usa somente usuário e senha.
