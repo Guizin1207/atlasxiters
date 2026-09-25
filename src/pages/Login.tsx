@@ -27,7 +27,7 @@ type Mode = "login" | "signup";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { keyData, expiredKey, loading: keyLoading } = useKey();
+  const { keyData, expiredKey, loading: keyLoading, redeem } = useKey();
   const { session, profile, loading: authLoading, signIn, signOut } = useAuth();
   const { signIn: signInAdmin } = useAdmin();
   const [search] = useSearchParams();
@@ -218,6 +218,25 @@ export default function LoginPage() {
         }
         if (!name.trim()) {
           setError("Informe seu usuário.");
+          return;
+        }
+
+        // Login com usuário + key: valida no servidor que a key pertence a esse usuário.
+        if (/^[A-Z0-9]{3,}(-[A-Z0-9]{3,}){2,}$/i.test(password.trim())) {
+          const { error: keyErr } = await supabase.rpc("check_user_key", { _username: name.trim(), _key: password.trim() });
+          if (keyErr) {
+            const msg = keyErr.message?.toLowerCase() ?? "";
+            if (msg.includes("key_not_linked")) { setError("Esta key ainda não tem conta. Crie sua conta primeiro."); return; }
+            const code = Object.keys(ERROR_MESSAGES).find(k => msg.includes(k));
+            setError(ERROR_MESSAGES[code ?? "network_error"]);
+            return;
+          }
+          const redeemed = await redeem(password.trim());
+          if (redeemed.ok === false) {
+            setError(ERROR_MESSAGES[redeemed.error] ?? ERROR_MESSAGES.unknown_error);
+            return;
+          }
+          navigate("/painel", { replace: true });
           return;
         }
 
