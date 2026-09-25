@@ -360,8 +360,9 @@ export default function AdminPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="font-semibold truncate">{u.username || "Sem usuário"}</p>
-                            <p className="mt-1 font-mono text-xs text-muted-foreground">
-                              {u.key ? `${String(u.key).slice(0, 5)}••••••••${String(u.key).slice(-4)}` : "Sem key"}
+                            <p className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">Key vinculada</p>
+                            <p className="mt-1 break-all font-mono text-sm font-semibold text-foreground">
+                              {u.key || "Sem key"}
                             </p>
                           </div>
                           <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px] uppercase">{u.status === "active" ? "Ativo" : u.status === "expired" ? "Expirada" : u.status === "revoked" ? "Revogada" : "Sem key"}</span>
