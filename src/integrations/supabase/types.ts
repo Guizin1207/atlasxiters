@@ -1098,6 +1098,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      check_user_key: {
+        Args: { _key: string; _username: string }
+        Returns: boolean
+      }
       claim_daily_reward: { Args: { _key: string }; Returns: Json }
       count_unread_messages: { Args: { _key: string }; Returns: number }
       get_app_version: { Args: never; Returns: string }
