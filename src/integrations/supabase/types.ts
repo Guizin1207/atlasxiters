@@ -714,6 +714,7 @@ export type Database = {
         Args: { _password: string }
         Returns: Json
       }
+      admin_list_users: { Args: { _password: string }; Returns: Json }
       admin_open_panel: {
         Args: { _password: string }
         Returns: {
@@ -1111,6 +1112,7 @@ export type Database = {
         Returns: string
       }
       get_maintenance: { Args: never; Returns: Json }
+      get_my_access_key: { Args: never; Returns: Json }
       get_settings: { Args: { _key: string }; Returns: Json }
       is_master_key: { Args: { _key: string }; Returns: boolean }
       list_my_messages: { Args: { _key: string }; Returns: Json }
