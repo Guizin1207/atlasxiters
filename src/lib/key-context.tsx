@@ -165,6 +165,11 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
         }
         if (reason === "expired_key") { expireKey(stored); void notifyExpired(stored); }
         else if (["invalid_key", "revoked_key", "device_mismatch", "account_mismatch"].includes(reason)) { localStorage.removeItem(STORAGE_KEY); clearExpiry(); setKeyData(null); }
+      } else if (data && (data as any).user_id && (data as any).user_id !== session.user.id && !(data as any).is_master) {
+        // Key salva no aparelho pertence a outra conta: descarta e recupera a da conta atual.
+        localStorage.removeItem(STORAGE_KEY);
+        requestVersion.current++;
+        return void refresh();
       } else if (data) {
         await retireOtherUserPush(stored);
         if (version !== requestVersion.current) return;
