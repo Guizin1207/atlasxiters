@@ -169,6 +169,13 @@
       "when": 1790433218761,
       "tag": "0023_auth_accounts_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790433319400,
+      "tag": "0024_require_admin_case_insensitive",
+      "breakpoints": true
     }
   ]
 }
