@@ -372,6 +372,10 @@ export default function AdminPage() {
                           <span>Expira: {u.key_expires_at ? new Date(u.key_expires_at).toLocaleDateString("pt-BR") : "—"}</span>
                           <span>Ativada: {u.key_activated_at ? new Date(u.key_activated_at).toLocaleDateString("pt-BR") : "—"}</span>
                           <span>Último acesso: {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}</span>
+                          <span className="col-span-2 break-all">E-mail: {u.email || "—"}</span>
+                          <span>Plano: {u.plan || "—"}</span>
+                          <span>Aparelho: {u.device || "—"}</span>
+                          <span className="col-span-2 sm:col-span-4 break-all font-mono">Device ID: {u.device_id || "—"}</span>
                         </div>
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                           <p className="text-xs text-muted-foreground">Senha: protegida pelo sistema de autenticação</p>
