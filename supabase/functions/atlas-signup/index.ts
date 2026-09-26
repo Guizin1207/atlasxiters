@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
 
   const db = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
 
-  let body: { key?: unknown; name?: unknown; password?: unknown };
+  let body: { key?: unknown; name?: unknown; password?: unknown; device?: unknown; device_id?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -24,6 +24,8 @@ Deno.serve(async (req) => {
   const key = typeof body.key === "string" ? body.key.trim().toUpperCase() : "";
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
+  const device = typeof body.device === "string" ? body.device.slice(0, 40) : null;
+  const deviceId = typeof body.device_id === "string" && /^[0-9a-f-]{36}$/i.test(body.device_id) ? body.device_id : null;
 
   if (!key || key.length > 64) return json({ ok: false, error: "invalid_key" }, 400);
   if (name.length < 2 || name.length > 40) return json({ ok: false, error: "invalid_username" }, 400);
@@ -138,6 +140,8 @@ Deno.serve(async (req) => {
       user_id: uid,
       activated_at: activation.toISOString(),
       expires_at: expiresAt,
+      device,
+      device_id: deviceId,
     })
     .eq("id", rec.id)
     .is("user_id", null)
@@ -146,6 +150,18 @@ Deno.serve(async (req) => {
   if (bindErr || !bound?.length) {
     if (createdNow) await db.auth.admin.deleteUser(uid);
     return json({ ok: false, error: bindErr ? "database_error" : "key_already_linked" }, 409);
+  }
+
+  // Confirma no banco antes de responder sucesso.
+  const [{ data: authUser }, { data: prof }, { data: linked }] = await Promise.all([
+    db.auth.admin.getUserById(uid),
+    db.from("profiles").select("id").eq("id", uid).maybeSingle(),
+    db.from("access_keys").select("id, activated_at").eq("id", rec.id).eq("user_id", uid).maybeSingle(),
+  ]);
+  if (!authUser?.user || !prof || !linked?.activated_at) {
+    await db.from("access_keys").update({ user_id: null, activated_at: null, expires_at: rec.expires_at, device: null, device_id: null }).eq("id", rec.id);
+    if (createdNow) await db.auth.admin.deleteUser(uid);
+    return json({ ok: false, error: "signup_failed" }, 500);
   }
 
   return json({ ok: true, email });

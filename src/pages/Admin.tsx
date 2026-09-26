@@ -372,6 +372,10 @@ export default function AdminPage() {
                           <span>Expira: {u.key_expires_at ? new Date(u.key_expires_at).toLocaleDateString("pt-BR") : "—"}</span>
                           <span>Ativada: {u.key_activated_at ? new Date(u.key_activated_at).toLocaleDateString("pt-BR") : "—"}</span>
                           <span>Último acesso: {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}</span>
+                          <span className="col-span-2 break-all">E-mail: {u.email || "—"}</span>
+                          <span>Plano: {u.plan || "—"}</span>
+                          <span>Aparelho: {u.device || "—"}</span>
+                          <span className="col-span-2 sm:col-span-4 break-all font-mono">Device ID: {u.device_id || "—"}</span>
                         </div>
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                           <p className="text-xs text-muted-foreground">Senha: protegida pelo sistema de autenticação</p>
@@ -393,7 +397,10 @@ export default function AdminPage() {
                                 body: { admin_password: password, user_id: u.user_id, new_password: newPassword },
                               });
                               if (error || !data?.ok) {
-                                window.alert("Não foi possível redefinir a senha.");
+                                let code = data?.error;
+                                try { code = code ?? (await (error as any)?.context?.json())?.error; } catch { /* sem detalhe */ }
+                                const msgs: Record<string, string> = { unauthorized: "Senha ADM inválida.", leaked_password: "Senha muito comum. Escolha outra.", weak_password: "Senha fraca.", update_failed: "O servidor recusou a nova senha." };
+                                window.alert(msgs[code] ?? "Não foi possível redefinir a senha.");
                                 return;
                               }
                               window.alert("Senha redefinida com sucesso.");
