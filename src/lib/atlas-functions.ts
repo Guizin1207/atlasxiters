@@ -24,7 +24,6 @@ export const FALLBACK_FUNCTIONS: AtlasFunction[] = [
   { id: "shield", icon: "shield", name: "Sem Recuo", tag: "Combate", minPlan: "pro", sortOrder: 40, visible: true },
   { id: "radar", icon: "radar", name: "Radar Tático", tag: "Visão", minPlan: "pro", sortOrder: 50, visible: true },
   { id: "gauge", icon: "gauge", name: "FPS Turbo", tag: "Performance", minPlan: "pro", sortOrder: 60, visible: true },
-  { id: "skin", icon: "wand-2", name: "Skin Changer FF", tag: "Visual", minPlan: "master", sortOrder: 70, visible: true },
   { id: "magic", icon: "box", name: "Aim Lock", tag: "Utilidade", minPlan: "master", sortOrder: 80, visible: true },
 ];
 
