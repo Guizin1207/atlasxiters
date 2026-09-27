@@ -18,14 +18,14 @@ export type AtlasFunction = {
 };
 
 export const FALLBACK_FUNCTIONS: AtlasFunction[] = [
-  { id: "aim", icon: "crosshair", name: "Aim Assist", tag: "Combate", minPlan: "basic", sortOrder: 10, visible: true },
-  { id: "esp", icon: "eye", name: "ESP", tag: "Visão", minPlan: "basic", sortOrder: 20, visible: true },
-  { id: "speed", icon: "zap", name: "Velocidade", tag: "Mobilidade", minPlan: "basic", sortOrder: 30, visible: true },
-  { id: "shield", icon: "shield", name: "Anti-Recoil", tag: "Combate", minPlan: "pro", sortOrder: 40, visible: true },
-  { id: "radar", icon: "radar", name: "Radar", tag: "Visão", minPlan: "pro", sortOrder: 50, visible: true },
-  { id: "gauge", icon: "gauge", name: "FPS Boost", tag: "Performance", minPlan: "pro", sortOrder: 60, visible: true },
-  { id: "skin", icon: "wand-2", name: "Skin Changer", tag: "Visual", minPlan: "master", sortOrder: 70, visible: true },
-  { id: "magic", icon: "box", name: "Auto Loot", tag: "Utilidade", minPlan: "master", sortOrder: 80, visible: true },
+  { id: "aim", icon: "crosshair", name: "Auto Headshot", tag: "Combate", minPlan: "basic", sortOrder: 10, visible: true },
+  { id: "esp", icon: "eye", name: "Antena FF", tag: "Visão", minPlan: "basic", sortOrder: 20, visible: true },
+  { id: "speed", icon: "zap", name: "Sensi Turbo", tag: "Mobilidade", minPlan: "basic", sortOrder: 30, visible: true },
+  { id: "shield", icon: "shield", name: "Sem Recuo", tag: "Combate", minPlan: "pro", sortOrder: 40, visible: true },
+  { id: "radar", icon: "radar", name: "Radar Tático", tag: "Visão", minPlan: "pro", sortOrder: 50, visible: true },
+  { id: "gauge", icon: "gauge", name: "FPS Turbo", tag: "Performance", minPlan: "pro", sortOrder: 60, visible: true },
+  { id: "skin", icon: "wand-2", name: "Skin Changer FF", tag: "Visual", minPlan: "master", sortOrder: 70, visible: true },
+  { id: "magic", icon: "box", name: "Aim Lock", tag: "Utilidade", minPlan: "master", sortOrder: 80, visible: true },
 ];
 
 /** Linha crua vinda do banco. */
