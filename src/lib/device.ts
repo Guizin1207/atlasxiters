@@ -2,6 +2,8 @@ export function detectDevice(): string {
   if (typeof navigator === "undefined") return "Desconhecido";
   const ua = navigator.userAgent || "";
   const platform = navigator.platform || "";
+  const model = (navigator as Navigator & { userAgentData?: { model?: string } }).userAgentData?.model?.trim();
+  if (model && model.length >= 2) return model;
   if (/android/i.test(ua)) return "Android";
   if (/iphone|ipad|ipod/i.test(ua) || (/mac/i.test(platform) && navigator.maxTouchPoints > 1)) return "iOS";
   if (/windows phone/i.test(ua)) return "Windows";
