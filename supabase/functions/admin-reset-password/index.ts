@@ -23,8 +23,15 @@ Deno.serve(async (req) => {
     if (ok !== true) return json({ ok: false, error: "unauthorized" }, 403);
     await db.from("access_keys").update({ user_id: null }).eq("user_id", userId);
     await db.from("profiles").delete().eq("id", userId);
-    const { error: delErr } = await db.auth.admin.deleteUser(userId);
-    if (delErr) return json({ ok: false, error: "delete_failed" }, 400);
+    let { error: delErr } = await db.auth.admin.deleteUser(userId);
+    if (delErr && !/not.?found/i.test(delErr.message ?? "")) {
+      console.error("hard delete failed", delErr.message);
+      ({ error: delErr } = await db.auth.admin.deleteUser(userId, true));
+    }
+    if (delErr && !/not.?found/i.test(delErr.message ?? "")) {
+      console.error("delete failed", delErr.message);
+      return json({ ok: false, error: "delete_failed", detail: delErr.message }, 400);
+    }
     return json({ ok: true });
   }
   if (pwd.length < 8 || pwd.length > 72 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/\d/.test(pwd)) {
