@@ -12,12 +12,21 @@ Deno.serve(async (req) => {
   if (!url || !service) return json({ ok: false, error: "server_configuration_error" }, 500);
   const db = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
 
-  let body: { admin_password?: unknown; user_id?: unknown; new_password?: unknown };
+  let body: { admin_password?: unknown; user_id?: unknown; new_password?: unknown; action?: unknown };
   try { body = await req.json(); } catch { return json({ ok: false, error: "invalid_request" }, 400); }
   const adminPassword = typeof body.admin_password === "string" ? body.admin_password : "";
   const userId = typeof body.user_id === "string" && /^[0-9a-f-]{36}$/i.test(body.user_id) ? body.user_id : "";
   const pwd = typeof body.new_password === "string" ? body.new_password : "";
   if (!adminPassword || !userId) return json({ ok: false, error: "invalid_request" }, 400);
+  if (body.action === "delete") {
+    const { data: ok } = await db.rpc("_check_admin", { _password: adminPassword });
+    if (ok !== true) return json({ ok: false, error: "unauthorized" }, 403);
+    await db.from("access_keys").update({ user_id: null }).eq("user_id", userId);
+    await db.from("profiles").delete().eq("id", userId);
+    const { error: delErr } = await db.auth.admin.deleteUser(userId);
+    if (delErr) return json({ ok: false, error: "delete_failed" }, 400);
+    return json({ ok: true });
+  }
   if (pwd.length < 8 || pwd.length > 72 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/\d/.test(pwd)) {
     return json({ ok: false, error: "weak_password" }, 400);
   }

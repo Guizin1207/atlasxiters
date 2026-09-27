@@ -4,7 +4,7 @@ export type KeyStatus = "unused" | "active" | "expired" | "revoked";
 
 export function getKeyStatus(k: KeyData): KeyStatus {
   if (k.revoked) return "revoked";
-  if (!k.activated_at) return "unused";
+  if (!k.activated_at && !(k as { user_id?: string | null }).user_id) return "unused";
   if (k.is_master || k.plan === "demo") return "active";
   if (k.expires_at && new Date(k.expires_at).getTime() < Date.now()) return "expired";
   return "active";
