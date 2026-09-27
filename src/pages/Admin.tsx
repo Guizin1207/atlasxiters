@@ -408,6 +408,22 @@ export default function AdminPage() {
                           >
                             Redefinir senha
                           </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="rounded-xl"
+                            onClick={async () => {
+                              if (!window.confirm(`Excluir a conta ${u.username || ""}? A key volta a ficar livre.`)) return;
+                              const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+                                body: { admin_password: password, user_id: u.user_id, action: "delete" },
+                              });
+                              if (error || !data?.ok) { window.alert("Não foi possível excluir a conta."); return; }
+                              setUsers((prev) => prev.filter((x) => x.user_id !== u.user_id));
+                            }}
+                          >
+                            Excluir usuário
+                          </Button>
                         </div>
                       </div>
                     ))}
