@@ -205,11 +205,7 @@ export default function LoginPage() {
           return;
         }
         setAccountStatus("validated");
-        await signOut();
-        setMode("login");
-        setPassword("");
-        setKeyVerified(false);
-        setInfo("Conta criada e key vinculada com sucesso. Agora entre com seu usuário e senha.");
+        navigate("/painel", { replace: true });
       } else {
         // Senha mestra do ADM: validada no servidor, abre /admin sem exigir usuário.
         if (password.trim()) {
