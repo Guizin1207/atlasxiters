@@ -3,7 +3,7 @@
  * Layout mobile-first com tabs Funções / Ajustes / Perfil.
  */
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
-import { Gift, Flame, Coins, Plus, MessageCircle, X, Loader2, Sparkles, Crosshair, RotateCcw } from "lucide-react";
+import { Gift, Flame, Coins, Plus, MessageCircle, X, Loader2, Sparkles, Crosshair, RotateCcw, LockKeyhole, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useKey } from "@/lib/key-context";
@@ -26,6 +26,7 @@ import { rewardApi } from "@/lib/reward-api";
 import { supabase } from "@/integrations/supabase/client";
 import { isReceiptBody } from "@/lib/receipts";
 import { enableUserPush, notifyRewardReady, notifyCoinsAdded } from "@/lib/push";
+import { getPlanPermissions, featureRequiredPlan, type AtlasFeature } from "@/lib/plan-permissions";
 
 type SupportMessage = {
   id: string;
@@ -63,9 +64,10 @@ export default function PainelPage() {
   const [injectEnabled, setInjectEnabled] = useState(false);
   const [tab, setTab] = useState<AtlasTab>("funcoes");
   const [sensiDevice, setSensiDevice] = useState("");
+  const [sensiChatCount, setSensiChatCount] = useState(0);
   const [sensiStyle, setSensiStyle] = useState("2 dedos");
   const [sensiDpi, setSensiDpi] = useState("Padrão");
-  const [sensiMessages, setSensiMessages] = useState<{ role: "ai" | "user"; text: string }[]>([
+  const [sensiMessages, setSensiMessages] = useState<{ role: "ai" | "user"; text: string; action?: "upgrade" }[]>([
     { role: "ai", text: "Fala! Eu sou a Atlas IA. Me conta qual é seu celular, quantos dedos você usa e se quer mais capa, precisão ou uma sensi rápida. Eu monto a configuração completa, incluindo o tamanho do botão de tiro." }
   ]);
   const [sensiInput, setSensiInput] = useState("");
@@ -160,48 +162,58 @@ const getButtonSize = () => {
 const sendSensiMessage = () => {
     const text = sensiInput.trim();
     if (!text || sensiTyping) return;
+
+    const feature = detectRequestedFeature(text);
+    if (!isFeatureAllowed(feature)) {
+      setSensiInput("");
+      setSensiMessages((messages) => [...messages, { role: "user", text }, { role: "ai", action: "upgrade", text: "🔒 Recurso bloqueado\n\nEssa função está disponível no plano " + featureRequiredPlan(feature) + ". Faça upgrade para liberar." }]);
+      return;
+    }
+
+    if (!permissions.unlimitedChat && sensiChatCount >= (permissions.chatLimit ?? 20)) {
+      setSensiInput("");
+      setSensiMessages((messages) => [...messages, { role: "ai", action: "upgrade", text: "🔒 Limite do Chat IA atingido. Faça upgrade para continuar ou ter chat sem limite." }]);
+      return;
+    }
+
     const match = text.match(/(?:iphone|ip ?(?:\d+|xr|xs)|galaxy|samsung|s ?\d+|a ?\d+|redmi|rn ?\d+|note ?\d+|poco|motorola|moto ?[a-z]?\d+|g ?\d+|edge ?\d+|realme|infinix|tecno)[^,.!?]*/i);
-    const nextDevice = sensiDevice || (match?.[0] ?? "");
+    const nextDevice = sensiDevice || (match?.[0] ?? keyData?.device ?? "");
     setSensiDevice(nextDevice);
     setSensiMessages((messages) => [...messages, { role: "user", text }]);
     setSensiInput("");
     setSensiTyping(true);
+
+    const nextCount = sensiChatCount + 1;
+    setSensiChatCount(nextCount);
+    if (!permissions.unlimitedChat && keyData?.key) {
+      const day = new Date().toISOString().slice(0, 10);
+      localStorage.setItem("atlas_sensi_usage:" + keyData.key.toUpperCase() + ":" + day, String(nextCount));
+    }
+
     window.setTimeout(() => {
-      const cfg = getSensiConfig(nextDevice);
+      const cfg = applyChatMode(getSensiConfig(nextDevice), feature);
       const model = nextDevice || "seu aparelho";
       const ffTips = getFfTips(text);
+      const modeLabel = feature === "moreHeadshot" ? "🔥 MAIS CAPA" : feature === "moreControl" ? "🎯 MAIS CONTROLE" : feature === "rush" ? "⚡ RUSH" : feature === "awm" ? "🎯 AWM" : "🎯 SENSI PADRÃO";
       const detailedReply = [
-        "🎯  CONFIGURAÇÃO ATLAS AI",
-        "",
-        "📱 APARELHO\n" + model,
-      "🎯 PERFIL DE POSIÇÃO\n" + getDeviceProfile(nextDevice).label,
+        "🎯  CONFIGURAÇÃO ATLAS AI", "",
+        "📱 APARELHO DETECTADO\n" + model,
+        "💎 PLANO: " + currentPlanLabel,
+        modeLabel,
         "🎮 Estilo: " + sensiStyle,
-        "⚙️ DPI: " + sensiDpi,
-        "",
-        "━━━━━━━━━━━━━━━━",
-        "🔥  SENSIBILIDADE",
-        "• Geral: " + cfg.geral,
-        "• Ponto Vermelho: " + cfg.red,
-        "• Mira 2x: " + cfg.x2,
-        "• Mira 4x: " + cfg.x4,
-        "• Mira AWM: " + cfg.awm,
-        "• Olhadinha: " + cfg.olhadinha,
-        "",
-        "━━━━━━━━━━━━━━━━",
-        "🔘  BOTÃO DE TIRO",
+        "⚙️ DPI: " + sensiDpi, "",
+        "━━━━━━━━━━━━━━━━", "🔥  SENSIBILIDADE",
+        "• Geral: " + cfg.geral, "• Ponto Vermelho: " + cfg.red, "• Mira 2x: " + cfg.x2, "• Mira 4x: " + cfg.x4, "• Mira AWM: " + cfg.awm, "• Olhadinha: " + cfg.olhadinha, "",
+        "━━━━━━━━━━━━━━━━", "🔘  BOTÃO DE TIRO",
         "• Tamanho recomendado: " + cfg.button + "%",
-        "• Comece com esse tamanho e ajuste de 1–2% se necessário.",
-        "",
-        "━━━━━━━━━━━━━━━━",
-        "🧠  AJUSTE FINO",
+        "• Comece com esse tamanho e ajuste de 1–2% se necessário.", "",
+        "━━━━━━━━━━━━━━━━", "🧠  AJUSTE FINO",
         "• Mira passando da cabeça → diminua Geral e Ponto Vermelho em 2.",
         "• Mira pesada → aumente Geral e Ponto Vermelho em 2.",
-        "• Dificuldade para puxar capa → teste +2 no botão de tiro.",
-        "",
-        "━━━━━━━━━━━━━━━━",
-        "📌  OBSERVAÇÃO",
+        "• Dificuldade para puxar capa → teste +2 no botão de tiro.", "",
+        "━━━━━━━━━━━━━━━━", "📌  OBSERVAÇÃO",
         "Essa configuração é uma base inicial. Ajuste aos poucos conforme tela, toque, FPS e seu estilo de jogo.",
-      ...(ffTips.length ? ["", "━━━━━━━━━━━━━━━━", ...ffTips] : [])
+        ...(ffTips.length ? ["", "━━━━━━━━━━━━━━━━", ...ffTips] : [])
       ].join("\n");
       setSensiMessages((messages) => [...messages, { role: "ai", text: detailedReply }]);
       setSensiSeed((value) => value + 1);
@@ -211,7 +223,7 @@ const sendSensiMessage = () => {
 
   const resetSensiChat = () => {
     setSensiMessages([{ role: "ai", text: "Beleza, vamos começar de novo. Qual é o seu celular e como você joga: 2, 3 ou 4 dedos? Também pode me dizer se prefere capa, precisão ou sensi rápida." }]);
-    setSensiInput(""); setSensiDevice(""); setSensiSeed(0);
+    setSensiInput(""); setSensiDevice(keyData?.device && !["Android", "iOS", "Desconhecido"].includes(keyData.device) ? keyData.device : ""); setSensiSeed(0);
   };
 
   const [rewardOpen, setRewardOpen] = useState(false);
@@ -229,6 +241,53 @@ const sendSensiMessage = () => {
   const [supportOpen, setSupportOpen] = useState(
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
+  const permissions = getPlanPermissions(keyData?.plan, keyData?.is_master);
+  const currentPlanLabel = keyData?.is_master ? "MASTER" : String(keyData?.plan ?? "basic").toUpperCase();
+  const detectedDeviceLabel = sensiDevice || keyData?.device || "Aparelho não identificado";
+
+  useEffect(() => {
+    if (!keyData?.key) return;
+    const day = new Date().toISOString().slice(0, 10);
+    const usageKey = "atlas_sensi_usage:" + keyData.key.toUpperCase() + ":" + day;
+    const stored = Number(localStorage.getItem(usageKey) ?? 0);
+    setSensiChatCount(Number.isFinite(stored) ? stored : 0);
+  }, [keyData?.key]);
+
+  useEffect(() => {
+    const detected = keyData?.device;
+    if (detected && !["Android", "iOS", "Desconhecido"].includes(detected)) setSensiDevice(detected);
+  }, [keyData?.device]);
+
+  const openUpgrade = () => {
+    setTab("planos");
+    window.setTimeout(() => document.getElementById("planos")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  };
+
+  const detectRequestedFeature = (text: string): AtlasFeature => {
+    const normalized = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (/\bawm\b|mira awm/.test(normalized)) return "awm";
+    if (/\brush\b|rapida|rapido|agressiv/.test(normalized)) return "rush";
+    if (/mais controle|controle/.test(normalized)) return "moreControl";
+    if (/mais capa|capa|headshot/.test(normalized)) return "moreHeadshot";
+    return "default";
+  };
+
+  const isFeatureAllowed = (feature: AtlasFeature) => {
+    if (feature === "default") return permissions.canUseDefault;
+    if (feature === "moreHeadshot") return permissions.canUseMoreHeadshot;
+    if (feature === "moreControl") return permissions.canUseMoreControl;
+    if (feature === "rush") return permissions.canUseRush;
+    return permissions.canUseAwm;
+  };
+
+  const applyChatMode = (cfg: ReturnType<typeof getSensiConfig>, feature: AtlasFeature) => {
+    if (feature === "moreHeadshot") return { ...cfg, geral: Math.min(200, cfg.geral + 5), red: Math.min(200, cfg.red + 6), button: Math.min(62, cfg.button + 1) };
+    if (feature === "moreControl") return { ...cfg, geral: Math.max(20, cfg.geral - 3), red: Math.max(20, cfg.red - 4), x2: Math.max(20, cfg.x2 - 3), x4: Math.max(20, cfg.x4 - 2) };
+    if (feature === "rush") return { ...cfg, geral: Math.min(200, cfg.geral + 8), red: Math.min(200, cfg.red + 7), button: Math.min(62, cfg.button + 2) };
+    if (feature === "awm") return { ...cfg, awm: Math.min(200, cfg.awm + 10), x4: Math.min(200, cfg.x4 + 3) };
+    return cfg;
+  };
+
   const [userPushReady, setUserPushReady] = useState(false);
 
   useEffect(() => {
@@ -442,7 +501,7 @@ const sendSensiMessage = () => {
 
         <TabsNav value={tab} onChange={setTab} />
 
-        <div className="mt-4 animate-fade-in min-[390px]:mt-6" key={tab}>
+        <div id={tab === "planos" ? "planos" : undefined} className="mt-4 animate-fade-in min-[390px]:mt-6" key={tab}>
           {tab === "funcoes" && <FuncoesTab />}
           {tab === "ajustes" && <AjustesTab />}
           {tab === "planos" && <PlanosTab />}
@@ -459,26 +518,57 @@ const sendSensiMessage = () => {
                     </div>
                     <button type="button" onClick={resetSensiChat} className="rounded-xl p-2 text-muted-foreground hover:bg-white/10" aria-label="Novo chat"><RotateCcw className="h-4 w-4" /></button>
                   </div>
+                  <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Smartphone className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0"><p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Aparelho detectado</p><p className="truncate text-xs font-bold">{detectedDeviceLabel}</p></div>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase">{currentPlanLabel}</span>
+                  </div>
                 </div>
                 <div className="min-h-[430px] space-y-3 p-3">
                   {sensiMessages.map((message, index) => (
                     <div key={index} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                      <div className={message.role === "user" ? "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm leading-6 text-primary-foreground" : "max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-sm leading-6"}>{message.text}</div>
+                      <div className={message.role === "user" ? "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm leading-6 text-primary-foreground" : "max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-sm leading-6"}>
+                        {message.text}
+                        {message.action === "upgrade" && (
+                          <button type="button" onClick={openUpgrade} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-bold text-black">
+                            <LockKeyhole className="h-3.5 w-3.5" /> Fazer upgrade
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                   {sensiTyping && <div className="flex justify-start"><div className="rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-xs text-muted-foreground">Atlas IA está pensando...</div></div>}
                 </div>
                 <div className="border-t border-white/10 bg-white/[0.02] p-3">
                   <div className="mb-2 flex gap-2 overflow-x-auto">
-                    {["Meu celular é iPhone", "Uso 3 dedos", "Quero mais capa", "Quero precisão"].map((quick) => (
-                      <button key={quick} type="button" onClick={() => setSensiInput(quick)} className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] hover:bg-white/10">{quick}</button>
-                    ))}
+                    {[
+                      { label: "Sensi padrão", text: "Quero uma sensi padrão", feature: "default" as AtlasFeature },
+                      { label: "Mais capa", text: "Quero mais capa", feature: "moreHeadshot" as AtlasFeature },
+                      { label: "Mais controle", text: "Quero mais controle", feature: "moreControl" as AtlasFeature },
+                      { label: "Rush", text: "Quero rush", feature: "rush" as AtlasFeature },
+                      { label: "AWM", text: "Quero AWM", feature: "awm" as AtlasFeature },
+                    ].map((quick) => {
+                      const allowed = isFeatureAllowed(quick.feature);
+                      return (
+                        <button key={quick.label} type="button" onClick={() => {
+                          if (!allowed) {
+                            setSensiMessages((messages) => [...messages, { role: "ai", action: "upgrade", text: "🔒 " + quick.label + " está bloqueado no plano " + currentPlanLabel + ". Faça upgrade para liberar." }]);
+                            return;
+                          }
+                          setSensiInput(quick.text);
+                        }} className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] hover:bg-white/10">
+                          {!allowed && <LockKeyhole className="h-3 w-3" />}{quick.label}
+                        </button>
+                      );
+                    })}
                   </div>
                   <div className="flex items-end gap-2">
                     <textarea value={sensiInput} onChange={(e) => setSensiInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendSensiMessage(); } }} placeholder="Digite sua mensagem..." rows={1} className="min-h-11 flex-1 resize-none rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 text-[16px] text-foreground outline-none focus:border-white/30" />
                     <Button onClick={sendSensiMessage} disabled={!sensiInput.trim() || sensiTyping} className="h-11 w-11 shrink-0 rounded-2xl p-0"><MessageCircle className="h-4 w-4" /></Button>
                   </div>
-                  <p className="mt-2 text-center text-[10px] text-muted-foreground">Converse normalmente. A IA monta a base de sensibilidade e botão de tiro a partir do que você informar.</p>
+                  <p className="mt-2 text-center text-[10px] text-muted-foreground">{permissions.unlimitedChat ? "Chat sem limite • todos os recursos liberados." : "Chat: " + Math.max(0, (permissions.chatLimit ?? 20) - sensiChatCount) + " mensagens restantes hoje."}</p>
                 </div>
               </div>
             </section>
