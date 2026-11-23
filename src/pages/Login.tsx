@@ -368,6 +368,14 @@ export default function LoginPage() {
           <Button type="button" onClick={() => setSupportOpen(true)} className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong bg-transparent text-white text-sm font-semibold">
             <MessageCircle className="w-4 h-4" /> Falar com suporte
           </Button>
+          <a
+            href="https://discord.gg/yfmPGyaDAK"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl border border-[#5865F2]/40 bg-[#5865F2]/10 text-white text-sm font-semibold transition-colors hover:bg-[#5865F2]/20"
+          >
+            <MessageCircle className="w-4 h-4" /> Entrar no Discord
+          </a>
         </div>
       </div>
 
