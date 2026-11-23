@@ -159,14 +159,14 @@ const getButtonSize = () => {
   return tips;
 };
 
-const sendSensiMessage = () => {
+const sendSensiMessage = async () => {
     const text = sensiInput.trim();
     if (!text || sensiTyping) return;
 
     const feature = detectRequestedFeature(text);
     if (!isFeatureAllowed(feature)) {
       setSensiInput("");
-      setSensiMessages((messages) => [...messages, { role: "user", text }, { role: "ai", action: "upgrade", text: "🔒 Recurso bloqueado\n\nEssa função está disponível no plano " + featureRequiredPlan(feature) + ". Faça upgrade para liberar." }]);
+      setSensiMessages((messages) => [...messages, { role: "user", text }, { role: "ai", action: "upgrade", text: "🔒 Recurso bloqueado\\n\\nEssa função está disponível no plano " + featureRequiredPlan(feature) + ". Faça upgrade para liberar." }]);
       return;
     }
 
@@ -176,9 +176,13 @@ const sendSensiMessage = () => {
       return;
     }
 
-    const match = text.match(/(?:iphone|ip ?(?:\d+|xr|xs)|galaxy|samsung|s ?\d+|a ?\d+|redmi|rn ?\d+|note ?\d+|poco|motorola|moto ?[a-z]?\d+|g ?\d+|edge ?\d+|realme|infinix|tecno)[^,.!?]*/i);
+    const match = text.match(/(?:iphone|ip ?(?:\\d+|xr|xs)|galaxy|samsung|s ?\\d+|a ?\\d+|redmi|rn ?\\d+|note ?\\d+|poco|motorola|moto ?[a-z]?\\d+|g ?\\d+|edge ?\\d+|realme|infinix|tecno)[^,.!?]*/i);
     const nextDevice = sensiDevice || (match?.[0] ?? keyData?.device ?? "");
-    setSensiDevice(nextDevice);
+    if (nextDevice) setSensiDevice(nextDevice);
+    const previous = sensiMessages.slice(-12).map((message) => ({
+      role: message.role === "ai" ? "assistant" : "user",
+      content: message.text,
+    }));
     setSensiMessages((messages) => [...messages, { role: "user", text }]);
     setSensiInput("");
     setSensiTyping(true);
@@ -190,35 +194,35 @@ const sendSensiMessage = () => {
       localStorage.setItem("atlas_sensi_usage:" + keyData.key.toUpperCase() + ":" + day, String(nextCount));
     }
 
-    window.setTimeout(() => {
-      const cfg = applyChatMode(getSensiConfig(nextDevice), feature);
-      const model = nextDevice || "seu aparelho";
-      const ffTips = getFfTips(text);
-      const modeLabel = feature === "moreHeadshot" ? "🔥 MAIS CAPA" : feature === "moreControl" ? "🎯 MAIS CONTROLE" : feature === "rush" ? "⚡ RUSH" : feature === "awm" ? "🎯 AWM" : "🎯 SENSI PADRÃO";
-      const detailedReply = [
-        "🎯  CONFIGURAÇÃO ATLAS AI", "",
-        "📱 APARELHO DETECTADO\n" + model,
-        "💎 PLANO: " + currentPlanLabel,
-        modeLabel,
-        "🎮 Estilo: " + sensiStyle,
-        "⚙️ DPI: " + sensiDpi, "",
-        "━━━━━━━━━━━━━━━━", "🔥  SENSIBILIDADE",
-        "• Geral: " + cfg.geral, "• Ponto Vermelho: " + cfg.red, "• Mira 2x: " + cfg.x2, "• Mira 4x: " + cfg.x4, "• Mira AWM: " + cfg.awm, "• Olhadinha: " + cfg.olhadinha, "",
-        "━━━━━━━━━━━━━━━━", "🔘  BOTÃO DE TIRO",
-        "• Tamanho recomendado: " + cfg.button + "%",
-        "• Comece com esse tamanho e ajuste de 1–2% se necessário.", "",
-        "━━━━━━━━━━━━━━━━", "🧠  AJUSTE FINO",
-        "• Mira passando da cabeça → diminua Geral e Ponto Vermelho em 2.",
-        "• Mira pesada → aumente Geral e Ponto Vermelho em 2.",
-        "• Dificuldade para puxar capa → teste +2 no botão de tiro.", "",
-        "━━━━━━━━━━━━━━━━", "📌  OBSERVAÇÃO",
-        "Essa configuração é uma base inicial. Ajuste aos poucos conforme tela, toque, FPS e seu estilo de jogo.",
-        ...(ffTips.length ? ["", "━━━━━━━━━━━━━━━━", ...ffTips] : [])
-      ].join("\n");
-      setSensiMessages((messages) => [...messages, { role: "ai", text: detailedReply }]);
-      setSensiSeed((value) => value + 1);
+    try {
+      const { data, error } = await supabase.functions.invoke("atlas-chat-ai", {
+        body: {
+          key: keyData?.key,
+          question: text,
+          chat: previous,
+          device: nextDevice,
+          plan: currentPlanLabel,
+          style: sensiStyle,
+          dpi: sensiDpi,
+        },
+      });
+      if (error) throw error;
+      if (!data?.answer || typeof data.answer !== "string") {
+        throw new Error(data?.error || "A Atlas IA não conseguiu responder agora.");
+      }
+      setSensiMessages((messages) => [...messages, { role: "ai", text: data.answer }]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Não foi possível falar com a Atlas IA. Tente novamente.";
+      setSensiMessages((messages) => [...messages, { role: "ai", text: "Não consegui responder agora. " + message }]);
+      toast.error("Falha ao conectar com a Atlas IA.");
+      setSensiChatCount((count) => Math.max(0, count - 1));
+      if (!permissions.unlimitedChat && keyData?.key) {
+        const day = new Date().toISOString().slice(0, 10);
+        localStorage.setItem("atlas_sensi_usage:" + keyData.key.toUpperCase() + ":" + day, String(Math.max(0, nextCount - 1)));
+      }
+    } finally {
       setSensiTyping(false);
-    }, 650);
+    }
   };
 
   const resetSensiChat = () => {
