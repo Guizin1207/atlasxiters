@@ -2,11 +2,6 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createOpenAI } from "npm:@ai-sdk/openai";
 import { generateText } from "npm:ai";
-import {
-  createLovableAiGatewayRunIdFetch,
-  getLovableAiGatewayRunId,
-} from "../_shared/ai-gateway.ts";
-
 type ChatTurn = { role: "user" | "assistant"; content: string };
 
 const json = (body: Record<string, unknown>, status = 200) =>
@@ -52,12 +47,10 @@ Deno.serve(async (req) => {
     const style = typeof body?.style === "string" ? body.style.trim().slice(0, 40) : "não informado";
     const dpi = typeof body?.dpi === "string" || typeof body?.dpi === "number" ? String(body.dpi).slice(0, 20) : "não informado";
 
-    const gateway = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(req));
     const lovable = createOpenAI({
       baseURL: "https://ai.gateway.lovable.dev/v1",
       apiKey,
       headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-      fetch: gateway.fetch,
     });
 
     const result = await generateText({
