@@ -68,7 +68,7 @@ export default function PainelPage() {
   const [sensiStyle, setSensiStyle] = useState("2 dedos");
   const [sensiDpi, setSensiDpi] = useState("Padrão");
   const [sensiMessages, setSensiMessages] = useState<{ role: "ai" | "user"; text: string; action?: "upgrade" }[]>([
-    { role: "ai", text: "Fala! Eu sou a Atlas IA. Me conta qual é seu celular, quantos dedos você usa e se quer mais capa, precisão ou uma sensi rápida. Eu monto a configuração completa, incluindo o tamanho do botão de tiro." }
+    { role: "ai", text: "Fala! Eu sou a Atlas IA. Posso conversar sobre sensibilidade, DPI, capa, HUD, botão de tiro, gráficos e desempenho no Free Fire. Me conta o que você precisa!" }
   ]);
   const [sensiInput, setSensiInput] = useState("");
   const [sensiTyping, setSensiTyping] = useState(false);
@@ -226,7 +226,7 @@ const sendSensiMessage = async () => {
   };
 
   const resetSensiChat = () => {
-    setSensiMessages([{ role: "ai", text: "Beleza, vamos começar de novo. Qual é o seu celular e como você joga: 2, 3 ou 4 dedos? Também pode me dizer se prefere capa, precisão ou sensi rápida." }]);
+    setSensiMessages([{ role: "ai", text: "Novo chat iniciado! Pode perguntar sobre sensibilidade, DPI, HUD, capa, desempenho ou qualquer configuração do Free Fire." }]);
     setSensiInput(""); setSensiDevice(keyData?.device && !["Android", "iOS", "Desconhecido"].includes(keyData.device) ? keyData.device : ""); setSensiSeed(0);
   };
 
@@ -518,7 +518,7 @@ const sendSensiMessage = async () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10"><Sparkles className="h-5 w-5" /></div>
-                      <div><p className="vip-eyebrow">Atlas AI</p><h2 className="text-lg font-black">IA de Sensi 2026</h2></div>
+                      <div><p className="vip-eyebrow">Atlas AI</p><h2 className="text-lg font-black">Assistente Free Fire</h2></div>
                     </div>
                     <button type="button" onClick={resetSensiChat} className="rounded-xl p-2 text-muted-foreground hover:bg-white/10" aria-label="Novo chat"><RotateCcw className="h-4 w-4" /></button>
                   </div>
