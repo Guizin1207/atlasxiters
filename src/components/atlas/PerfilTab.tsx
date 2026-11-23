@@ -147,14 +147,25 @@ export function PerfilTab() {
       </div>
 
       {!adminPreview && (
-        <button
-          type="button"
-          onClick={() => setSupportOpen(true)}
-          className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
-        >
-          <MessageCircle className="w-4 h-4" />
-          Falar com suporte
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => setSupportOpen(true)}
+            className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl glass-strong text-sm font-semibold hover:bg-white/10 transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Falar com suporte
+          </button>
+          <a
+            href="https://discord.gg/yfmPGyaDAK"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl border border-violet-400/30 bg-violet-500/10 text-sm font-semibold text-violet-200 hover:bg-violet-500/20 transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Entrar no Discord
+          </a>
+        </>
       )}
 
       {supportOpen && (
