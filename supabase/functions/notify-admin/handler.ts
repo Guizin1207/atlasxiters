@@ -281,9 +281,10 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
 
       if (kind === "admin_test") {
         if (!password) return json({ error: "Autenticação obrigatória." }, 400);
+        if (!targetEndpoint) return json({ error: "Aparelho de destino obrigatório." }, 400);
         const { data: isAdmin, error: adminError } = await admin.rpc("_check_admin", { _password: password });
         if (adminError || isAdmin !== true) return json({ code: "ADMIN_AUTH_FAILED", error: "Acesso negado." }, 403);
-        query = query.eq("scope", "admin");
+        query = query.eq("scope", "admin").eq("endpoint", targetEndpoint);
       } else if (kind === "user_test") {
         if (!key || !targetEndpoint) return json({ error: "Key e aparelho de destino obrigatórios." }, 400);
         const { data: validKey, error: validError } = await admin.rpc("_valid_access_key", { _key: key });

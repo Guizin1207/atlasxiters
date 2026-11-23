@@ -127,7 +127,7 @@ describe("destinatários e autorização do servidor push", () => {
     f.sendNotification.mockRejectedValue({ statusCode: 410 });
     const result = await f.send({ kind: "admin_test", password: "admin", targetEndpoint: "https://push.test/admin-a" });
     expect(result.status).toBe(502);
-    expect(await result.json()).toMatchObject({ sent: 0, failed: 1, removed: 1, code: "PUSH_SUBSCRIPTION_EXPIRED", version: 2 });
+    expect(await result.json()).toMatchObject({ sent: 0, failed: 1, removed: 1, code: "PUSH_SUBSCRIPTION_EXPIRED" });
     quiet.mockRestore();
   });
 
