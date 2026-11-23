@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, KeyRound, ShieldCheck, MessageCircle, Lock, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useKey } from "@/lib/key-context";
+import { AUTH_ERROR_KEY, useKey } from "@/lib/key-context";
 import { useAuth } from "@/lib/auth-context";
 import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
@@ -37,7 +37,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [keyValue, setKeyValue] = useState("");
   const [keyVerified, setKeyVerified] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => sessionStorage.getItem(AUTH_ERROR_KEY) === "revoked_key" ? "Sua chave foi revogada. Sua conta foi desconectada. Fale com o suporte." : null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get("suporte") === "1");

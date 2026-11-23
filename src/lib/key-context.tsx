@@ -4,6 +4,7 @@ import { detectDevice } from "@/lib/device";
 import { notifyExpired, resetExpiryNotification, retireOtherUserPush, notifySecurity } from "@/lib/push";
 import { withTimeout } from "@/lib/request-timeout";
 import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 export { detectDevice } from "@/lib/device";
 
@@ -68,6 +69,19 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.setItem(AUTH_ERROR_KEY, "expired_key"); sessionStorage.setItem(AUTH_SUPPORT_KEY, key);
     setExpiredKey(key); setKeyData(null);
   }, []);
+  const revokeKey = useCallback(() => {
+    requestVersion.current++;
+    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(AUTH_SUPPORT_KEY);
+    sessionStorage.setItem(AUTH_ERROR_KEY, "revoked_key");
+    setExpiredKey(null);
+    setKeyData(null);
+    setLoading(false);
+    toast.error("Sua chave foi revogada. Sua conta foi desconectada.");
+    // Local logout clears this device even if the server is unreachable.
+    // Every other active device detects the same revocation on revalidation.
+    void supabase.auth.signOut({ scope: "local" });
+  }, []);
   const persist = (data: KeyData | null) => {
     if (data) localStorage.setItem(STORAGE_KEY, data.key); else localStorage.removeItem(STORAGE_KEY);
     setKeyData(data);
@@ -112,8 +126,7 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
         }
         const linkedKey = accountKey as KeyData;
         if (linkedKey.revoked) {
-          setKeyData(null);
-          setLoading(false);
+          revokeKey();
           return;
         }
         if (linkedKey.expires_at && Date.parse(linkedKey.expires_at) < Date.now()) {
@@ -133,6 +146,7 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       if (version !== requestVersion.current) return;
       if (error) {
         const reason = parseError(error.message);
+        if (reason === "revoked_key") { revokeKey(); return; }
         if (["invalid_key", "revoked_key", "device_mismatch", "account_mismatch"].includes(reason)) {
           // Se a key local ficou inválida/trocou de dispositivo, tenta recuperar
           // a key vinculada à conta antes de bloquear o usuário.
@@ -141,9 +155,7 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
           if (accountKey) {
             const linkedKey = accountKey as KeyData;
             if (linkedKey.revoked) {
-              localStorage.removeItem(STORAGE_KEY);
-              clearExpiry();
-              setKeyData(null);
+              revokeKey();
               return;
             }
             if (linkedKey.expires_at && Date.parse(linkedKey.expires_at) < Date.now()) {
@@ -165,6 +177,8 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
         }
         if (reason === "expired_key") { expireKey(stored); void notifyExpired(stored); }
         else if (["invalid_key", "revoked_key", "device_mismatch", "account_mismatch"].includes(reason)) { localStorage.removeItem(STORAGE_KEY); clearExpiry(); setKeyData(null); }
+      } else if (data && (data as KeyData).revoked) {
+        revokeKey();
       } else if (data && (data as any).user_id && (data as any).user_id !== session.user.id && !(data as any).is_master) {
         // Key salva no aparelho pertence a outra conta: descarta e recupera a da conta atual.
         localStorage.removeItem(STORAGE_KEY);
@@ -180,7 +194,7 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
     } finally {
       if (version === requestVersion.current) setLoading(false);
     }
-  }, [clearExpiry, expireKey, session?.user?.id]);
+  }, [clearExpiry, expireKey, revokeKey, session?.user?.id]);
 
   useEffect(() => { void refresh(); }, [refresh]);
 

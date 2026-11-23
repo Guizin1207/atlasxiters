@@ -7,5 +7,7 @@
 - [x] Validar os fluxos em tela e os testes do projeto.
 - [x] Tornar o plano demo real no banco: a chave demo deixa de ser salva como Basic.
 - [x] Criar e entregar uma chave demo funcional ao administrador.
+- [ ] Avisar os aparelhos da key revogada e desconectar o acesso da conta.
+- [ ] Validar revogação e desconexão, sem alterar contas reais.
 
 

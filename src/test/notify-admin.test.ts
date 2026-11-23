@@ -8,6 +8,7 @@ function fixture(options: { adminValid?: boolean; userValid?: boolean; keyExpire
     access_keys: [{ id: "key-a", key: "KEY-A", is_master: false, revoked: options.revoked ?? false, expires_at: options.keyExpired === false ? "2099-01-01T00:00:00Z" : "2000-01-01T00:00:00Z" }],
     support_threads: [{ id: "thread-a", key_id: "key-a" }],
     support_messages: [{ id: "message-a", thread_id: "thread-a", sender_type: "user", created_at: new Date().toISOString() }],
+    admin_messages: [{ id: "revocation-a", target_key_id: "key-a", title: "Chave revogada", created_at: new Date().toISOString() }],
     push_subscriptions: [
       { id: "admin-a", endpoint: "https://push.test/admin-a", scope: "admin", key_id: null, p256dh: "p", auth: "a" },
       { id: "admin-b", endpoint: "https://push.test/admin-b", scope: "admin", key_id: null, p256dh: "p", auth: "a" },
@@ -43,6 +44,29 @@ function fixture(options: { adminValid?: boolean; userValid?: boolean; keyExpire
 }
 
 describe("destinatários e autorização do servidor push", () => {
+  it("revogação avisa somente os aparelhos da chave revogada", async () => {
+    const f = fixture({ revoked: true });
+    f.rows.push_subscriptions.push({ ...f.rows.push_subscriptions[2], id: "user-a-2", endpoint: "https://push.test/user-a-2" });
+    expect((await f.send({ kind: "revoked", eventId: "revocation-a" })).status).toBe(200);
+    expect(f.sendNotification.mock.calls.map(([target]) => target.endpoint)).toEqual(["https://push.test/user-a", "https://push.test/user-a-2"]);
+  });
+
+  it("revogação sem evento do servidor não envia notificações", async () => {
+    const f = fixture({ revoked: true });
+    expect((await f.send({ kind: "revoked", key: "KEY-A" })).status).toBe(400);
+    expect((await f.send({ kind: "revoked", eventId: "forged" })).status).toBe(403);
+    expect(f.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("revogação não envia aviso para chave ativa ou evento antigo", async () => {
+    const f = fixture();
+    expect((await f.send({ kind: "revoked", eventId: "revocation-a" })).status).toBe(403);
+    f.rows.access_keys[0].revoked = true;
+    f.rows.admin_messages[0].created_at = "2000-01-01T00:00:00Z";
+    expect((await f.send({ kind: "revoked", eventId: "revocation-a" })).status).toBe(403);
+    expect(f.sendNotification).not.toHaveBeenCalled();
+  });
+
   it("teste do ADM exige autenticação válida", async () => {
     const f = fixture({ adminValid: false });
     const result = await f.send({ kind: "admin_test", password: "wrong", targetEndpoint: "https://push.test/admin-a" });

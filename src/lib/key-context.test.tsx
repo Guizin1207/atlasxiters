@@ -2,9 +2,11 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KeyProvider, useKey } from "./key-context";
 
-const mocks = vi.hoisted(() => ({ rpc: vi.fn(), notifyExpired: vi.fn(), resetExpiryNotification: vi.fn() }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc } }));
-vi.mock("@/lib/push", () => ({ notifyExpired: mocks.notifyExpired, resetExpiryNotification: mocks.resetExpiryNotification, retireOtherUserPush: vi.fn().mockResolvedValue(undefined) }));
+const mocks = vi.hoisted(() => ({ rpc: vi.fn(), authSignOut: vi.fn().mockResolvedValue({ error: null }), notifyExpired: vi.fn(), resetExpiryNotification: vi.fn() }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc, auth: { signOut: mocks.authSignOut } } }));
+vi.mock("@/lib/auth-context", () => ({ useAuth: () => ({ session: { user: { id: "user-a" } } }) }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+vi.mock("@/lib/push", () => ({ notifySecurity: vi.fn(), notifyExpired: mocks.notifyExpired, resetExpiryNotification: mocks.resetExpiryNotification, retireOtherUserPush: vi.fn().mockResolvedValue(undefined) }));
 
 const activeKey = {
   id: "key-a", key: "KEY-A", is_master: false, revoked: false,
@@ -81,12 +83,43 @@ describe("expiração individual", () => {
   });
 
   it("resposta antiga não restaura a key depois de sair", async () => {
-    let finish: (value: unknown) => void;
+    let finish: ((value: unknown) => void) | undefined;
     mocks.rpc.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
     const { result } = await mount();
     act(() => result.current.signOut());
-    await act(async () => { finish!({ data: activeKey, error: null }); });
+    await act(async () => { finish?.({ data: activeKey, error: null }); });
     expect(result.current.keyData).toBeNull();
     expect(localStorage.getItem("atlas_vip_key")).toBeNull();
+  });
+});
+
+describe("revogação desconecta a conta", () => {
+  it("remove o acesso e a sessão quando a validação informa revogação", async () => {
+    const { result } = await mount();
+    mocks.rpc.mockResolvedValue({ data: null, error: { message: "revoked_key" } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(15_000); });
+    expect(result.current.keyData).toBeNull();
+    expect(result.current.expiredKey).toBeNull();
+    expect(localStorage.getItem("atlas_vip_key")).toBeNull();
+    expect(sessionStorage.getItem("atlas_vip_auth_error")).toBe("revoked_key");
+    expect(mocks.authSignOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(mocks.rpc).not.toHaveBeenCalledWith("get_my_access_key");
+  });
+
+  it("não recupera uma chave revogada vinculada à conta sem cache", async () => {
+    localStorage.removeItem("atlas_vip_key");
+    mocks.rpc.mockResolvedValue({ data: { ...activeKey, revoked: true }, error: null });
+    const { result } = await mount();
+    expect(result.current.keyData).toBeNull();
+    expect(mocks.authSignOut).toHaveBeenCalledOnce();
+    expect(sessionStorage.getItem("atlas_vip_auth_error")).toBe("revoked_key");
+  });
+
+  it("falha de rede não desconecta uma conta com acesso válido", async () => {
+    const { result } = await mount();
+    mocks.rpc.mockRejectedValue(new Error("offline"));
+    await act(async () => { await result.current.refresh(); });
+    expect(result.current.keyData?.key).toBe("KEY-A");
+    expect(mocks.authSignOut).not.toHaveBeenCalled();
   });
 });

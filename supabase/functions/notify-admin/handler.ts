@@ -99,6 +99,12 @@ const CONTENT: Record<
     audience: "user",
     url: "/painel?suporte=1",
   },
+  revoked: {
+    title: "Atlas VIP — Chave revogada",
+    body: "Sua chave foi revogada e sua conta foi desconectada. Fale com o suporte.",
+    audience: "user",
+    url: "/login",
+  },
 };
 
 const TESTABLE_KINDS = new Set([
@@ -403,6 +409,21 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
         if (keyError) return json({ error: "Falha ao validar coins." }, 500);
         if (!keyRow?.id || keyRow.is_master || keyRow.revoked) return json({ error: "Chave inválida." }, 403);
         query = query.eq("scope", "user").eq("key_id", keyRow.id);
+      } else if (kind === "revoked") {
+        // Only a server-created revocation notice authorizes delivery.
+        // A revoked key alone must never authorize arbitrary repeated pushes.
+        if (!eventId) return json({ error: "Evento de revogação obrigatório." }, 400);
+        const { data: event, error: eventError } = await admin.from("admin_messages")
+          .select("id, title, target_key_id, created_at")
+          .eq("id", eventId).eq("title", "Chave revogada")
+          .gte("created_at", new Date(Date.now() - 5 * 60_000).toISOString()).maybeSingle();
+        if (eventError) return json({ code: "DATABASE_ERROR", error: "Falha ao validar revogação." }, 500);
+        if (!event?.target_key_id) return json({ error: "Evento de revogação inválido." }, 403);
+        const { data: keyRow, error: keyError } = await admin.from("access_keys")
+          .select("id, revoked, is_master").eq("id", event.target_key_id).maybeSingle();
+        if (keyError) return json({ code: "DATABASE_ERROR", error: "Falha ao validar chave." }, 500);
+        if (!keyRow?.revoked || keyRow.is_master) return json({ error: "Chave não está revogada." }, 403);
+        query = query.eq("scope", "user").eq("key_id", keyRow.id);
       } else if (kind === "expired") {
         if (!key) return json({ error: "Chave ausente." }, 400);
         const { data: keyRow, error: keyError } = await admin
@@ -443,10 +464,10 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       if (!subs?.length) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
 
       const payload = JSON.stringify({
-        title: customTitle || content.title,
-        body: content.audience === "admin" || kind === "expired" || kind === "user_test" ? content.body : customBody || content.body,
+        title: kind === "revoked" ? content.title : customTitle || content.title,
+        body: content.audience === "admin" || kind === "expired" || kind === "revoked" || kind === "user_test" ? content.body : customBody || content.body,
         url: content.url,
-        tag: `atlas-${kind}`,
+        tag: kind === "revoked" ? `atlas-revoked-${eventId}` : `atlas-${kind}`,
       });
       const stale: string[] = [];
       let sent = 0;
