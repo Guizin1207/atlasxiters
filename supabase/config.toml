@@ -4,3 +4,7 @@ project_id = "soadsghfbmogayootqwl"
 # dentro do handler; o projeto já recebe essas chamadas sem JWT de Supabase Auth.
 [functions.notify-admin]
 verify_jwt = false
+
+[functions.atlas-chat-ai]
+# A função valida a chave Atlas dentro do handler; não usa Supabase Auth JWT.
+verify_jwt = false
