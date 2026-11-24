@@ -32,13 +32,46 @@ export function SupportAdminCard() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
   const [closed, setClosed] = useState(false);
+  const [requestedThreadId, setRequestedThreadId] = useState<string | null>(
+    () => new URLSearchParams(window.location.search).get("thread")
+  );
 
   const loadThreads = useCallback(async () => {
     if (!password) return;
     const { data, error } = await supabase.rpc("admin_support_list_threads", { _password: password });
-    if (!error) setThreads((data ?? []) as Thread[]);
+    if (!error) {
+      const list = (data ?? []) as Thread[];
+      setThreads(list);
+      if (requestedThreadId) {
+        const match = list.find((item) => item.id === requestedThreadId);
+        if (match) {
+          setSelected(match);
+          setRequestedThreadId(null);
+        }
+      }
+    }
     setLoading(false);
-  }, [password]);
+  }, [password, requestedThreadId]);
+
+  useEffect(() => {
+    const onOpenThread = (event: Event) => {
+      const id = (event as CustomEvent<{ threadId?: string }>).detail?.threadId;
+      if (!id) return;
+      const match = threads.find((item) => item.id === id);
+      if (match) setSelected(match);
+      else setRequestedThreadId(id);
+    };
+    window.addEventListener("atlas:open-support-thread", onOpenThread);
+    return () => window.removeEventListener("atlas:open-support-thread", onOpenThread);
+  }, [threads]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", "support");
+    if (selected?.id) url.searchParams.set("thread", selected.id);
+    else url.searchParams.delete("thread");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [selected?.id]);
 
   const loadMessages = useCallback(async () => {
     if (!password || !selected) return;
@@ -49,9 +82,13 @@ export function SupportAdminCard() {
   useEffect(() => { loadThreads(); const t = window.setInterval(loadThreads, 2500); return () => window.clearInterval(t); }, [loadThreads]);
   useEffect(() => { loadMessages(); const t = window.setInterval(loadMessages, 2000); return () => window.clearInterval(t); }, [loadMessages]);
 
-  const alertUser = (thread: Thread, text: string) => {
+  const alertUser = (thread: Thread, text: string, messageId?: string) => {
     if (!password) return;
-    void notifyUsers(password, "reply", { targetKey: thread.key }).then((result) => {
+    void notifyUsers(password, "reply", {
+      targetKey: thread.key,
+      messageId,
+      threadId: thread.id,
+    }).then((result) => {
       if (!result.ok) toast.warning(`Resposta salva no chat. ${result.message}`);
     });
     void supabase.rpc("admin_send_message", {
@@ -66,13 +103,13 @@ export function SupportAdminCard() {
 
   const sendQuick = async (message: string) => {
     if (!password || !selected) return;
-    const { error } = await supabase.rpc("admin_support_send_message", {
+    const { data, error } = await supabase.rpc("admin_support_send_message", {
       _password: password,
       _thread_id: selected.id,
       _body: message,
     });
     if (error) { toast.error("Não foi possível enviar."); return; }
-    alertUser(selected, message);
+    alertUser(selected, message, (data as { id?: string } | null)?.id);
     loadMessages();
     loadThreads();
   };
@@ -93,9 +130,9 @@ export function SupportAdminCard() {
 
   const send = async () => {
     if (!password || !selected || !body.trim()) return;
-    const { error } = await supabase.rpc("admin_support_send_message", { _password: password, _thread_id: selected.id, _body: body.trim() });
+    const { data, error } = await supabase.rpc("admin_support_send_message", { _password: password, _thread_id: selected.id, _body: body.trim() });
     if (error) { toast.error("Não foi possível enviar."); return; }
-    alertUser(selected, body.trim());
+    alertUser(selected, body.trim(), (data as { id?: string } | null)?.id);
     setBody("");
     loadMessages();
     loadThreads();

@@ -183,6 +183,13 @@
       "when": 1795400159704,
       "tag": "0025_notify_key_revocation",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795545609976,
+      "tag": "0026_universal_free_keys",
+      "breakpoints": true
     }
   ]
 }

@@ -61,7 +61,7 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
       const game = loadingGame;
       const href = game ? gameLaunchUrl(game, navigator.userAgent, window.location.href) : null;
       const started = performance.now();
-      const duration = 3200;
+      const duration = 500;
 
       const tick = (time: number) => {
         const value = Math.min(100, ((time - started) / duration) * 100);
@@ -74,7 +74,7 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
           setSuccessNotice(true);
           window.setTimeout(() => {
             if (href) window.location.href = href;
-          }, 1200);
+          }, 250);
         }
       };
 

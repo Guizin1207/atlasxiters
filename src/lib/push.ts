@@ -503,7 +503,15 @@ export async function testNotification(
 export async function notifyUsers(
   password: string,
   kind: UserNotifyKind,
-  options?: { targetKey?: string; body?: string; title?: string },
+  options?: { targetKey?: string; body?: string; title?: string; messageId?: string; threadId?: string },
 ) {
-  return deliver({ kind, password, targetKey: options?.targetKey, body: options?.body, title: options?.title });
+  return deliver({
+    kind,
+    password,
+    targetKey: options?.targetKey,
+    body: options?.body,
+    title: options?.title,
+    messageId: options?.messageId,
+    threadId: options?.threadId,
+  });
 }

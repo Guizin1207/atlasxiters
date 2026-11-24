@@ -255,6 +255,25 @@ const sendSensiMessage = async () => {
   const [supportOpen, setSupportOpen] = useState(
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (supportOpen) url.searchParams.set("suporte", "1");
+    else url.searchParams.delete("suporte");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [supportOpen]);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      const payload = event.data as { type?: string; url?: string } | null;
+      if (payload?.type !== "ATLAS_OPEN_URL" || !payload.url) return;
+      const target = new URL(payload.url, window.location.origin);
+      if (target.searchParams.get("suporte") === "1") setSupportOpen(true);
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, []);
   const permissions = getPlanPermissions(keyData?.plan, keyData?.is_master);
   const currentPlanLabel = keyData?.is_master ? "MASTER" : String(keyData?.plan ?? "basic").toUpperCase();
   const detectedDeviceLabel = sensiDevice || keyData?.device || "Aparelho não identificado";

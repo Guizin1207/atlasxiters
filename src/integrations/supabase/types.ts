@@ -24,6 +24,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -39,6 +40,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_master?: boolean
+          is_universal?: boolean
           key: string
           note?: string | null
           plan?: string
@@ -54,6 +56,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_master?: boolean
+          is_universal?: boolean
           key?: string
           note?: string | null
           plan?: string
@@ -574,6 +577,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -637,6 +641,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -663,6 +668,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -726,6 +732,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -750,6 +757,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -778,6 +786,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -877,6 +886,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -910,6 +920,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -943,6 +954,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -1056,6 +1068,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string
@@ -1086,6 +1099,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_master: boolean
+          is_universal: boolean
           key: string
           note: string | null
           plan: string

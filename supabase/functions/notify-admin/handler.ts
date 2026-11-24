@@ -31,7 +31,7 @@ const CONTENT: Record<
     title: "Atlas VIP — Novo atendimento",
     body: "Você recebeu uma nova mensagem no suporte.",
     audience: "admin",
-    url: "/admin",
+    url: "/admin?tab=support",
   },
   security: {
     title: "Atlas VIP — Alerta de segurança",
@@ -43,7 +43,7 @@ const CONTENT: Record<
     title: "Atlas VIP — Novo comprovante",
     body: "Um cliente enviou um comprovante.",
     audience: "admin",
-    url: "/admin",
+    url: "/admin?tab=support",
   },
   reply: {
     title: "Atlas VIP — Suporte respondeu",
@@ -144,6 +144,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       const targetKey = typeof raw?.targetKey === "string" ? raw.targetKey.trim() : "";
       const targetEndpoint = typeof raw?.targetEndpoint === "string" ? raw.targetEndpoint.trim() : "";
       const messageId = typeof raw?.messageId === "string" ? raw.messageId : "";
+      let threadId = typeof raw?.threadId === "string" ? raw.threadId.trim() : "";
       const customBody = typeof raw?.body === "string" ? raw.body.trim().slice(0, 180) : "";
       const customTitle = typeof raw?.title === "string" ? raw.title.trim().slice(0, 80) : "";
       const cronToken = typeof raw?.cronToken === "string" ? raw.cronToken : "";
@@ -302,6 +303,13 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
           const { data: validKey, error: keyError } = await admin.rpc("_valid_access_key", { _key: key });
           if (keyError) return json({ error: "Falha ao validar chave." }, 500);
           if (validKey !== true) return json({ error: "Chave inválida." }, 403);
+          if (!threadId) {
+            const { data: keyRow } = await admin.from("access_keys").select("id").eq("key", key.toUpperCase()).maybeSingle();
+            if (keyRow?.id) {
+              const { data: thread } = await admin.from("support_threads").select("id").eq("key_id", keyRow.id).maybeSingle();
+              if (thread?.id) threadId = String(thread.id);
+            }
+          }
           query = query.eq("scope", "admin");
         } else if (messageId) {
           const { data: keyRow, error: keyError } = await admin.from("access_keys")
@@ -312,6 +320,7 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
             .select("id").eq("key_id", keyRow.id).maybeSingle();
           if (threadError) return json({ error: "Falha ao validar atendimento." }, 500);
           if (!thread) return json({ error: "Atendimento inválido." }, 403);
+          threadId = String(thread.id);
           const { data: message, error: messageError } = await admin.from("support_messages")
             .select("id").eq("id", messageId).eq("thread_id", thread.id).eq("sender_type", "user")
             .gte("created_at", new Date(Date.now() - 5 * 60_000).toISOString()).maybeSingle();
@@ -464,11 +473,25 @@ export function createNotifyHandler({ admin, pushConfigured, pushConfigCode = "P
       if (subsError) return json({ code: "DATABASE_ERROR", error: "Falha ao listar inscrições." }, 500);
       if (!subs?.length) return json({ sent: 0, removed: 0, code: "NO_RECIPIENTS" });
 
+      const resolvedUrl =
+        (kind === "message" || kind === "receipt") && threadId
+          ? `/admin?tab=support&thread=${encodeURIComponent(threadId)}`
+          : content.url;
+      const resolvedTag =
+        kind === "revoked"
+          ? `atlas-revoked-${eventId}`
+          : messageId && (kind === "message" || kind === "receipt" || kind === "reply")
+            ? `atlas-support-${messageId}`
+            : `atlas-${kind}`;
+
       const payload = JSON.stringify({
         title: kind === "revoked" ? content.title : customTitle || content.title,
         body: content.audience === "admin" || kind === "expired" || kind === "revoked" || kind === "user_test" ? content.body : customBody || content.body,
-        url: content.url,
-        tag: kind === "revoked" ? `atlas-revoked-${eventId}` : `atlas-${kind}`,
+        url: resolvedUrl,
+        tag: resolvedTag,
+        kind,
+        threadId: threadId || undefined,
+        messageId: messageId || undefined,
       });
       const stale: string[] = [];
       let sent = 0;

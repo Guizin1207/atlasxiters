@@ -46,8 +46,12 @@ export function useMessages() {
 
       if (initialized.current) {
         // Detecta novas mensagens
+        const supportChatVisible =
+          document.visibilityState === "visible" &&
+          new URLSearchParams(window.location.search).get("suporte") === "1";
         list.forEach((m) => {
           if (!knownIds.current.has(m.id) && !m.is_read) {
+            if (supportChatVisible && m.title.toLowerCase().includes("suporte")) return;
             const showToast = m.title.toLowerCase().includes("expirad") ? toast.error : toast;
             showToast(m.title, {
               description:
