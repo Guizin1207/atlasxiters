@@ -20,6 +20,7 @@ export function AdminDevicesCard() {
   const [cleaning, setCleaning] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [keysByDevice, setKeysByDevice] = useState<Record<string, string[]>>({});
+  const [linkedDevices, setLinkedDevices] = useState<any[]>([]);
   const [processingDevice, setProcessingDevice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,8 +37,9 @@ export function AdminDevicesCard() {
           supabase.rpc("admin_list_keys", { _password: password }),
         ]);
         const map: Record<string, string[]> = {};
+        const keyRows = !keysResult.error && Array.isArray(keysResult.data) ? keysResult.data as any[] : [];
         if (!keysResult.error) {
-          for (const key of (keysResult.data ?? []) as any[]) {
+          for (const key of keyRows) {
             if (!key.device_id) continue;
             if (!map[key.device_id]) map[key.device_id] = [];
             map[key.device_id].push(key.key);
@@ -52,6 +54,14 @@ export function AdminDevicesCard() {
           }
           setRows(Array.from(unique.values()));
           setKeysByDevice(map);
+          const devices = new Map<string, any>();
+          for (const key of keyRows) {
+            if (!key.device_id) continue;
+            const id = String(key.device_id);
+            const previous = devices.get(id);
+            if (!previous || new Date(key.activated_at ?? 0).getTime() > new Date(previous.activated_at ?? 0).getTime()) devices.set(id, key);
+          }
+          setLinkedDevices(Array.from(devices.values()));
           setError(false);
         }
       } catch {
@@ -142,10 +152,10 @@ export function AdminDevicesCard() {
             <thead>
               <tr className="border-b border-white/10">
                 <th className="p-2">Dispositivo</th>
-                <th className="p-2">Acesso / Key</th>
-                <th className="p-2">Primeiro registro</th>
+                <th className="p-2">Sessão criada</th>
                 <th className="p-2">Última atividade</th>
                 <th className="p-2">Status</th>
+                <th className="p-2">Aprovação</th>
                 
               </tr>
             </thead>
@@ -158,12 +168,8 @@ export function AdminDevicesCard() {
                   <tr key={row.device_id ?? row.session_id} className="border-b border-white/5">
 
                     <td className="p-2">
-                      <div className="font-medium">ADM</div>
-                      {(keysByDevice[row.device_id ?? ""] ?? []).length > 0 && (
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          Normal: {(keysByDevice[row.device_id ?? ""] ?? []).join(", ")}
-                        </div>
-                      )}
+                      <div className="font-medium">{row.device_label || "Dispositivo ADM"}</div>
+                      <div className="mt-1 text-[10px] text-muted-foreground">{isCurrent ? "Este aparelho" : "Acesso administrativo"}</div>
                     </td>
                     <td className="p-2 whitespace-nowrap">{date(row.created_at)}</td>
                     <td className="p-2 whitespace-nowrap">{date(row.last_seen_at)}</td>
@@ -226,10 +232,35 @@ export function AdminDevicesCard() {
           </table>
 
           {!rows.length && !error && (
-            <p className="p-2 text-muted-foreground">Nenhum dispositivo registrado.</p>
+            <p className="p-2 text-muted-foreground">Nenhuma sessão ADM registrada.</p>
           )}
         </div>
       )}
+
+      <div className="space-y-3 border-t border-white/10 pt-4">
+        <div>
+          <h3 className="font-semibold">Dispositivos vinculados às keys</h3>
+          <p className="text-xs text-muted-foreground">Aparelhos registrados nas chaves de usuários.</p>
+        </div>
+        {linkedDevices.length ? (
+          <div className="space-y-2">
+            {linkedDevices.map((item) => (
+              <div key={String(item.device_id)} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{item.device || "Dispositivo não identificado"}</p>
+                  <p className="text-xs text-muted-foreground font-mono break-all">{String(item.device_id).slice(0, 8)}… · {item.customer_name || "Usuário"}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-mono">{item.key || "Key não disponível"}</p>
+                  <p className="text-[10px] text-muted-foreground">{item.plan || "Free"} · {item.revoked ? "Revogada" : "Vinculada"}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Nenhum aparelho vinculado a uma key foi encontrado.</p>
+        )}
+      </div>
     </section>
   );
 }
