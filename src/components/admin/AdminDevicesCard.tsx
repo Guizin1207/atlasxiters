@@ -19,7 +19,6 @@ export function AdminDevicesCard() {
   const [loading, setLoading] = useState(true);
   const [cleaning, setCleaning] = useState(false);
   const [refresh, setRefresh] = useState(0);
-  const [keysByDevice, setKeysByDevice] = useState<Record<string, string[]>>({});
   const [linkedDevices, setLinkedDevices] = useState<any[]>([]);
   const [processingDevice, setProcessingDevice] = useState<string | null>(null);
 
@@ -36,15 +35,7 @@ export function AdminDevicesCard() {
           listAdminSessions(password),
           supabase.rpc("admin_list_keys", { _password: password }),
         ]);
-        const map: Record<string, string[]> = {};
         const keyRows = !keysResult.error && Array.isArray(keysResult.data) ? keysResult.data as any[] : [];
-        if (!keysResult.error) {
-          for (const key of keyRows) {
-            if (!key.device_id) continue;
-            if (!map[key.device_id]) map[key.device_id] = [];
-            map[key.device_id].push(key.key);
-          }
-        }
         if (live) {
           const unique = new Map<string, AdminAccessSession>();
           for (const row of data) {
@@ -53,7 +44,6 @@ export function AdminDevicesCard() {
             if (!previous || new Date(row.last_seen_at).getTime() > new Date(previous.last_seen_at).getTime()) unique.set(id, row);
           }
           setRows(Array.from(unique.values()));
-          setKeysByDevice(map);
           const devices = new Map<string, any>();
           for (const key of keyRows) {
             if (!key.device_id) continue;
