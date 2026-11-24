@@ -10,7 +10,7 @@
 - [x] Avisar os aparelhos da key revogada e desconectar o acesso da conta.
 - [x] Validar revogação e desconexão nos testes e aviso na tela móvel, sem alterar contas reais.
 - [ ] Validar com uma conta autenticada e aparelho push real — autorização para conta temporária recusada.
-- [ ] Corrigir e publicar atlas-chat-ai, preservando modelo, limites e validação das keys.
-- [ ] Validar respostas e erros da Atlas IA com o mínimo de chamadas pagas.
+- [x] Corrigir e publicar atlas-chat-ai, preservando modelo, limites e validação das keys.
+- [x] Validar respostas e erros da Atlas IA com o mínimo de chamadas pagas.
 
 

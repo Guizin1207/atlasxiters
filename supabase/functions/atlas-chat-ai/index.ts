@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${apiKey}`,
         "Lovable-API-Key": apiKey,
         "Content-Type": "application/json",
+        "X-Lovable-AIG-SDK": "fetch",
       },
       body: JSON.stringify({
         model: "google/gemini-3.7-flash",
@@ -77,10 +78,28 @@ Deno.serve(async (req) => {
 
     if (!upstream.ok) {
       const details = await upstream.json().catch(() => ({}));
-      console.error("atlas-chat-ai gateway error", upstream.status, details?.error?.message ?? "");
-      if (upstream.status === 402) return json({ error: "Os créditos de IA do projeto acabaram. Verifique o uso de IA no Lovable." }, 402);
-      if (upstream.status === 429) return json({ error: "A Atlas IA está recebendo muitas mensagens. Aguarde alguns segundos e tente novamente." }, 429);
-      if (upstream.status === 401 || upstream.status === 403) return json({ error: "A conexão com o serviço de IA está inválida. Verifique a configuração do Lovable." }, 502);
+      const safeMessage =
+        typeof details?.error?.message === "string"
+          ? details.error.message.trim()
+          : typeof details?.message === "string"
+            ? details.message.trim()
+            : "";
+      console.error("atlas-chat-ai gateway error", upstream.status, safeMessage);
+      if (upstream.status === 402) {
+        return json({ error: safeMessage || "Os créditos de IA do projeto acabaram. Verifique o uso de IA no Lovable." }, 402);
+      }
+      if (upstream.status === 429) {
+        return json({ error: "A Atlas IA está recebendo muitas mensagens. Aguarde alguns segundos e tente novamente." }, 429);
+      }
+      if (upstream.status === 403) {
+        return json({ error: safeMessage || "Acesso ao serviço de IA negado. Verifique as configurações de IA no Lovable." }, 403);
+      }
+      if (upstream.status === 401) {
+        return json({ error: "A conexão com o serviço de IA está inválida. Verifique a configuração do Lovable." }, 401);
+      }
+      if (upstream.status === 400 || upstream.status === 404) {
+        return json({ error: safeMessage || "Não foi possível processar a mensagem pela Atlas IA." }, upstream.status);
+      }
       return json({ error: "O serviço de IA está indisponível no momento. Tente novamente." }, 502);
     }
 

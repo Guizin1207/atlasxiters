@@ -206,7 +206,17 @@ const sendSensiMessage = async () => {
           dpi: sensiDpi,
         },
       });
-      if (error) throw error;
+      if (error) {
+        let detail = "";
+        const ctx = (error as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          const payload = await ctx.json().catch(() => null);
+          if (payload && typeof payload.error === "string" && payload.error.trim()) {
+            detail = payload.error.trim();
+          }
+        }
+        throw new Error(detail || error.message || "Não foi possível falar com a Atlas IA.");
+      }
       if (!data?.answer || typeof data.answer !== "string") {
         throw new Error(data?.error || "A Atlas IA não conseguiu responder agora.");
       }
