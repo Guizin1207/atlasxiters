@@ -58,7 +58,7 @@ export { getPanelIcon };
  */
 export function planAllows(plan: string | null | undefined, minPlan: PlanId) {
   const current = (plan ?? "basic") as PlanId;
-  const cur = PLAN_ORDER.indexOf(current === "demo" ? "basic" : current);
+  const cur = PLAN_ORDER.indexOf(current === "demo" || current === "free" ? "basic" : current);
   const need = PLAN_ORDER.indexOf(minPlan);
   return (cur < 0 ? 0 : cur) >= need;
 }

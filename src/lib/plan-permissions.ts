@@ -14,7 +14,7 @@ export type AtlasPlanPermissions = {
 
 const normalizePlan = (plan?: string | null): PlanId => {
   const value = String(plan ?? "basic").toLowerCase() as PlanId;
-  return ["demo", "basic", "pro", "master", "bronze", "esmeralda", "rubi", "atlas"].includes(value)
+  return ["free", "demo", "basic", "pro", "master", "bronze", "esmeralda", "rubi", "atlas"].includes(value)
     ? value
     : "basic";
 };

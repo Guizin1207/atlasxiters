@@ -38,7 +38,8 @@ export function PerfilTab() {
   if (!keyData) return null;
 
   const DeviceIcon = getDeviceIcon(device);
-  const remaining = keyData.is_master ? Infinity : msUntil(keyData.expires_at);
+  const isUnlimited = keyData.is_master || ((keyData.is_universal || keyData.plan === "free" || keyData.plan === "demo") && !keyData.expires_at);
+  const remaining = isUnlimited ? Infinity : msUntil(keyData.expires_at);
   const warn = isFinite(remaining) && remaining < 86_400_000; // <24h
   const expired = isFinite(remaining) && remaining <= 0;
 
@@ -97,7 +98,7 @@ export function PerfilTab() {
           <Stat label="Você está usando" value={device} icon={<DeviceIcon className="w-3.5 h-3.5" />} />
           <Stat
             label="Duração"
-            value={keyData.is_master ? "Vitalícia" : `${keyData.duration_days}d`}
+            value={keyData.is_master ? "Vitalícia" : isUnlimited ? "Ilimitada" : `${keyData.duration_days}d`}
           />
         </div>
       </div>
@@ -213,7 +214,7 @@ export function PerfilTab() {
 
 
 function PlanBadge({ plan, isMaster }: { plan?: string | null; isMaster?: boolean }) {
-  const names: Record<string, string> = { demo: "Demo", basic: "Basic", pro: "Pro", bronze: "VIP Bronze", esmeralda: "VIP Esmeralda", rubi: "VIP Rubi", atlas: "VIP Atlas", master: "Master" };
+  const names: Record<string, string> = { free: "Free Universal", demo: "Demo", basic: "Basic", pro: "Pro", bronze: "VIP Bronze", esmeralda: "VIP Esmeralda", rubi: "VIP Rubi", atlas: "VIP Atlas", master: "Master" };
   const label = isMaster ? "Master" : names[String(plan ?? "basic")] ?? "Basic";
   return <span className="shrink-0 rounded-full bg-white text-black px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]">{label}</span>;
 }

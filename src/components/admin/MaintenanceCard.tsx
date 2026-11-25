@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Wrench, Save, Loader2, Send } from "lucide-react";
+import { Wrench, Save, Loader2, Send, Zap, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,10 +69,6 @@ export function MaintenanceCard() {
 
   const saveVersion = async () => {
     if (!password || versionSaving) return;
-    if (!enabled) {
-      toast.error("Ative o modo de manutenção antes de alterar a versão.");
-      return;
-    }
     const normalized = version.trim().replace(",", ".");
     if (!/^\d+\.\d+$/.test(normalized)) {
       toast.error("Versão inválida", { description: "Use o formato X.Y, por exemplo 1.2 ou 2.0." });
@@ -102,6 +98,44 @@ export function MaintenanceCard() {
     }
   };
 
+  const bumpVersion = () => {
+    const match = version.trim().replace(",", ".").match(/^(\d+)\.(\d+)$/);
+    if (!match) { setVersion("1.1"); return; }
+    let major = Number(match[1]);
+    let minor = Number(match[2]) + 1;
+    if (minor >= 10) { major += 1; minor = 0; }
+    setVersion(`${major}.${minor}`);
+  };
+
+  const quickToggleMaintenance = async (nextEnabled: boolean, presetMessage?: string) => {
+    if (!password || saving) return;
+    const finalMessage = presetMessage ?? message;
+    setEnabled(nextEnabled);
+    if (presetMessage !== undefined) setMessage(presetMessage);
+    setSaving(true);
+    const { error } = await supabase.rpc("admin_set_maintenance", {
+      _enabled: nextEnabled,
+      _message: finalMessage,
+      _password: password,
+    });
+    setSaving(false);
+    if (error) {
+      toast.error("Falha ao atualizar manutenção", { description: error.message });
+      return;
+    }
+    void notifyUsers(password, nextEnabled ? "maintenance" : "maintenance_end");
+    toast.success(nextEnabled ? "Manutenção ativada e aviso enviado." : "Manutenção finalizada e aviso enviado.");
+  };
+
+  const notifyAppUpdate = async () => {
+    if (!password || sendingNotice) return;
+    setSendingNotice(true);
+    const result = await notifyUsers(password, "update");
+    setSendingNotice(false);
+    if (result.ok) toast.success("Aviso de atualização do app enviado.");
+    else toast.warning(result.message);
+  };
+
   return (
     <section className="glass-strong rounded-3xl p-6 space-y-5">
       <div className="flex items-center justify-between">
@@ -128,6 +162,39 @@ export function MaintenanceCard() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={loading || saving}
+          onClick={() => void quickToggleMaintenance(true, "Estamos aplicando melhorias no Atlas VIP. Voltamos em poucos minutos.")}
+          className="h-11 rounded-xl border-white/10 bg-white/5 text-xs font-semibold"
+        >
+          <Zap className="w-3.5 h-3.5 mr-1.5" />
+          Ativar + Avisar
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={loading || saving}
+          onClick={() => void quickToggleMaintenance(false)}
+          className="h-11 rounded-xl border-white/10 bg-white/5 text-xs font-semibold"
+        >
+          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+          Finalizar + Avisar
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={loading || sendingNotice}
+          onClick={() => void notifyAppUpdate()}
+          className="h-11 rounded-xl border-white/10 bg-white/5 text-xs font-semibold"
+        >
+          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+          Avisar atualização
+        </Button>
+      </div>
+
       <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
         <div>
           <p className="vip-eyebrow mb-1">Versão do aplicativo</p>
@@ -141,11 +208,31 @@ export function MaintenanceCard() {
             inputMode="decimal"
             className="h-10 flex-1 rounded-xl border border-white/10 bg-background px-3 text-sm outline-none focus:border-primary/50"
           />
+          <Button type="button" onClick={bumpVersion} disabled={loading || versionSaving} variant="outline" className="rounded-xl px-3 text-xs font-semibold">
+            +0.1
+          </Button>
           <Button onClick={saveVersion} disabled={loading || versionSaving} variant="outline" className="rounded-xl px-5">
             {versionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar versão"}
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground">A manutenção continua podendo avançar automaticamente 1.0 → 1.1 → … → 1.9 → 2.0.</p>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {[
+          ["Atualização rápida", "Estamos atualizando o Atlas VIP com melhorias. Voltamos em alguns minutos."],
+          ["Correção de servidor", "Estamos estabilizando o servidor para melhorar o desempenho. Aguarde um instante."],
+          ["Manutenção programada", "Manutenção programada em andamento. O acesso será liberado em breve."],
+        ].map(([label, text]) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => setMessage(text)}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-muted-foreground hover:bg-white/10 hover:text-foreground transition-colors"
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <Textarea

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyRound, Loader2, Plus, ClipboardCopy, CalendarDays, FlaskConical } from "lucide-react";
+import { KeyRound, Loader2, Plus, ClipboardCopy, CalendarDays, FlaskConical, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import type { KeyData } from "@/lib/key-context";
 import { PLANS, getPlan, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
 
-type KeyMode = "normal" | "daily" | "demo";
+type KeyMode = "normal" | "daily" | "demo" | "free";
 
 export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
   const { password } = useAdmin();
@@ -25,9 +25,13 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
   const generate = async () => {
     if (!password) return;
     setBusy(true);
-    const effectiveDays = mode === "normal" ? days : mode === "demo" ? 0 : 1;
-    const effectivePlan: PlanId = mode === "demo" ? "demo" : plan;
-    const effectiveNote = mode === "demo" ? ["DEMO", note.trim()].filter(Boolean).join(" — ") : note;
+    const effectiveDays = mode === "normal" ? days : mode === "demo" ? 0 : mode === "free" ? Math.max(0, days) : 1;
+    const effectivePlan: PlanId = mode === "demo" ? "demo" : mode === "free" ? "free" : plan;
+    const effectiveNote = mode === "demo"
+      ? ["DEMO", note.trim()].filter(Boolean).join(" — ")
+      : mode === "free"
+        ? ["UNIVERSAL FREE", note.trim()].filter(Boolean).join(" — ")
+        : note;
     const { data, error } = await supabase.rpc("admin_create_keys", {
       _count: count, _duration_days: effectiveDays, _note: effectiveNote,
       _password: password, _plan: effectivePlan,
@@ -59,9 +63,10 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
           <ModeButton active={mode === "normal"} onClick={() => setMode("normal")} icon={<KeyRound className="w-3.5 h-3.5" />}>Normal</ModeButton>
           <ModeButton active={mode === "daily"} onClick={() => { setMode("daily"); setDays(1); }} icon={<CalendarDays className="w-3.5 h-3.5" />}>Diária</ModeButton>
           <ModeButton active={mode === "demo"} onClick={() => { setMode("demo"); setDays(1); }} icon={<FlaskConical className="w-3.5 h-3.5" />}>Demo</ModeButton>
+          <ModeButton active={mode === "free"} onClick={() => { setMode("free"); setDays(0); }} icon={<Globe className="w-3.5 h-3.5" />}>Universal Free</ModeButton>
         </div>
       </Field>
-      {mode !== "demo" && (
+      {mode !== "demo" && mode !== "free" && (
         <Field label="Plano">
           <div className="grid grid-cols-3 gap-2">
             {PLANS.map(p => <button key={p.id} type="button" onClick={() => { setPlan(p.id); if (mode === "normal") setDays(p.days ?? 36500); }} className={cn("h-11 rounded-xl text-xs font-semibold uppercase tracking-[0.12em] border transition-colors", plan === p.id ? "bg-white text-black border-white" : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground")}>{p.name}</button>)}
@@ -70,9 +75,15 @@ export function KeyGeneratorCard({ onCreated }: { onCreated?: () => void }) {
         </Field>
       )}
       {mode === "demo" && <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3"><p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Plano</p><p className="mt-1 text-sm font-semibold">DEMO</p></div>}
+      {mode === "free" && (
+        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Plano Universal Free</p>
+          <p className="mt-1 text-sm font-semibold">Qualquer pessoa pode entrar em múltiplos aparelhos (0 dias = sem expiração).</p>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <Field label="Quantidade"><Input type="number" min={1} max={100} value={count} onChange={e => setCount(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} className="rounded-xl bg-white/5 border-white/10 h-11" /></Field>
-        <Field label="Duração (dias)"><Input type="number" min={1} value={days} disabled={mode !== "normal"} onChange={e => setDays(Math.max(1, Number(e.target.value) || 30))} className="rounded-xl bg-white/5 border-white/10 h-11 disabled:opacity-60" /></Field>
+        <Field label={mode === "free" ? "Duração (0 = ilimitada)" : "Duração (dias)"}><Input type="number" min={mode === "free" ? 0 : 1} value={days} disabled={mode !== "normal" && mode !== "free"} onChange={e => setDays(mode === "free" ? Math.max(0, Number(e.target.value) || 0) : Math.max(1, Number(e.target.value) || 30))} className="rounded-xl bg-white/5 border-white/10 h-11 disabled:opacity-60" /></Field>
       </div>
       <Field label="Nota (opcional)"><Textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="Ex: lote influencer abril" className="rounded-xl bg-white/5 border-white/10 resize-none" /></Field>
       <Button onClick={generate} disabled={busy} className="w-full h-12 rounded-2xl bg-white text-black hover:bg-white/90 font-bold uppercase tracking-[0.15em]">{busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}Gerar</Button>

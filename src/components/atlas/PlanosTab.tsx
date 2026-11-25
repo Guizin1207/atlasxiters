@@ -3,7 +3,7 @@
  * O botão de aquisição abre o WhatsApp com a mensagem pronta.
  */
 
-import { Check, Crown, Copy, FlaskConical, QrCode, Sparkles, Zap } from "lucide-react";
+import { Check, Crown, Copy, FlaskConical, Globe, QrCode, Sparkles, Zap } from "lucide-react";
 import { useKey } from "@/lib/key-context";
 import { PLANS, getPlan, type PlanId } from "@/lib/atlas-config";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const ICONS: Record<PlanId, typeof Zap> = {
+  free: Globe,
   demo: FlaskConical,
   basic: Zap,
   pro: Sparkles,
@@ -26,7 +27,7 @@ export function PlanosTab({ embedded = false }: { embedded?: boolean } = {}) {
   const [pixPlan, setPixPlan] = useState<PlanId | null>(null);
 
   const startPayment = (plan: PlanId) => {
-    if (plan === "demo") return;
+    if (plan === "demo" || plan === "free") return;
     setPixPlan(plan);
     setTimeout(() => {
       document.getElementById("pix-payment")?.scrollIntoView({ behavior: "smooth", block: "center" });

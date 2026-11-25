@@ -6,7 +6,7 @@ const SUPPORT_MESSAGE = "Olá! Preciso de ajuda com o Atlas VIP.";
 export const SUPPORT_URL = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(SUPPORT_MESSAGE)}`;
 export const SUPPORT_LABEL = "Falar com o suporte";
 
-export type PlanId = "demo" | "basic" | "pro" | "master" | "bronze" | "esmeralda" | "rubi" | "atlas";
+export type PlanId = "free" | "demo" | "basic" | "pro" | "master" | "bronze" | "esmeralda" | "rubi" | "atlas";
 
 export type PlanInfo = {
   id: PlanId;
@@ -28,11 +28,13 @@ export const PLANS: PlanInfo[] = [
   { id: "atlas", name: "VIP Atlas", days: 180, tagline: "VIP por 180 dias", price: "R$ 139,90", priceNote: "pelo suporte", perks: ["Pacote premium completo", "Sensi Pro+", "IA completa+", "Atendimento VIP exclusivo"] },
 ];
 
-export const PLAN_ORDER: PlanId[] = ["demo", "basic", "pro", "bronze", "esmeralda", "rubi", "atlas", "master"];
+export const PLAN_ORDER: PlanId[] = ["free", "demo", "basic", "pro", "bronze", "esmeralda", "rubi", "atlas", "master"];
 
 const PLAN_FALLBACK: PlanInfo = { id: "demo", name: "Demo", days: null, tagline: "Acesso demo ilimitado", price: "Grátis", priceNote: "acesso demo", perks: ["Acesso de demonstração", "Sem expiração"] };
+const FREE_FALLBACK: PlanInfo = { id: "free", name: "Free Universal", days: null, tagline: "Acesso gratuito universal para todos", price: "Grátis", priceNote: "key universal", perks: ["Acesso gratuito universal", "Vários dispositivos", "Funções essenciais"] };
 
 export function getPlan(id?: string | null): PlanInfo {
+  if (id === "free" || id === "universal") return FREE_FALLBACK;
   if (id === "demo") return PLAN_FALLBACK;
   return PLANS.find((p) => p.id === id) ?? PLANS[0];
 }

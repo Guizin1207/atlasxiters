@@ -11,7 +11,7 @@ export { detectDevice } from "@/lib/device";
 export type KeyData = {
   id: string; key: string; duration_days: number; device: string | null; device_id: string | null;
   activated_at: string | null; expires_at: string | null; note: string | null; is_master: boolean;
-  revoked: boolean; created_at: string; plan?: string | null; customer_name?: string | null;
+  is_universal?: boolean; revoked: boolean; created_at: string; plan?: string | null; customer_name?: string | null;
 };
 
 type RedeemError = "invalid_key" | "revoked_key" | "expired_key" | "device_mismatch" | "key_already_linked" | "login_required" | "account_mismatch" | "network_error" | "unknown_error";
@@ -100,7 +100,20 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!session?.user) {
-        setKeyData(null); setLoading(false); return;
+        const storedUniversal = localStorage.getItem(STORAGE_KEY);
+        if (!storedUniversal) { setKeyData(null); setLoading(false); return; }
+        const { data: uData, error: uError } = await withTimeout(supabase.rpc("validate_key", { _key: storedUniversal, _device_id: deviceIdRef.current }));
+        if (version !== requestVersion.current) return;
+        const universalKey = uData as KeyData | null;
+        if (!uError && universalKey && (universalKey.is_universal || universalKey.plan === "free") && !universalKey.revoked) {
+          clearExpiry(); resetExpiryNotification(storedUniversal); setKeyData(universalKey); setLoading(false); return;
+        }
+        if (uError && parseError(uError.message) === "expired_key") {
+          expireKey(storedUniversal);
+        } else {
+          localStorage.removeItem(STORAGE_KEY); setKeyData(null);
+        }
+        setLoading(false); return;
       }
 
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -219,7 +232,14 @@ export function KeyProvider({ children }: { children: React.ReactNode }) {
   const redeem = useCallback<Ctx["redeem"]>(async rawKey => {
     const key = rawKey.trim().toUpperCase();
     if (!key) return { ok: false, error: "invalid_key" };
-    if (!session?.user) return { ok: false, error: "login_required" };
+    if (!session?.user) {
+      const { data: checkData, error: checkError } = await withTimeout(supabase.rpc("validate_key", { _key: key, _device_id: deviceIdRef.current }));
+      if (checkError) return { ok: false, error: parseError(checkError.message) };
+      const candidate = checkData as KeyData | null;
+      if (!candidate || (!candidate.is_universal && candidate.plan !== "free")) {
+        return { ok: false, error: "login_required" };
+      }
+    }
     const version = ++requestVersion.current; changingKey.current = true;
     try {
       const { data, error } = await withTimeout(supabase.rpc("redeem_key", { _key: key, _device: deviceRef.current, _device_id: deviceIdRef.current }));

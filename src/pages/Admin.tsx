@@ -63,7 +63,10 @@ export default function AdminPage() {
   const { openAdminPanel, closeAdminPanel, adminPreview } = useKey();
   const navigate = useNavigate();
   const [openingPanel, setOpeningPanel] = useState(false);
-  const [selectedFunction, setSelectedFunction] = useState("overview");
+  const [selectedFunction, setSelectedFunction] = useState(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    return tab && adminFunctions.some((item) => item.id === tab) ? tab : "overview";
+  });
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -106,6 +109,39 @@ export default function AdminPage() {
     void loadUsers();
     return () => { mounted = false; };
   }, [password, selectedFunction]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (selectedFunction === "overview") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", selectedFunction);
+    if (selectedFunction !== "support") url.searchParams.delete("thread");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }, [selectedFunction]);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "ATLAS_OPEN_URL" || typeof event.data.url !== "string") return;
+      try {
+        const target = new URL(event.data.url, window.location.origin);
+        if (target.pathname !== "/admin") return;
+        const tab = target.searchParams.get("tab");
+        const threadId = target.searchParams.get("thread");
+        if (tab && adminFunctions.some((item) => item.id === tab)) {
+          setSelectedFunction(tab);
+        }
+        if (threadId) {
+          window.setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("atlas:open-support-thread", { detail: { threadId } }));
+          }, 60);
+        }
+      } catch {
+        // URL inválida ignorada
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, []);
 
   if (loading) {
     return (
@@ -337,6 +373,37 @@ export default function AdminPage() {
                 </div>
               </section>
 
+              <section className="glass-strong rounded-3xl p-5 space-y-3">
+                <div>
+                  <p className="vip-eyebrow">Atalhos</p>
+                  <h3 className="font-bold">Ações rápidas</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                  {[
+                    { id: "keys", label: "Gerar Keys", icon: KeyRound },
+                    { id: "support", label: "Suporte", icon: LifeBuoy },
+                    { id: "maintenance", label: "Manutenção", icon: Wrench },
+                    { id: "devices", label: "Dispositivos", icon: Smartphone },
+                    { id: "notifications", label: "Notificações", icon: Bell },
+                    { id: "users", label: "Contas", icon: Users },
+                  ].map((shortcut) => {
+                    const Icon = shortcut.icon;
+                    return (
+                      <Button
+                        key={shortcut.id}
+                        type="button"
+                        variant="outline"
+                        onClick={() => setSelectedFunction(shortcut.id)}
+                        className="h-12 rounded-2xl justify-start gap-2 border-white/10 bg-white/[0.03] hover:bg-white/10"
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate text-xs font-semibold">{shortcut.label}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </section>
+
               <DeviceStatsCard />
             </div>
           )}
@@ -459,8 +526,8 @@ export default function AdminPage() {
           {selectedFunction === "devices" && (
             <div className="space-y-4">
               <div>
-                <p className="vip-eyebrow">Acesso administrativo</p>
-                <h2 className="text-xl font-bold">Dispositivos ADM</h2>
+                <p className="vip-eyebrow">Conexões</p>
+                <h2 className="text-xl font-bold">Todos os dispositivos</h2>
               </div>
               <AdminDevicesCard />
             </div>

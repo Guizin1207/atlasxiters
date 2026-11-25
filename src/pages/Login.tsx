@@ -44,7 +44,7 @@ export default function LoginPage() {
   const [accountStatus, setAccountStatus] = useState<"validating" | "validated" | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !keyLoading && session && keyData && !switchingUser) {
+    if (!authLoading && !keyLoading && keyData && (session || keyData.is_universal || keyData.plan === "free") && !switchingUser) {
       navigate("/painel", { replace: true });
     }
   }, [authLoading, keyLoading, session, keyData, switchingUser, navigate]);
@@ -218,13 +218,29 @@ export default function LoginPage() {
             // Não é senha ADM ou validação indisponível: segue para o login normal.
           }
         }
+        const keyPattern = /^[A-Z0-9]{3,}(-[A-Z0-9]{3,}){2,}$/i;
+        const directKey = !name.trim() && keyPattern.test(password.trim())
+          ? password.trim()
+          : !password.trim() && keyPattern.test(name.trim())
+            ? name.trim()
+            : null;
+        if (directKey) {
+          const redeemed = await redeem(directKey);
+          if (redeemed.ok === false) {
+            setError(ERROR_MESSAGES[redeemed.error] ?? ERROR_MESSAGES.unknown_error);
+            return;
+          }
+          navigate("/painel", { replace: true });
+          return;
+        }
+
         if (!name.trim()) {
           setError("Informe seu usuário.");
           return;
         }
 
         // Login com usuário + key: valida no servidor que a key pertence a esse usuário.
-        if (/^[A-Z0-9]{3,}(-[A-Z0-9]{3,}){2,}$/i.test(password.trim())) {
+        if (keyPattern.test(password.trim())) {
           const { error: keyErr } = await supabase.rpc("check_user_key", { _username: name.trim(), _key: password.trim() });
           if (keyErr) {
             const msg = keyErr.message?.toLowerCase() ?? "";
@@ -329,7 +345,7 @@ export default function LoginPage() {
               <span className="vip-eyebrow block mb-2">Senha</span>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="password" value={password} onChange={e => { setPassword(e.target.value); setError(null); }} placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required />
+                <Input type="password" value={password} onChange={e => { setPassword(e.target.value); setError(null); }} placeholder="•••••••• ou Key Universal" autoComplete={mode === "login" ? "current-password" : "new-password"} className="h-12 pl-11 rounded-2xl bg-white/5 border-white/10" required={mode === "signup" || !/^[A-Z0-9]{3,}(-[A-Z0-9]{3,}){2,}$/i.test(name.trim())} />
               </div>
             </label>}
 

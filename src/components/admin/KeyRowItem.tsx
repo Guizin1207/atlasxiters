@@ -85,7 +85,8 @@ export function KeyRowItem({
   const DeviceIcon = getDeviceIcon(data.device);
 
   const isDemo = data.plan === "demo";
-  const remaining = data.is_master || isDemo ? Infinity : msUntil(data.expires_at);
+  const isUniversal = Boolean(data.is_universal || data.plan === "free");
+  const remaining = data.is_master || isDemo || (isUniversal && !data.expires_at) ? Infinity : msUntil(data.expires_at);
   const warn = isFinite(remaining) && remaining > 0 && remaining < 86_400_000;
   const expired = isFinite(remaining) && remaining <= 0 && !!data.activated_at;
 
@@ -154,6 +155,11 @@ export function KeyRowItem({
                 Master
               </span>
             )}
+            {isUniversal && !data.is_master && (
+              <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-white/15 text-foreground inline-flex items-center gap-1">
+                Universal Free
+              </span>
+            )}
           </div>
 
           {data.customer_name && (
@@ -167,7 +173,7 @@ export function KeyRowItem({
               {data.device ?? "Não registrado"}
             </span>
             <span className="text-muted-foreground/40">•</span>
-            <span>{data.is_master || isDemo ? "Ilimitada" : `${data.duration_days}d`}</span>
+            <span>{data.is_master || isDemo || (isUniversal && !data.expires_at) ? "Ilimitada" : `${data.duration_days}d`}</span>
             {data.note && (
               <>
                 <span className="text-muted-foreground/40">•</span>
@@ -189,7 +195,7 @@ export function KeyRowItem({
               )}
             >
               {formatCountdown(remaining)}
-              {data.expires_at && !data.is_master && !isDemo && (
+              {data.expires_at && !data.is_master && !isDemo && !(isUniversal && !data.expires_at) && (
                 <span className="text-muted-foreground/60 ml-2">
                   · até{" "}
                   {new Date(data.expires_at).toLocaleString("pt-BR", {
@@ -378,10 +384,11 @@ export function KeyRowItem({
                   if (value === "basic") setNewDuration(30);
                   if (value === "pro") setNewDuration(90);
                   if (value === "master") setNewDuration(36500);
-                  if (value === "demo") setNewDuration(0);
+                  if (value === "demo" || value === "free") setNewDuration(0);
                 }}
                 className="w-full h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm"
               >
+                <option value="free">Universal (Free)</option>
                 <option value="demo">Demo</option>
                 <option value="basic">Basic</option>
                 <option value="pro">Pro</option>
