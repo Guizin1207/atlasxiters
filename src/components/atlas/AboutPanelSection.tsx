@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Info, Loader2, Send, Star } from "lucide-react";
+import { Coins, Info, Loader2, MessageSquareReply, Send, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,10 @@ import {
   DEFAULT_ABOUT_PANEL,
   extractYouTubeEmbedUrl,
   resolvePanelVideoUrl,
+  getGrantedFeedbackCoins,
   type AboutPanelConfig,
   type PanelFeedbackList,
+  type PanelFeedbackSubmission,
 } from "@/lib/about-panel";
 
 export function AboutPanelSection() {
@@ -86,7 +88,7 @@ export function AboutPanelSection() {
       return;
     }
     setSending(true);
-    const { error } = await supabase.rpc("submit_panel_feedback", {
+    const { data, error } = await supabase.rpc("submit_panel_feedback", {
       _key: accessKey,
       _rating: rating,
       _comment: clean,
@@ -97,9 +99,14 @@ export function AboutPanelSection() {
       toast.error(error.message || "Não foi possível enviar o feedback.");
       return;
     }
+    const coins = getGrantedFeedbackCoins(data as PanelFeedbackSubmission | null);
     setComment("");
     setRating(5);
-    toast.success("Obrigado pelo seu feedback!");
+    if (coins > 0) {
+      toast.success(`Feedback enviado! Você ganhou +${coins} Atlas Coins.`);
+    } else {
+      toast.success("Feedback enviado! O prêmio de hoje já foi recebido.");
+    }
     void loadFeedbacks();
   };
 
@@ -173,6 +180,10 @@ export function AboutPanelSection() {
         </div>
 
         <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-3.5 space-y-3">
+          <div className="flex items-center gap-2 rounded-xl border border-atlas-accent/20 bg-atlas-accent/[0.07] px-3 py-2 text-xs text-atlas-accent-bright">
+            <Coins className="h-4 w-4 shrink-0" />
+            <span>O primeiro feedback do dia vale <strong>+25 Atlas Coins</strong>.</span>
+          </div>
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-muted-foreground">Sua nota</span>
             <div className="flex items-center gap-1" role="radiogroup" aria-label="Nota do aplicativo">
@@ -237,6 +248,19 @@ export function AboutPanelSection() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words">{fb.comment}</p>
+                {(fb.reward_coins ?? 0) > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-atlas-accent/10 px-2 py-1 text-[10px] font-semibold text-atlas-accent-bright">
+                    <Coins className="h-3 w-3" /> +{fb.reward_coins} Atlas Coins
+                  </span>
+                )}
+                {fb.admin_reply && (
+                  <div className="mt-2 rounded-xl rounded-tl-sm border border-atlas-cyan/20 bg-atlas-cyan/[0.06] p-3">
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-atlas-cyan">
+                      <MessageSquareReply className="h-3.5 w-3.5" /> Resposta do ADM
+                    </p>
+                    <p className="mt-1.5 whitespace-pre-wrap break-words text-xs leading-relaxed text-foreground/85">{fb.admin_reply}</p>
+                  </div>
+                )}
                 <p className="text-[10px] text-muted-foreground/70">
                   {new Date(fb.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
                 </p>

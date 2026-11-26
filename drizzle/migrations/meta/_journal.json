@@ -218,6 +218,20 @@
       "when": 1795706221135,
       "tag": "0030_support_start_about_panel_and_feedbacks",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795707345468,
+      "tag": "0031_feedback_replies_and_daily_rewards",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1795707397700,
+      "tag": "0032_set_feedback_reward_to_25_coins",
+      "breakpoints": true
     }
   ]
 }

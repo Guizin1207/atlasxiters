@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Save, Video, Youtube, Upload, Trash2, Star, Info } from "lucide-react";
+import { Coins, Loader2, Save, Video, Youtube, Upload, Trash2, Star, Info, MessageSquareReply, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   extractYouTubeEmbedUrl,
   resolvePanelVideoUrl,
   uploadPanelVideo,
+  isValidAdminFeedbackReply,
   type AboutPanelConfig,
   type AboutVideoType,
   type PanelFeedback,
@@ -26,6 +27,9 @@ export function AboutPanelAdminCard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [replyOpenId, setReplyOpenId] = useState<string | null>(null);
+  const [replies, setReplies] = useState<Record<string, string>>({});
+  const [replyingId, setReplyingId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -137,6 +141,34 @@ export function AboutPanelAdminCard() {
     }
     setFeedbacks((prev) => prev.filter((item) => item.id !== id));
     toast.success("Feedback excluído.");
+  };
+
+  const replyToFeedback = async (id: string) => {
+    const reply = (replies[id] ?? "").trim();
+    if (!password || replyingId) return;
+    if (!isValidAdminFeedbackReply(reply)) {
+      toast.error("A resposta deve ter entre 2 e 1000 caracteres.");
+      return;
+    }
+    setReplyingId(id);
+    const { data, error } = await supabase.rpc("admin_reply_panel_feedback", {
+      _password: password,
+      _id: id,
+      _reply: reply,
+    });
+    setReplyingId(null);
+    if (error) {
+      toast.error(error.message || "Não foi possível responder ao feedback.");
+      return;
+    }
+    const result = data as { admin_reply?: string; admin_reply_at?: string } | null;
+    setFeedbacks((prev) => prev.map((item) => item.id === id ? {
+      ...item,
+      admin_reply: result?.admin_reply ?? reply,
+      admin_reply_at: result?.admin_reply_at ?? new Date().toISOString(),
+    } : item));
+    setReplyOpenId(null);
+    toast.success("Resposta publicada no feedback do usuário.");
   };
 
   const youtubeEmbed = extractYouTubeEmbedUrl(config.youtube_url);
@@ -332,6 +364,58 @@ export function AboutPanelAdminCard() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words">{fb.comment}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(fb.reward_coins ?? 0) > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-atlas-accent/10 px-2 py-1 text-[10px] font-semibold text-atlas-accent-bright">
+                      <Coins className="h-3 w-3" /> Prêmio: +{fb.reward_coins} coins
+                    </span>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 rounded-lg px-2 text-[11px] text-atlas-cyan hover:bg-atlas-cyan/10"
+                    onClick={() => {
+                      setReplies((prev) => ({ ...prev, [fb.id]: prev[fb.id] ?? fb.admin_reply ?? "" }));
+                      setReplyOpenId((current) => current === fb.id ? null : fb.id);
+                    }}
+                  >
+                    <MessageSquareReply className="mr-1.5 h-3.5 w-3.5" />
+                    {fb.admin_reply ? "Editar resposta" : "Responder"}
+                  </Button>
+                </div>
+                {fb.admin_reply && replyOpenId !== fb.id && (
+                  <div className="rounded-xl border border-atlas-cyan/20 bg-atlas-cyan/[0.06] p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-atlas-cyan">Resposta do ADM</p>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-xs text-foreground/85">{fb.admin_reply}</p>
+                  </div>
+                )}
+                {replyOpenId === fb.id && (
+                  <div className="space-y-2 rounded-xl border border-atlas-cyan/20 bg-atlas-cyan/[0.04] p-3">
+                    <Textarea
+                      value={replies[fb.id] ?? ""}
+                      onChange={(event) => setReplies((prev) => ({ ...prev, [fb.id]: event.target.value }))}
+                      placeholder="Escreva uma resposta para este usuário…"
+                      maxLength={1000}
+                      rows={3}
+                      aria-label={`Resposta para ${fb.author_name}`}
+                      className="resize-none rounded-xl border-white/10 bg-background/60 text-sm"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-muted-foreground">{(replies[fb.id] ?? "").length}/1000</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={replyingId === fb.id || !isValidAdminFeedbackReply(replies[fb.id] ?? "")}
+                        onClick={() => void replyToFeedback(fb.id)}
+                        className="h-8 rounded-lg text-xs"
+                      >
+                        {replyingId === fb.id ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1.5 h-3.5 w-3.5" />}
+                        Publicar resposta
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <p className="text-[10px] text-muted-foreground/70">
                   {new Date(fb.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
                 </p>

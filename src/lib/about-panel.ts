@@ -19,7 +19,28 @@ export type PanelFeedback = {
   comment: string;
   created_at: string;
   key?: string | null;
+  admin_reply?: string | null;
+  admin_reply_at?: string | null;
+  reward_coins?: number;
 };
+
+export type PanelFeedbackSubmission = {
+  rewarded?: boolean;
+  reward_coins?: number;
+};
+
+export const FEEDBACK_DAILY_REWARD_COINS = 25;
+
+export function getGrantedFeedbackCoins(payload: PanelFeedbackSubmission | null): number {
+  return payload?.rewarded && payload.reward_coins === FEEDBACK_DAILY_REWARD_COINS
+    ? FEEDBACK_DAILY_REWARD_COINS
+    : 0;
+}
+
+export function isValidAdminFeedbackReply(value: string): boolean {
+  const length = value.trim().length;
+  return length >= 2 && length <= 1000;
+}
 
 export type PanelFeedbackList = {
   items: PanelFeedback[];

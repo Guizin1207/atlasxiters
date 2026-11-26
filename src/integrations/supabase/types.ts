@@ -344,28 +344,43 @@ export type Database = {
       }
       panel_feedbacks: {
         Row: {
+          admin_reply: string | null
+          admin_reply_at: string | null
           author_name: string
           comment: string
           created_at: string
           id: string
           key_id: string | null
           rating: number
+          reward_coins: number
+          reward_day: string | null
+          rewarded_at: string | null
         }
         Insert: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
           author_name: string
           comment: string
           created_at?: string
           id?: string
           key_id?: string | null
           rating: number
+          reward_coins?: number
+          reward_day?: string | null
+          rewarded_at?: string | null
         }
         Update: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
           author_name?: string
           comment?: string
           created_at?: string
           id?: string
           key_id?: string | null
           rating?: number
+          reward_coins?: number
+          reward_day?: string | null
+          rewarded_at?: string | null
         }
         Relationships: [
           {
@@ -848,6 +863,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_reply_panel_feedback: {
+        Args: { _id: string; _password: string; _reply: string }
+        Returns: Json
       }
       admin_reset_device: {
         Args: { _id: string; _password: string }
