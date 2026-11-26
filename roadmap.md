@@ -1,8 +1,8 @@
 # Roadmap
 
-- [ ] Permitir que o ADM envie e substitua o arquivo do botão de download.
-- [ ] Corrigir o download no Safari e demais navegadores do iOS sem prender o usuário na visualização.
-- [ ] Validar a substituição do arquivo e o retorno ao painel.
+- [x] Permitir que o ADM envie e substitua o arquivo TXT do botão de download, sempre usando a versão mais recente.
+- [x] Entregar o arquivo por Blob ou folha de arquivos no iOS, sem abrir uma visualização que retire o usuário do painel.
+- [x] Validar duas substituições, o download móvel do arquivo mais recente e o retorno ao painel; dados temporários removidos.
 
 - [x] Permitir respostas do ADM nos feedbacks e exibi-las no perfil do usuário.
 - [x] Premiar o primeiro feedback do dia com 25 Atlas Coins e validar o limite com dados temporários removidos.
