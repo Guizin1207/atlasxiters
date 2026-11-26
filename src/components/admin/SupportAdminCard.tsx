@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
-import { Loader2, Send, Pencil, Check, X, CheckCircle2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2, Send, Pencil, Check, X, CheckCircle2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/lib/admin-context";
+import type { KeyData } from "@/lib/key-context";
 import { ReceiptImage } from "@/components/atlas/ReceiptImage";
 import { isReceiptBody, receiptRef } from "@/lib/receipts";
 import { notifyUsers } from "@/lib/push";
@@ -32,6 +41,12 @@ export function SupportAdminCard() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
   const [closed, setClosed] = useState(false);
+  const [keys, setKeys] = useState<KeyData[]>([]);
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [keySearch, setKeySearch] = useState("");
+  const [targetKeyId, setTargetKeyId] = useState("");
+  const [initialBody, setInitialBody] = useState("");
+  const [startingChat, setStartingChat] = useState(false);
   const [requestedThreadId, setRequestedThreadId] = useState<string | null>(
     () => new URLSearchParams(window.location.search).get("thread")
   );
@@ -82,6 +97,59 @@ export function SupportAdminCard() {
 
   useEffect(() => { loadThreads(); const t = window.setInterval(loadThreads, 2500); return () => window.clearInterval(t); }, [loadThreads]);
   useEffect(() => { loadMessages(); const t = window.setInterval(loadMessages, 2000); return () => window.clearInterval(t); }, [loadMessages]);
+
+  useEffect(() => {
+    if (!password) return;
+    void supabase.rpc("admin_list_keys", { _password: password }).then(({ data, error }) => {
+      if (!error && Array.isArray(data)) {
+        setKeys(data as unknown as KeyData[]);
+      }
+    });
+  }, [password]);
+
+  const filteredKeys = useMemo(() => {
+    const q = keySearch.trim().toLowerCase();
+    return [...keys]
+      .filter((k) => !k.revoked)
+      .filter((k) => !q || k.key.toLowerCase().includes(q) || (k.note ?? "").toLowerCase().includes(q))
+      .sort((a, b) => a.key.localeCompare(b.key));
+  }, [keys, keySearch]);
+
+  const startChatWithUser = async () => {
+    if (!password || !targetKeyId || startingChat) return;
+    setStartingChat(true);
+    const msgText = initialBody.trim();
+    const { data, error } = await supabase.rpc("admin_support_start_chat", {
+      _password: password,
+      _key_id: targetKeyId,
+      _body: msgText || undefined,
+    });
+    setStartingChat(false);
+    if (error || !data) {
+      toast.error("Não foi possível iniciar a conversa com este usuário.");
+      return;
+    }
+    const created = data as unknown as Thread & { message_id?: string | null };
+    const thread: Thread = {
+      id: created.id,
+      key_id: created.key_id,
+      key: created.key,
+      updated_at: created.updated_at,
+    };
+    setClosed(false);
+    setSelected(thread);
+    setNewChatOpen(false);
+    setInitialBody("");
+    setTargetKeyId("");
+    if (msgText) {
+      alertUser(thread, msgText, created.message_id ?? undefined);
+      toast.success(`Mensagem enviada para ${thread.key}.`);
+    } else {
+      toast.success(`Conversa aberta com ${thread.key}.`);
+    }
+    void loadThreads();
+    void loadMessages();
+  };
 
   const alertUser = (thread: Thread, text: string, messageId?: string) => {
     if (!password) return;
@@ -141,12 +209,70 @@ export function SupportAdminCard() {
 
   return (
     <section className="glass-strong rounded-3xl p-6 space-y-5">
-      <header><p className="vip-eyebrow">Atendimento</p><h2 className="vip-title text-base">Chat de suporte</h2></header>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="vip-eyebrow">Atendimento</p>
+          <h2 className="vip-title text-base">Chat de suporte</h2>
+        </div>
+        <Button
+          type="button"
+          variant={newChatOpen ? "secondary" : "outline"}
+          size="sm"
+          onClick={() => setNewChatOpen((prev) => !prev)}
+          className="rounded-xl border-white/10 bg-white/5 text-xs"
+        >
+          <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+          {newChatOpen ? "Fechar envio" : "Mandar mensagem para usuário"}
+        </Button>
+      </header>
+
+      {newChatOpen && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+          <p className="vip-eyebrow">Iniciar conversa direta</p>
+          <Input
+            value={keySearch}
+            onChange={(e) => setKeySearch(e.target.value)}
+            placeholder="Buscar usuário pela key ou observação…"
+            className="h-10 rounded-xl bg-white/5 border-white/10 text-xs"
+          />
+          <Select value={targetKeyId} onValueChange={setTargetKeyId}>
+            <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/10 text-xs">
+              <SelectValue placeholder="Selecione a key do usuário" />
+            </SelectTrigger>
+            <SelectContent className="max-h-64">
+              {filteredKeys.map((k) => (
+                <SelectItem key={k.id} value={k.id}>
+                  {k.key}
+                  {k.note ? ` — ${k.note}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Textarea
+            value={initialBody}
+            onChange={(e) => setInitialBody(e.target.value)}
+            placeholder="Digite a mensagem inicial para o usuário (opcional)…"
+            rows={2}
+            maxLength={1000}
+            className="rounded-xl bg-white/5 border-white/10 resize-none text-sm"
+          />
+          <Button
+            type="button"
+            onClick={() => void startChatWithUser()}
+            disabled={!targetKeyId || startingChat}
+            className="w-full h-10 rounded-xl bg-white text-black hover:bg-white/90 text-xs font-bold uppercase tracking-[0.12em]"
+          >
+            {startingChat ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-2" />}
+            {initialBody.trim() ? "Enviar mensagem e abrir chat" : "Abrir conversa com usuário"}
+          </Button>
+        </div>
+      )}
+
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> :
         <div className="grid min-w-0 lg:grid-cols-[220px_minmax(0,1fr)] gap-4">
           <div className="space-y-2">
             {threads.length === 0 ? <p className="text-xs text-muted-foreground">Nenhuma conversa.</p> :
-              threads.map((t) => <button key={t.id} onClick={() => setSelected(t)} className={`w-full text-left rounded-2xl p-3 text-xs ${selected?.id === t.id ? "bg-white text-black" : "glass"}`}>{t.key}</button>)}
+              threads.map((t) => <button key={t.id} onClick={() => { setClosed(false); setSelected(t); }} className={`w-full text-left rounded-2xl p-3 text-xs ${selected?.id === t.id ? "bg-white text-black" : "glass"}`}>{t.key}</button>)}
           </div>
           <div className="min-w-0 space-y-3">
             <div className="h-72 min-w-0 overflow-y-auto rounded-2xl bg-black/15 border border-white/10 p-3 space-y-2">

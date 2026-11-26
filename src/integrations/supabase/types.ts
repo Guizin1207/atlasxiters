@@ -342,6 +342,41 @@ export type Database = {
           },
         ]
       }
+      panel_feedbacks: {
+        Row: {
+          author_name: string
+          comment: string
+          created_at: string
+          id: string
+          key_id: string | null
+          rating: number
+        }
+        Insert: {
+          author_name: string
+          comment: string
+          created_at?: string
+          id?: string
+          key_id?: string | null
+          rating: number
+        }
+        Update: {
+          author_name?: string
+          comment?: string
+          created_at?: string
+          id?: string
+          key_id?: string | null
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "panel_feedbacks_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       panel_functions: {
         Row: {
           created_at: string
@@ -680,6 +715,10 @@ export type Database = {
         Args: { _id: string; _password: string }
         Returns: boolean
       }
+      admin_delete_panel_feedback: {
+        Args: { _id: string; _password: string }
+        Returns: boolean
+      }
       admin_delete_push_subscription: {
         Args: { _id: string; _password: string }
         Returns: boolean
@@ -746,6 +785,7 @@ export type Database = {
         }
       }
       admin_list_messages: { Args: { _password: string }; Returns: Json }
+      admin_list_panel_feedbacks: { Args: { _password: string }; Returns: Json }
       admin_list_panel_functions: { Args: { _password: string }; Returns: Json }
       admin_list_push_subscriptions: {
         Args: { _password: string }
@@ -893,6 +933,18 @@ export type Database = {
       }
       admin_reward_set_streak: {
         Args: { _key_id: string; _password: string; _streak: number }
+        Returns: Json
+      }
+      admin_save_about_panel: {
+        Args: {
+          _bio: string
+          _description: string
+          _gallery_video_name?: string
+          _gallery_video_path?: string
+          _password: string
+          _video_type: string
+          _youtube_url?: string
+        }
         Returns: Json
       }
       admin_save_ai_messages: {
@@ -1115,6 +1167,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_support_start_chat: {
+        Args: { _body?: string; _key_id: string; _password: string }
+        Returns: Json
+      }
       admin_touch_access_session: {
         Args: {
           _device_id: string
@@ -1186,6 +1242,7 @@ export type Database = {
       }
       claim_daily_reward: { Args: { _key: string }; Returns: Json }
       count_unread_messages: { Args: { _key: string }; Returns: number }
+      get_about_panel: { Args: never; Returns: Json }
       get_app_version: { Args: never; Returns: string }
       get_daily_reward: { Args: { _key: string }; Returns: Json }
       get_login_email_by_username: {
@@ -1198,6 +1255,7 @@ export type Database = {
       is_master_key: { Args: { _key: string }; Returns: boolean }
       list_my_messages: { Args: { _key: string }; Returns: Json }
       list_my_upgrade_requests: { Args: { _key: string }; Returns: Json }
+      list_panel_feedbacks: { Args: { _key: string }; Returns: Json }
       list_panel_functions: { Args: { _key: string }; Returns: Json }
       mark_messages_read: {
         Args: { _ids: string[]; _key: string }
@@ -1227,6 +1285,15 @@ export type Database = {
         Returns: Json
       }
       save_settings: { Args: { _key: string; _settings: Json }; Returns: Json }
+      submit_panel_feedback: {
+        Args: {
+          _author_name?: string
+          _comment: string
+          _key: string
+          _rating: number
+        }
+        Returns: Json
+      }
       support_close_chat: {
         Args: { _key: string }
         Returns: {

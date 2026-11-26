@@ -14,6 +14,8 @@ import {
   Pencil,
   Check,
   X,
+  RotateCcw,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,29 @@ type AdminMessage = {
 
 const BROADCAST = "__broadcast__";
 
+const MESSAGE_TEMPLATES = [
+  {
+    label: "Nova atualização",
+    title: "Nova atualização disponível",
+    body: "Uma nova versão do Atlas VIP já está disponível. Reinicie o aplicativo para aplicar as melhorias.",
+  },
+  {
+    label: "Aviso importante",
+    title: "Aviso importante",
+    body: "Fique atento às instruções no painel para manter o melhor desempenho no Free Fire.",
+  },
+  {
+    label: "Novidade VIP",
+    title: "Novidade no painel",
+    body: "Adicionamos melhorias nas funções do painel. Confira agora na aba Funções!",
+  },
+  {
+    label: "Manutenção concluída",
+    title: "Painel normalizado",
+    body: "A manutenção foi concluída com sucesso. Todas as funções estão liberadas novamente.",
+  },
+] as const;
+
 export function MessagesCard() {
   const { password } = useAdmin();
   const [keys, setKeys] = useState<KeyData[]>([]);
@@ -56,6 +81,8 @@ export function MessagesCard() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [historyFilter, setHistoryFilter] = useState<"all" | "broadcast" | "direct">("all");
+  const [historySearch, setHistorySearch] = useState("");
 
   const load = useCallback(async () => {
     if (!password) return;
@@ -171,6 +198,20 @@ export function MessagesCard() {
     [keys]
   );
 
+  const filteredMessages = useMemo(() => {
+    const q = historySearch.trim().toLowerCase();
+    return messages.filter((m) => {
+      if (historyFilter === "broadcast" && m.target_key_id !== null) return false;
+      if (historyFilter === "direct" && m.target_key_id === null) return false;
+      if (!q) return true;
+      return (
+        m.title.toLowerCase().includes(q) ||
+        m.body.toLowerCase().includes(q) ||
+        (m.target_key ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [messages, historyFilter, historySearch]);
+
   return (
     <section className="glass-strong rounded-3xl p-6 space-y-6">
       <header className="flex items-center gap-3">
@@ -185,6 +226,27 @@ export function MessagesCard() {
 
       {/* Composer */}
       <div className="space-y-3">
+        <div className="space-y-1.5">
+          <p className="vip-eyebrow">Modelos rápidos</p>
+          <div className="flex flex-wrap gap-1.5">
+            {MESSAGE_TEMPLATES.map((tpl) => (
+              <Button
+                key={tpl.label}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTitle(tpl.title);
+                  setBody(tpl.body);
+                }}
+                className="h-7 rounded-xl border-white/10 bg-white/5 px-2.5 text-[11px]"
+              >
+                {tpl.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         <div>
           <label className="vip-eyebrow block mb-2">Destinatário</label>
           <Select value={target} onValueChange={setTarget}>
@@ -227,7 +289,10 @@ export function MessagesCard() {
         </div>
 
         <div>
-          <label className="vip-eyebrow block mb-2">Mensagem</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="vip-eyebrow">Mensagem</label>
+            <span className="text-[10px] text-muted-foreground tabular-nums">{body.length}/1000</span>
+          </div>
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -258,19 +323,50 @@ export function MessagesCard() {
       </div>
 
       {/* Histórico */}
-      <div>
-        <p className="vip-eyebrow mb-3">Histórico</p>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="vip-eyebrow">Histórico ({filteredMessages.length})</p>
+          <div className="flex items-center gap-1">
+            {([
+              ["all", "Todas"],
+              ["broadcast", "Broadcast"],
+              ["direct", "Diretas"],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setHistoryFilter(value)}
+                className={`rounded-xl px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  historyFilter === value ? "bg-white text-black" : "glass text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Input
+            value={historySearch}
+            onChange={(e) => setHistorySearch(e.target.value)}
+            placeholder="Filtrar histórico por título, texto ou key…"
+            className="h-10 pl-9 rounded-xl bg-white/5 border-white/10 text-xs"
+          />
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
           </div>
-        ) : messages.length === 0 ? (
+        ) : filteredMessages.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Nenhuma mensagem enviada.
+            Nenhuma mensagem encontrada.
           </p>
         ) : (
           <ul className="space-y-2">
-            {messages.map((m) => (
+            {filteredMessages.map((m) => (
               <li
                 key={m.id}
                 className="glass rounded-2xl p-4 space-y-2 animate-fade-in"
@@ -314,6 +410,20 @@ export function MessagesCard() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => {
+                          setTarget(m.target_key_id ?? BROADCAST);
+                          setTitle(m.title);
+                          setBody(m.body);
+                          toast.message("Mensagem carregada para reenvio.");
+                        }}
+                        aria-label="Reenviar mensagem"
+                        className="w-8 h-8 rounded-xl"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => { setEditingId(m.id); setEditTitle(m.title); setEditBody(m.body); }}
                         aria-label="Editar mensagem"
                         className="w-8 h-8 rounded-xl"
@@ -332,7 +442,7 @@ export function MessagesCard() {
                     </div>
                   </div>
                 )}
-                <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     {m.target_key ? (
                       <>
@@ -346,9 +456,17 @@ export function MessagesCard() {
                       </>
                     )}
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <Eye className="w-3 h-3" />
-                    {m.read_count} {m.read_count === 1 ? "leitura" : "leituras"}
+                  <span className="flex items-center gap-3">
+                    <span>
+                      {new Date(m.created_at).toLocaleString("pt-BR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Eye className="w-3 h-3" />
+                      {m.read_count} {m.read_count === 1 ? "leitura" : "leituras"}
+                    </span>
                   </span>
                 </div>
               </li>

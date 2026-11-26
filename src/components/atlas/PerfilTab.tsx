@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useKey } from "@/lib/key-context";
 import { useNavigate } from "react-router-dom";
 import { SupportChat } from "@/components/atlas/SupportChat";
+import { AboutPanelSection } from "@/components/atlas/AboutPanelSection";
 import { useTicker } from "@/hooks/use-ticker";
 import {
   formatCountdown,
@@ -149,6 +150,7 @@ export function PerfilTab() {
 
       {!adminPreview && (
         <>
+          <AboutPanelSection />
           <button
             type="button"
             onClick={() => setSupportOpen(true)}

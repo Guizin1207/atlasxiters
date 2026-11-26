@@ -20,6 +20,7 @@ import {
   BarChart3,
   Users,
   SlidersHorizontal,
+  Info,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ import { syncPushServiceWorker } from "@/lib/push";
 import { supabase } from "@/integrations/supabase/client";
 import { AccountsCard } from "@/components/admin/AccountsCard";
 import { PanelFunctionsCard } from "@/components/admin/PanelFunctionsCard";
+import { AboutPanelAdminCard } from "@/components/admin/AboutPanelAdminCard";
 
 type AdminFunction = {
   id: string;
@@ -60,6 +62,7 @@ const adminFunctions: AdminFunction[] = [
   { id: "messages", title: "Mensagens", icon: MessageSquare },
   { id: "support", title: "Suporte", icon: LifeBuoy },
   { id: "maintenance", title: "Manutenção", icon: Wrench },
+  { id: "about", title: "Sobre o painel", icon: Info },
   { id: "security", title: "Segurança", icon: ShieldCheck },
 ];
 
@@ -154,7 +157,7 @@ export default function AdminPage() {
   const adminGroups = [
     { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "clients", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
     { title: "Atendimento", functions: adminFunctions.filter((item) => ["notifications", "messages", "support"].includes(item.id)) },
-    { title: "Sistema", functions: adminFunctions.filter((item) => ["maintenance", "functions"].includes(item.id)) },
+    { title: "Sistema", functions: adminFunctions.filter((item) => ["maintenance", "functions", "about"].includes(item.id)) },
   ];
 
 
@@ -491,6 +494,16 @@ export default function AdminPage() {
                 <h2 className="text-xl font-bold">Manutenção</h2>
               </div>
               <MaintenanceCard />
+            </div>
+          )}
+
+          {selectedFunction === "about" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Perfil do usuário</p>
+                <h2 className="text-xl font-bold">Sobre o painel</h2>
+              </div>
+              <AboutPanelAdminCard />
             </div>
           )}
 
