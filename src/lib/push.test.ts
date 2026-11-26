@@ -1,5 +1,6 @@
+// @vitest-environment-options {"url":"https://atlas.test"}
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { adminPushState, currentPushStatus, enableAdminPush, enableUserPush, disableAdminPush, disableUserPush, notifyExpired, notifyAdmin, resetExpiryNotification, testAdminPush, testUserPush, registerPushServiceWorker, retireOtherUserPush } from "./push";
+import { adminPushState, currentPushStatus, enableAdminPush, enableUserPush, disableAdminPush, disableUserPush, notifyExpired, notifyAdmin, resetExpiryNotification, testAdminPush, testUserPush, registerPushServiceWorker, syncPushServiceWorker, retireOtherUserPush } from "./push";
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), invoke: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc, functions: { invoke: mocks.invoke } } }));
@@ -20,6 +21,7 @@ const userRegistration = { scope: `${location.origin}/push/user/`, active: {}, p
 const row = (scope: string, id = "current") => ({ id, endpoint, scope, device: "iOS", created_at: "2026-09-20T00:00:00Z" });
 
 beforeEach(() => {
+  vi.stubEnv("DEV", false);
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-09-20T12:00:00Z"));
   vi.clearAllMocks();
@@ -39,7 +41,7 @@ beforeEach(() => {
   mocks.rpc.mockReset(); mocks.invoke.mockReset();
   mocks.invoke.mockResolvedValue({ data: { sent: 1 }, error: null });
 });
-afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe("vínculo do aparelho do ADM", () => {
   it("não considera uma inscrição de usuário como inscrição do ADM", async () => {
@@ -80,8 +82,8 @@ describe("vínculo do aparelho do ADM", () => {
     expect(JSON.parse(localStorage.getItem("atlas_push_binding_v2:user")!).endpoint).toBe(userEndpoint);
     expect(mocks.rpc.mock.calls[1][1]._endpoint).toBe(userEndpoint);
     expect(subscription.unsubscribe).not.toHaveBeenCalled();
-    expect(navigator.serviceWorker.register).toHaveBeenCalledWith("/sw.js", { scope: "/push/admin/" });
-    expect(navigator.serviceWorker.register).toHaveBeenCalledWith("/sw.js", { scope: "/push/user/" });
+    expect(navigator.serviceWorker.register).toHaveBeenCalledWith("/sw.js?v=6", { scope: "/push/admin/", updateViaCache: "none" });
+    expect(navigator.serviceWorker.register).toHaveBeenCalledWith("/sw.js?v=6", { scope: "/push/user/", updateViaCache: "none" });
   });
 
   it("desativar os avisos do usuário não desativa os avisos do ADM", async () => {
@@ -115,6 +117,14 @@ describe("vínculo do aparelho do ADM", () => {
   it("não depende do worker da página para ativar o worker do papel", async () => {
     expect(await registerPushServiceWorker("admin")).toBe(registration);
     // ready fica pendente no mock: a ativação correta usa registration.active.
+  });
+
+  it("atualiza automaticamente somente o papel que já tinha push vinculado", async () => {
+    localStorage.setItem("atlas_push_binding_v2:user", JSON.stringify({ endpoint: userEndpoint, scope: "user", key: "KEY-A" }));
+    await syncPushServiceWorker("user");
+    await syncPushServiceWorker("admin");
+    expect(navigator.serviceWorker.register).toHaveBeenCalledOnce();
+    expect(navigator.serviceWorker.register).toHaveBeenCalledWith("/sw.js?v=6", { scope: "/push/user/", updateViaCache: "none" });
   });
 
   it("espera a primeira instalação do worker do usuário terminar", async () => {

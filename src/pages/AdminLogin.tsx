@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,19 +8,24 @@ import { useAdmin } from "@/lib/admin-context";
 export default function AdminLoginPage() {
   const { password, loading, signIn } = useAdmin();
   const navigate = useNavigate();
+  const location = useLocation();
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestedFrom = (location.state as { from?: unknown } | null)?.from;
+  const destination = requestedFrom === "/admin" || (typeof requestedFrom === "string" && requestedFrom.startsWith("/admin?"))
+    ? requestedFrom
+    : "/admin";
 
   if (loading) return <main className="min-h-screen grid place-items-center"><Loader2 aria-label="Carregando login ADM" className="animate-spin" /></main>;
-  if (password) return <Navigate to="/admin" replace />;
+  if (password) return <Navigate to={destination} replace />;
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (busy || !value.trim()) return;
     setBusy(true); setError(null);
     try {
-      if (await signIn(value.trim())) navigate("/admin", { replace: true });
+      if (await signIn(value.trim())) navigate(destination, { replace: true });
       else setError("Chave ou senha de ADM inválida. Confira e tente novamente.");
     } catch (err) {
       const code = err instanceof Error ? err.message : "";

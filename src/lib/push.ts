@@ -139,9 +139,9 @@ function urlBase64ToUint8Array(base64: string) {
 export async function registerPushServiceWorker(role: PushRole) {
   if (isPushPreviewEnvironment()) throw new Error("Notificações desativadas na prévia. Use a versão publicada.");
 
-  const workerUrl = role === "admin"
-    ? "/push/admin/push-admin-sw.js?v=5"
-    : "/push/user/push-user-sw.js?v=5";
+  // Os dois escopos usam o mesmo worker para que as regras de conversa aberta,
+  // duplicidade e clique na notificação não fiquem presas em cópias antigas.
+  const workerUrl = "/sw.js?v=6";
 
   // Registra o worker novo primeiro. Uma falha ao limpar o legado nunca bloqueia a push nova.
   const registration = await navigator.serviceWorker.register(workerUrl, {
@@ -195,6 +195,12 @@ export async function registerPushServiceWorker(role: PushRole) {
     registration.removeEventListener("updatefound", onUpdateFound);
     worker?.removeEventListener("statechange", onStateChange);
   }
+}
+
+/** Atualiza o worker de quem já ativou o push, sem pedir permissão novamente. */
+export async function syncPushServiceWorker(role: PushRole) {
+  if (isPushPreviewEnvironment() || !pushSupported() || !readBinding(role)) return;
+  await registerPushServiceWorker(role);
 }
 
 export async function enableAdminPush(password: string): Promise<PushStatus> {
@@ -305,7 +311,7 @@ export async function testAdminPush(password: string): Promise<PushDelivery> {
   if (state.status !== "enabled" || !state.endpoint) {
     return { ok: false, sent: 0, message: "Vincule este aparelho ao ADM antes de testar." };
   }
-  return deliver({ kind: "admin_test", password });
+  return deliver({ kind: "admin_test", password, targetEndpoint: state.endpoint });
 }
 
 /** Usuário só pode testar o próprio endpoint, autorizado pela própria key. */

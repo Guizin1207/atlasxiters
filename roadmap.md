@@ -9,8 +9,13 @@
 - [x] Criar e entregar uma chave demo funcional ao administrador.
 - [x] Avisar os aparelhos da key revogada e desconectar o acesso da conta.
 - [x] Validar revogação e desconexão nos testes e aviso na tela móvel, sem alterar contas reais.
-- [ ] Validar com uma conta autenticada e aparelho push real — autorização para conta temporária recusada.
 - [x] Corrigir e publicar atlas-chat-ai, preservando modelo, limites e validação das keys.
 - [x] Validar respostas e erros da Atlas IA com o mínimo de chamadas pagas.
+- [x] Ativar as regras corrigidas de push nos service workers usados pelo app.
+- [x] Preservar a conversa do suporte quando a notificação exigir novo login do ADM.
+- [x] Restaurar a key universal gratuita e validar sua entrada no painel.
+- [x] Validar os fluxos de notificação e o carregamento do app com 94 testes.
+- [ ] Confirmar o push em um aparelho físico — depende de um celular com notificações autorizadas.
+- [x] Salvar a conclusão no Git.
 
 

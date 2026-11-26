@@ -49,6 +49,10 @@ export default function LoginPage() {
     }
   }, [authLoading, keyLoading, session, keyData, switchingUser, navigate]);
 
+  useEffect(() => {
+    if (expiredKey) setError(ERROR_MESSAGES.expired_key);
+  }, [expiredKey]);
+
   const verifySignupKey = async () => {
     const key = keyValue.trim().toUpperCase();
     if (!key) { setError("Informe sua key de acesso."); return false; }

@@ -5,7 +5,8 @@ import PainelPage from "@/pages/Painel";
 import LoginPage from "@/pages/Login";
 
 const mocks = vi.hoisted(() => ({ expiredKey: "KEY-A" as string | null, loading: false, messages: [] as unknown[] }));
-vi.mock("@/lib/key-context", () => ({ useKey: () => ({ keyData: null, expiredKey: mocks.expiredKey, loading: mocks.loading, signOut: vi.fn(), redeem: vi.fn(), adminPreview: false }) }));
+vi.mock("@/lib/auth-context", () => ({ useAuth: () => ({ session: null, user: null, profile: null, loading: false, signIn: vi.fn().mockResolvedValue({ error: null }), signOut: vi.fn(), refreshProfile: vi.fn() }) }));
+vi.mock("@/lib/key-context", () => ({ AUTH_ERROR_KEY: "atlas_vip_auth_error", useKey: () => ({ keyData: null, expiredKey: mocks.expiredKey, loading: mocks.loading, signOut: vi.fn(), redeem: vi.fn(), adminPreview: false }) }));
 vi.mock("@/lib/admin-context", () => ({ useAdmin: () => ({ signIn: vi.fn() }) }));
 vi.mock("@/hooks/use-maintenance", () => ({ useMaintenance: () => ({ enabled: false }) }));
 vi.mock("@/hooks/use-messages", () => ({ useMessages: () => ({ messages: mocks.messages, unread: 0, loading: false, loadError: false, markAllRead: vi.fn(), reload: vi.fn() }) }));
@@ -50,9 +51,9 @@ describe("aviso vermelho sem liberar acesso expirado", () => {
   it("o login mostra a expiração quando a validação termina depois da montagem", () => {
     mocks.expiredKey = null; mocks.loading = true;
     const view = render(<LoginPage />, { wrapper });
-    expect(screen.queryByText("Sua key foi expirada")).not.toBeInTheDocument();
+    expect(screen.queryByText("Esta chave expirou. Renove para continuar.")).not.toBeInTheDocument();
     mocks.expiredKey = "KEY-A"; mocks.loading = false; view.rerender(<LoginPage />);
-    expect(screen.getByRole("alert")).toHaveClass("text-status-danger");
-    expect(screen.getByText("Sua key foi expirada")).toBeVisible();
+    expect(screen.getByText("Esta chave expirou. Renove para continuar.")).toHaveClass("text-status-danger");
+    expect(screen.getByText("Esta chave expirou. Renove para continuar.")).toBeVisible();
   });
 });

@@ -3,7 +3,7 @@
  * Navegação direta por funções, mantendo a ordem operacional do ADM.
  */
 import { useEffect, useRef, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Loader2,
   ShieldAlert,
@@ -36,6 +36,7 @@ import { AdminRewardsCard } from "@/components/admin/AdminRewardsCard";
 import { SecurityCard } from "@/components/admin/SecurityCard";
 import { FinanceAdminCard } from "@/components/admin/FinanceAdminCard";
 import { getKeyStatus } from "@/lib/key-status";
+import { syncPushServiceWorker } from "@/lib/push";
 import { supabase } from "@/integrations/supabase/client";
 
 type AdminFunction = {
@@ -62,6 +63,7 @@ export default function AdminPage() {
   const { password, loading, signOut } = useAdmin();
   const { openAdminPanel, closeAdminPanel, adminPreview } = useKey();
   const navigate = useNavigate();
+  const location = useLocation();
   const [openingPanel, setOpeningPanel] = useState(false);
   const [selectedFunction, setSelectedFunction] = useState(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
@@ -119,6 +121,10 @@ export default function AdminPage() {
   }, [selectedFunction]);
 
   useEffect(() => {
+    void syncPushServiceWorker("admin").catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type !== "ATLAS_OPEN_URL" || typeof event.data.url !== "string") return;
@@ -151,7 +157,10 @@ export default function AdminPage() {
     );
   }
 
-  if (!password) return <Navigate to="/admin/login" replace />;
+  if (!password) {
+    const from = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to="/admin/login" state={{ from }} replace />;
+  }
 
   const selected = adminFunctions.find((item) => item.id === selectedFunction);
   const adminGroups = [

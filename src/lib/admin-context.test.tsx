@@ -34,7 +34,7 @@ describe("autenticação ADM compatível com o acesso antigo", () => {
     await act(async () => { expect(await result.current.signIn("MinhaSenha")).toBe(true); });
     expect(mocks.rpc).toHaveBeenCalledTimes(1);
     expect(result.current.password).toBe("MinhaSenha");
-    expect(sessionStorage.getItem(SESSION_KEY)).toBe("MinhaSenha");
+    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
   it("restaura a conversão do login antigo e guarda somente a credencial validada", async () => {
@@ -45,7 +45,7 @@ describe("autenticação ADM compatível com o acesso antigo", () => {
     expect(mocks.rpc).toHaveBeenNthCalledWith(1, "_check_admin", { _password: "minha-chave" });
     expect(mocks.rpc).toHaveBeenNthCalledWith(2, "_check_admin", { _password: "MINHA-CHAVE" });
     expect(result.current.password).toBe("MINHA-CHAVE");
-    expect(sessionStorage.getItem(SESSION_KEY)).toBe("MINHA-CHAVE");
+    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
   it("não libera acesso quando o servidor recusa os dois formatos", async () => {
@@ -86,10 +86,11 @@ describe("autenticação ADM compatível com o acesso antigo", () => {
     expect(sessionStorage.getItem(SESSION_KEY)).toBe("MINHA-CHAVE");
   });
 
-  it("apaga a sessão quando o servidor confirma que a credencial salva não é válida", async () => {
+  it("não restaura uma credencial antiga do navegador", async () => {
     sessionStorage.setItem(SESSION_KEY, "ACESSO-REVOGADO");
+    mocks.rpc.mockResolvedValue({ data: true, error: null });
     const { result } = await mount();
     expect(result.current.password).toBeNull();
-    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 });

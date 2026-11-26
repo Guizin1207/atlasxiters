@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { rewardApi } from "@/lib/reward-api";
 import { supabase } from "@/integrations/supabase/client";
 import { isReceiptBody } from "@/lib/receipts";
-import { enableUserPush, notifyRewardReady, notifyCoinsAdded } from "@/lib/push";
+import { enableUserPush, notifyRewardReady, notifyCoinsAdded, syncPushServiceWorker } from "@/lib/push";
 import { getPlanPermissions, featureRequiredPlan, type AtlasFeature } from "@/lib/plan-permissions";
 
 type SupportMessage = {
@@ -262,6 +262,10 @@ const sendSensiMessage = async () => {
     else url.searchParams.delete("suporte");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
   }, [supportOpen]);
+
+  useEffect(() => {
+    void syncPushServiceWorker("user").catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;

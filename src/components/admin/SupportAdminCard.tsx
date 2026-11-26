@@ -67,11 +67,12 @@ export function SupportAdminCard() {
 
   useEffect(() => {
     const url = new URL(window.location.href);
+    const threadId = selected?.id ?? requestedThreadId;
     url.searchParams.set("tab", "support");
-    if (selected?.id) url.searchParams.set("thread", selected.id);
+    if (threadId) url.searchParams.set("thread", threadId);
     else url.searchParams.delete("thread");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-  }, [selected?.id]);
+  }, [selected?.id, requestedThreadId]);
 
   const loadMessages = useCallback(async () => {
     if (!password || !selected) return;
