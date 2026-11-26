@@ -539,7 +539,7 @@ const sendSensiMessage = async () => {
   };
 
   return (
-    <main className="min-h-screen pb-32 overflow-x-hidden">
+    <main className="atlas-shell min-h-screen pb-32 overflow-x-hidden">
       <div className="mx-auto max-w-md px-3.5 pt-4 min-[390px]:px-5 min-[390px]:pt-6">
         <PanelHeader />
 

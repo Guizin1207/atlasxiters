@@ -99,9 +99,12 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
         type="button"
         disabled={!enabled}
         onClick={() => { setOpen(true); setLoaded(false); setSuccessNotice(false); setLoadingGame(null); setProgress(0); }}
-        className="w-full h-16 rounded-2xl bg-white text-black font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 shadow-elevated active:scale-[0.98] transition-transform disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale"
+        className="inject-cta w-full h-16 rounded-2xl text-primary-foreground font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 active:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale disabled:shadow-none"
       >
-        <Rocket className="w-4 h-4" /> Injetar
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-primary-foreground/20 bg-primary-foreground/10">
+          <Rocket className="w-4 h-4" />
+        </span>
+        Injetar
       </button>
     </div>
 

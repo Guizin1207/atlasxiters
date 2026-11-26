@@ -33,12 +33,12 @@ export function FuncoesTab() {
 
   return (
     <section aria-label="Funções disponíveis" className="space-y-5">
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="vip-eyebrow mb-1">Plano {getPlan(plan).name}</p>
-          <h2 className="text-xl font-bold">Funções premium</h2>
+          <p className="vip-eyebrow mb-1 text-atlas-accent/70">Plano {getPlan(plan).name}</p>
+          <h2 className="text-xl font-bold tracking-tight">Funções premium</h2>
         </div>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="shrink-0 rounded-full border border-atlas-accent/20 bg-atlas-accent/[0.07] px-2.5 py-1 text-[10px] font-semibold text-atlas-accent-bright">
           {liberadas.length}/{visiveis.length} liberadas
         </span>
       </div>

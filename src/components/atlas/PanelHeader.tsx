@@ -26,14 +26,15 @@ export function PanelHeader() {
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0];
 
   return (
-    <header className="flex items-center justify-between mb-6">
+    <header className="relative flex items-center justify-between mb-6 after:absolute after:-bottom-3 after:left-0 after:h-px after:w-16 after:bg-atlas-accent/50 after:content-['']">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 h-10 rounded-2xl glass-strong flex items-center justify-center shrink-0">
-          <ShieldCheck className="w-4 h-4" />
+        <div className="relative w-11 h-11 rounded-2xl glass-strong flex items-center justify-center shrink-0 border-atlas-accent/25 shadow-glow">
+          <span className="absolute right-1.5 top-1.5 h-1 w-1 rounded-full bg-atlas-accent shadow-glow" aria-hidden />
+          <ShieldCheck className="w-4 h-4 text-atlas-accent" />
         </div>
         <div className="min-w-0">
-          <p className="vip-eyebrow">Painel</p>
-          <h1 className="vip-title text-lg leading-none">Atlas VIP</h1>
+          <p className="vip-eyebrow text-atlas-accent/75">Painel tático</p>
+          <h1 className="vip-title text-lg leading-none">Atlas <span className="text-atlas-accent">VIP</span></h1>
           <p className="text-[10px] text-muted-foreground mt-1">Versão {version}</p>
           {!adminPreview && displayName && (
             <p className="text-[10px] font-semibold text-foreground/80 mt-0.5 truncate max-w-[190px]">

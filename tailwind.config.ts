@@ -21,6 +21,13 @@ export default {
           danger: "hsl(var(--status-danger) / <alpha-value>)",
           info: "hsl(var(--status-info) / <alpha-value>)",
         },
+        atlas: {
+          accent: "hsl(var(--atlas-accent) / <alpha-value>)",
+          "accent-bright": "hsl(var(--atlas-accent-bright) / <alpha-value>)",
+          cyan: "hsl(var(--atlas-cyan) / <alpha-value>)",
+          surface: "hsl(var(--atlas-surface) / <alpha-value>)",
+          line: "hsl(var(--atlas-line) / <alpha-value>)",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -81,6 +88,7 @@ export default {
       boxShadow: {
         glow: "var(--shadow-glow)",
         elevated: "var(--shadow-elevated)",
+        "atlas-active": "var(--shadow-atlas-active)",
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },

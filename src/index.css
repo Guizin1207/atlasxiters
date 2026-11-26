@@ -4,72 +4,75 @@
 
 /* =========================================================
    ATLAS VIP — DESIGN SYSTEM
-   Tema: Dark premium monocromático (preto/branco)
-   Tokens HSL apenas. Glassmorphism + tipografia uppercase.
+   Grafite tático, menta elétrica e ciano. Tokens HSL apenas.
    ========================================================= */
 
 @layer base {
   :root {
-    /* Base monocromática */
-    --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
+    --background: 222 30% 4%;
+    --foreground: 180 20% 96%;
 
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 20% 8%;
+    --card-foreground: 180 20% 96%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 22% 8%;
+    --popover-foreground: 180 20% 96%;
 
-    /* Primary = branco puro (CTA principal) */
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 4%;
+    --primary: 163 82% 55%;
+    --primary-foreground: 222 42% 7%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 218 18% 13%;
+    --secondary-foreground: 180 20% 96%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 219 17% 12%;
+    --muted-foreground: 213 12% 65%;
 
-    --accent: 0 0% 100%;
-    --accent-foreground: 0 0% 4%;
+    --accent: 188 92% 60%;
+    --accent-foreground: 222 42% 7%;
 
-    --destructive: 0 72% 55%;
+    --destructive: 0 76% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 100%;          /* usado com /10 nos componentes */
-    --input: 0 0% 14%;
-    --ring: 0 0% 100%;
+    --border: 176 35% 76%;
+    --input: 217 18% 18%;
+    --ring: 163 82% 55%;
 
     --radius: 1rem;
 
-    /* Status semânticos (live keys, alerts, etc) */
-    --status-active: 152 70% 45%;       /* emerald */
-    --status-warning: 38 95% 55%;       /* amber  */
-    --status-danger: 0 75% 58%;         /* red    */
-    --status-info: 200 95% 60%;         /* sky    */
+    --status-active: 163 82% 55%;
+    --status-warning: 38 95% 58%;
+    --status-danger: 0 78% 62%;
+    --status-info: 190 95% 62%;
 
-    /* Glass / superfície */
-    --glass-bg: 0 0% 100%;              /* branco com baixa opacidade no use */
-    --glass-border: 0 0% 100%;
+    --atlas-accent: 163 82% 55%;
+    --atlas-accent-bright: 160 90% 72%;
+    --atlas-cyan: 190 95% 62%;
+    --atlas-surface: 220 22% 9%;
+    --atlas-line: 174 44% 68%;
 
-    /* Gradientes & sombras premium */
-    --gradient-surface: linear-gradient(180deg, hsl(0 0% 8% / 0.9), hsl(0 0% 4% / 0.7));
-    --gradient-radial: radial-gradient(1200px circle at 50% -200px, hsl(0 0% 100% / 0.08), transparent 60%);
-    --shadow-glow: 0 0 40px hsl(0 0% 100% / 0.08);
-    --shadow-elevated: 0 24px 60px -20px hsl(0 0% 0% / 0.8);
+    --glass-bg: 220 20% 12%;
+    --glass-border: 174 44% 68%;
 
-    /* Sidebar (não usado nesta fase) */
-    --sidebar-background: 0 0% 4%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 100%;
-    --sidebar-ring: 0 0% 100%;
+    --gradient-surface: linear-gradient(145deg, hsl(220 22% 12% / 0.96), hsl(222 30% 6% / 0.94));
+    --gradient-radial:
+      radial-gradient(760px circle at 92% -80px, hsl(190 95% 62% / 0.11), transparent 64%),
+      radial-gradient(680px circle at -12% 32%, hsl(163 82% 55% / 0.075), transparent 62%),
+      radial-gradient(900px circle at 50% 110%, hsl(220 60% 30% / 0.12), transparent 70%);
+    --gradient-atlas: linear-gradient(120deg, hsl(var(--atlas-accent-bright)), hsl(var(--atlas-accent)) 52%, hsl(var(--atlas-cyan)));
+    --shadow-glow: 0 10px 30px -12px hsl(var(--atlas-accent) / 0.48), inset 0 1px 0 hsl(0 0% 100% / 0.28);
+    --shadow-elevated: 0 24px 70px -24px hsl(222 60% 2% / 0.95), inset 0 1px 0 hsl(180 30% 96% / 0.055);
+    --shadow-atlas-active: 0 14px 34px -20px hsl(var(--atlas-accent) / 0.7), inset 0 1px 0 hsl(var(--atlas-accent-bright) / 0.1);
+
+    --sidebar-background: 222 30% 5%;
+    --sidebar-foreground: 180 15% 90%;
+    --sidebar-primary: 163 82% 55%;
+    --sidebar-primary-foreground: 222 42% 7%;
+    --sidebar-accent: 218 18% 13%;
+    --sidebar-accent-foreground: 180 20% 96%;
+    --sidebar-border: 174 44% 68%;
+    --sidebar-ring: 163 82% 55%;
   }
 
-  /* Sempre dark — não há modo claro neste app */
   .dark { color-scheme: dark; }
 }
 
@@ -90,30 +93,107 @@
     background-attachment: fixed;
     font-feature-settings: "ss01", "cv11";
   }
+
+  ::selection {
+    background: hsl(var(--atlas-accent) / 0.28);
+    color: hsl(var(--foreground));
+  }
+
+  :focus-visible {
+    outline-color: hsl(var(--ring) / 0.8);
+  }
 }
 
 @layer components {
-  /* Glassmorphism premium */
   .glass {
-    @apply bg-white/[0.04] backdrop-blur-xl border border-white/10;
-  }
-  .glass-strong {
-    @apply bg-white/[0.06] backdrop-blur-2xl border border-white/10;
-    box-shadow: var(--shadow-elevated);
-  }
-  .glass-subtle {
-    @apply bg-white/[0.02] backdrop-blur-md border border-white/5;
+    @apply backdrop-blur-xl;
+    background: linear-gradient(145deg, hsl(var(--glass-bg) / 0.68), hsl(222 28% 7% / 0.72));
+    border: 1px solid hsl(var(--glass-border) / 0.13);
+    box-shadow: inset 0 1px 0 hsl(180 30% 96% / 0.035);
   }
 
-  /* Tipografia VIP */
+  .glass-strong {
+    @apply backdrop-blur-2xl;
+    background: var(--gradient-surface);
+    border: 1px solid hsl(var(--glass-border) / 0.15);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .glass-subtle {
+    @apply backdrop-blur-md;
+    background: hsl(var(--glass-bg) / 0.32);
+    border: 1px solid hsl(var(--glass-border) / 0.08);
+  }
+
+  .atlas-shell {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .atlas-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(hsl(var(--atlas-cyan) / 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--atlas-cyan) / 0.018) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(to bottom, black, transparent 78%);
+  }
+
+  .atlas-hud-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--atlas-line) / 0.28), transparent);
+    pointer-events: none;
+  }
+
+  .atlas-hud-card[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 14px;
+    height: 14px;
+    border-top: 1px solid hsl(var(--atlas-accent) / 0.55);
+    border-right: 1px solid hsl(var(--atlas-accent) / 0.55);
+    border-radius: 0 5px 0 0;
+    pointer-events: none;
+  }
+
+  .inject-cta {
+    position: relative;
+    overflow: hidden;
+    background: var(--gradient-atlas);
+    box-shadow: var(--shadow-glow), 0 18px 45px -22px hsl(var(--atlas-cyan) / 0.5);
+  }
+
+  .inject-cta::before,
+  .inject-cta::after {
+    content: "";
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    width: 1px;
+    background: hsl(var(--primary-foreground) / 0.18);
+    pointer-events: none;
+  }
+
+  .inject-cta::before { left: 12px; }
+  .inject-cta::after { right: 12px; }
+
   .vip-title {
     @apply uppercase tracking-[0.2em] font-bold;
   }
+
   .vip-eyebrow {
     @apply uppercase tracking-[0.3em] text-[10px] text-muted-foreground;
   }
 
-  /* Status pills */
   .status-dot {
     @apply inline-block w-1.5 h-1.5 rounded-full;
   }
@@ -132,8 +212,11 @@
   .scrollbar-none { scrollbar-width: none; }
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--atlas-accent) / 0.25) transparent;
+}
 
-/* Evita ampliacao automatica do layout em celulares, especialmente ao focar campos no iOS. */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -145,5 +228,11 @@ html {
   textarea,
   button {
     font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-shell::before {
+    display: none;
   }
 }
