@@ -21,6 +21,7 @@ import {
   Users,
   SlidersHorizontal,
   Info,
+  Download,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AccountsCard } from "@/components/admin/AccountsCard";
 import { PanelFunctionsCard } from "@/components/admin/PanelFunctionsCard";
 import { AboutPanelAdminCard } from "@/components/admin/AboutPanelAdminCard";
+import { DownloadFileAdminCard } from "@/components/admin/DownloadFileAdminCard";
 
 type AdminFunction = {
   id: string;
@@ -62,6 +64,7 @@ const adminFunctions: AdminFunction[] = [
   { id: "messages", title: "Mensagens", icon: MessageSquare },
   { id: "support", title: "Suporte", icon: LifeBuoy },
   { id: "maintenance", title: "Manutenção", icon: Wrench },
+  { id: "download", title: "Arquivo de download", icon: Download },
   { id: "about", title: "Sobre o painel", icon: Info },
   { id: "security", title: "Segurança", icon: ShieldCheck },
 ];
@@ -157,7 +160,7 @@ export default function AdminPage() {
   const adminGroups = [
     { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "clients", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
     { title: "Atendimento", functions: adminFunctions.filter((item) => ["notifications", "messages", "support"].includes(item.id)) },
-    { title: "Sistema", functions: adminFunctions.filter((item) => ["maintenance", "functions", "about"].includes(item.id)) },
+    { title: "Sistema", functions: adminFunctions.filter((item) => ["maintenance", "functions", "download", "about"].includes(item.id)) },
   ];
 
 
@@ -494,6 +497,16 @@ export default function AdminPage() {
                 <h2 className="text-xl font-bold">Manutenção</h2>
               </div>
               <MaintenanceCard />
+            </div>
+          )}
+
+          {selectedFunction === "download" && (
+            <div className="space-y-4">
+              <div>
+                <p className="vip-eyebrow">Sistema</p>
+                <h2 className="text-xl font-bold">Arquivo de download</h2>
+              </div>
+              <DownloadFileAdminCard />
             </div>
           )}
 

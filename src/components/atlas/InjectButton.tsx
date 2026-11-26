@@ -1,12 +1,19 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Rocket, Loader2, CheckCircle2, FileText, Download, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { gameLaunchUrl, type GameVariant } from "@/lib/game-launch";
+import { useKey } from "@/lib/key-context";
+import {
+  deliverManagedDownload,
+  isCurrentDownloadReady,
+  prepareManagedDownload,
+  type PreparedDownload,
+} from "@/lib/app-download";
 
 const FILE_READY_KEY = "atlas_injection_file_ready";
-const TEST_FILE_URL = "/atlas-test-files/atlas-config-test.txt";
 
 export function InjectButton({ enabled = false }: { enabled?: boolean }) {
+  const { keyData } = useKey();
   const fallback = new URLSearchParams(window.location.search).get("game_fallback");
   const [open, setOpen] = useState(fallback === "normal" || fallback === "max");
   const [attempted, setAttempted] = useState(fallback === "normal" || fallback === "max");
@@ -15,12 +22,39 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
   const [fileText, setFileText] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [fileReady, setFileReady] = useState(() => localStorage.getItem(FILE_READY_KEY) === "1");
+  const [fileReady, setFileReady] = useState(() => Boolean(localStorage.getItem(FILE_READY_KEY)));
   const [successNotice, setSuccessNotice] = useState(false);
+  const [prepared, setPrepared] = useState<PreparedDownload | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Prepara o arquivo antes do toque. No iOS, iniciar uma busca dentro do
+  // clique faria o navegador perder a autorização para baixar/compartilhar.
+  useEffect(() => {
+    if (!open || !loadingGame) return;
+    let active = true;
+    setPrepared(null);
+    setPreparing(true);
+    setDownloadError("");
+    prepareManagedDownload({ key: keyData?.key })
+      .then((file) => {
+        if (!active) return;
+        setPrepared(file);
+        setFileReady(isCurrentDownloadReady(localStorage.getItem(FILE_READY_KEY), file.version));
+      })
+      .catch((error) => {
+        if (active) setDownloadError(error instanceof Error ? error.message : "Não foi possível preparar o arquivo.");
+      })
+      .finally(() => {
+        if (active) setPreparing(false);
+      });
+    return () => { active = false; };
+  }, [open, loadingGame, keyData?.key]);
+
   const markFileReady = () => {
-    localStorage.setItem(FILE_READY_KEY, "1");
+    localStorage.setItem(FILE_READY_KEY, prepared?.version || "manual");
     setFileReady(true);
   };
 
@@ -28,18 +62,27 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
     setAttempted(true);
     setLoadingGame(game);
     setSelectedFile(null);
+    setPrepared(null);
     setFileText("");
     setLoaded(false);
     setProgress(0);
   };
 
-  const handleDownload = () => {
-    markFileReady();
-    // O download acontece pelo navegador e o usuário permanece no Atlas.
-    window.setTimeout(() => {
+  const handleDownload = async () => {
+    if (!prepared || downloading) return;
+    setDownloading(true);
+    setDownloadError("");
+    try {
+      const result = await deliverManagedDownload(prepared.blob, prepared.fileName);
+      if (result === "cancelled") return;
+      markFileReady();
       setLoadingGame(null);
       setOpen(false);
-    }, 300);
+    } catch (error) {
+      setDownloadError(error instanceof Error ? error.message : "Não foi possível baixar o arquivo.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,19 +165,24 @@ export function InjectButton({ enabled = false }: { enabled?: boolean }) {
             {!selectedFile && !loaded ? (
               <>
                 {!fileReady ? (
-                  <a
-                    href={TEST_FILE_URL}
-                    download="atlas-config-test.txt"
-                    onClick={handleDownload}
-                    className="w-full h-16 rounded-2xl bg-white text-black flex items-center justify-center gap-3 font-bold"
+                  <button
+                    type="button"
+                    disabled={!prepared || preparing || downloading}
+                    onClick={() => void handleDownload()}
+                    className="w-full h-16 rounded-2xl bg-white text-black flex items-center justify-center gap-3 font-bold disabled:opacity-60 disabled:cursor-wait"
                   >
-                    <Download className="w-5 h-5" /> Baixar arquivo necessário
-                  </a>
+                    {preparing || downloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                    {preparing ? "Preparando arquivo..." : downloading ? "Iniciando download..." : "Baixar arquivo necessário"}
+                  </button>
                 ) : (
                   <div className="rounded-2xl glass p-4 text-left">
                     <p className="font-bold">Arquivo já baixado</p>
                     <p className="text-xs text-muted-foreground mt-1">Este dispositivo já foi registrado. Não é necessário baixar novamente.</p>
                   </div>
+                )}
+
+                {downloadError && (
+                  <p role="alert" className="text-xs text-status-danger break-words">{downloadError}</p>
                 )}
 
                 <button

@@ -970,6 +970,16 @@ export type Database = {
         Args: { _messages: Json; _password: string }
         Returns: boolean
       }
+      admin_save_download_file: {
+        Args: {
+          _content_type?: string
+          _file_name: string
+          _file_size: number
+          _password: string
+          _path: string
+        }
+        Returns: Json
+      }
       admin_save_push_subscription: {
         Args: {
           _auth: string
@@ -1264,6 +1274,7 @@ export type Database = {
       get_about_panel: { Args: never; Returns: Json }
       get_app_version: { Args: never; Returns: string }
       get_daily_reward: { Args: { _key: string }; Returns: Json }
+      get_download_file: { Args: never; Returns: Json }
       get_login_email_by_username: {
         Args: { _username: string }
         Returns: string
