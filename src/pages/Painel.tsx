@@ -20,6 +20,7 @@ import { InjectButton } from "@/components/atlas/InjectButton";
 import { MaintenanceModal } from "@/components/MaintenanceModal";
 import { ExpiredKeyModal } from "@/components/ExpiredKeyModal";
 import { SupportChat } from "@/components/atlas/SupportChat";
+import { SupportMessageNotice } from "@/components/atlas/SupportMessageNotice";
 import { RecompensaTab } from "@/components/atlas/RecompensaTab";
 import { Button } from "@/components/ui/button";
 import { rewardApi } from "@/lib/reward-api";
@@ -540,6 +541,7 @@ const sendSensiMessage = async () => {
 
   return (
     <main className="atlas-shell min-h-screen pb-32 overflow-x-hidden">
+      <SupportMessageNotice accessKey={keyData.key} keyId={keyData.id} chatOpen={supportOpen} onOpen={() => { closeDrawer(); setRewardOpen(false); setSupportOpen(true); }} />
       <div className="mx-auto max-w-md px-3.5 pt-4 min-[390px]:px-5 min-[390px]:pt-6">
         <PanelHeader />
 

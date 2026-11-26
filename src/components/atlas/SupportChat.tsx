@@ -127,7 +127,7 @@ export function SupportChat({ accessKey }: { accessKey?: string | null }) {
   };
 
   return (
-    <section className="glass-strong rounded-3xl p-5 space-y-4">
+    <section data-support-chat className="glass-strong rounded-3xl p-5 space-y-4">
       <header className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-2xl glass flex items-center justify-center">
           <MessageCircle className="w-4 h-4" />
