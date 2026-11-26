@@ -204,6 +204,13 @@
       "when": 1795696273791,
       "tag": "0028_admin_accounts_function_history",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795697415633,
+      "tag": "0029_enforce_account_blocks",
+      "breakpoints": true
     }
   ]
 }

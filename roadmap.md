@@ -1,8 +1,8 @@
 # Roadmap
 
-- [ ] Completar bloqueio, liberação e exclusão segura de contas.
-- [ ] Adicionar clientes com histórico real de funções e ferramentas do painel no ADM.
-- [ ] Melhorar contexto e leitura do chat IA e validar os fluxos.
+- [x] Completar bloqueio, liberação e exclusão segura de contas; validar desconexão e preservação dos prazos com conta temporária removida após o teste.
+- [x] Adicionar clientes com histórico real de funções e ferramentas do painel no ADM; conferir celular e computador.
+- [x] Melhorar contexto e leitura do chat IA, publicar as funções e validar uma resposta real; 107 testes passaram.
 
 - [x] Permitir que o admin abra o painel de funções com validação segura.
 - [x] Permitir o retorno do painel de funções ao admin.
