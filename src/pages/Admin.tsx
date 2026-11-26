@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   BarChart3,
   Users,
+  SlidersHorizontal,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ import { FinanceAdminCard } from "@/components/admin/FinanceAdminCard";
 import { getKeyStatus } from "@/lib/key-status";
 import { syncPushServiceWorker } from "@/lib/push";
 import { supabase } from "@/integrations/supabase/client";
+import { AccountsCard } from "@/components/admin/AccountsCard";
+import { PanelFunctionsCard } from "@/components/admin/PanelFunctionsCard";
 
 type AdminFunction = {
   id: string;
@@ -48,6 +51,8 @@ type AdminFunction = {
 const adminFunctions: AdminFunction[] = [
   { id: "overview", title: "Visão geral", icon: LayoutGrid },
   { id: "users", title: "Contas", icon: Users },
+  { id: "clients", title: "Clientes", icon: Users },
+  { id: "functions", title: "Funções e IA", icon: SlidersHorizontal },
   { id: "finance", title: "Financeiro", icon: BarChart3 },
   { id: "keys", title: "Keys", icon: KeyRound },
   { id: "devices", title: "Dispositivos", icon: Smartphone },
@@ -70,8 +75,6 @@ export default function AdminPage() {
     return tab && adminFunctions.some((item) => item.id === tab) ? tab : "overview";
   });
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
-  const [users, setUsers] = useState<any[]>([]);
-  const [usersLoading, setUsersLoading] = useState(false);
   const [overviewStats, setOverviewStats] = useState({ totalKeys: 0, activeKeys: 0, unusedKeys: 0, expiredKeys: 0, revokedKeys: 0, loading: true });
   const touchStartRef = useRef({ x: 0, y: 0 });
 
@@ -97,20 +100,6 @@ export default function AdminPage() {
     const timer = window.setInterval(loadOverview, 15000);
     return () => { mounted = false; window.clearInterval(timer); };
   }, [password]);
-
-  useEffect(() => {
-    if (!password || selectedFunction !== "users") return;
-    let mounted = true;
-    setUsersLoading(true);
-    const loadUsers = async () => {
-      const { data, error } = await supabase.rpc("admin_list_users", { _password: password });
-      if (!mounted) return;
-      setUsers(Array.isArray(data) && !error ? data : []);
-      setUsersLoading(false);
-    };
-    void loadUsers();
-    return () => { mounted = false; };
-  }, [password, selectedFunction]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -164,9 +153,9 @@ export default function AdminPage() {
 
   const selected = adminFunctions.find((item) => item.id === selectedFunction);
   const adminGroups = [
-    { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "users", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
+    { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "users", "clients", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
     { title: "Atendimento", functions: adminFunctions.filter((item) => ["notifications", "messages", "support"].includes(item.id)) },
-    { title: "Sistema", functions: adminFunctions.filter((item) => item.id === "maintenance") },
+    { title: "Sistema", functions: adminFunctions.filter((item) => ["maintenance", "functions"].includes(item.id)) },
   ];
 
 
@@ -417,97 +406,9 @@ export default function AdminPage() {
             </div>
           )}
 
-          {selectedFunction === "users" && (
-            <div className="space-y-5">
-              <div>
-                <p className="vip-eyebrow">Contas</p>
-                <h2 className="text-xl font-bold">Contas criadas</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Veja os usuários criados, suas keys vinculadas e o status de cada conta.</p>
-              </div>
-              <section className="glass-strong rounded-3xl p-4 sm:p-5">
-                {usersLoading ? (
-                  <div className="flex items-center gap-2 py-8 justify-center text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Carregando usuários...</div>
-                ) : users.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">Nenhum usuário cadastrado.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {users.map((u) => (
-                      <div key={u.user_id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="font-semibold truncate">{u.username || "Sem usuário"}</p>
-                            <p className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">Key vinculada</p>
-                            <p className="mt-1 break-all font-mono text-sm font-semibold text-foreground">
-                              {u.key || "Sem key"}
-                            </p>
-                          </div>
-                          <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px] uppercase">{u.status === "active" ? "Ativo" : u.status === "expired" ? "Expirada" : u.status === "revoked" ? "Revogada" : "Sem key"}</span>
-                        </div>
-                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
-                          <span>Criado: {u.created_at ? new Date(u.created_at).toLocaleDateString("pt-BR") : "—"}</span>
-                          <span>Expira: {u.key_expires_at ? new Date(u.key_expires_at).toLocaleDateString("pt-BR") : "—"}</span>
-                          <span>Ativada: {u.key_activated_at ? new Date(u.key_activated_at).toLocaleDateString("pt-BR") : "—"}</span>
-                          <span>Último acesso: {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}</span>
-                          <span className="col-span-2 break-all">E-mail: {u.email || "—"}</span>
-                          <span>Plano: {u.plan || "—"}</span>
-                          <span>Aparelho: {u.device || "—"}</span>
-                          <span className="col-span-2 sm:col-span-4 break-all font-mono">Device ID: {u.device_id || "—"}</span>
-                        </div>
-                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-xs text-muted-foreground">Senha: protegida pelo sistema de autenticação</p>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="rounded-xl"
-                            onClick={async () => {
-                              const newPassword = window.prompt(
-                                `Nova senha para ${u.username || "este usuário"}:\n\nUse 8+ caracteres, com maiúscula, minúscula e número.`
-                              );
-                              if (newPassword === null) return;
-                              if (newPassword.length < 8 || newPassword.length > 72 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/\d/.test(newPassword)) {
-                                window.alert("Senha inválida. Use 8+ caracteres, com maiúscula, minúscula e número.");
-                                return;
-                              }
-                              const { data, error } = await supabase.functions.invoke("admin-reset-password", {
-                                body: { admin_password: password, user_id: u.user_id, new_password: newPassword },
-                              });
-                              if (error || !data?.ok) {
-                                let code = data?.error;
-                                try { code = code ?? (await (error as any)?.context?.json())?.error; } catch { /* sem detalhe */ }
-                                const msgs: Record<string, string> = { unauthorized: "Senha ADM inválida.", leaked_password: "Senha muito comum. Escolha outra.", weak_password: "Senha fraca.", update_failed: "O servidor recusou a nova senha." };
-                                window.alert(msgs[code] ?? "Não foi possível redefinir a senha.");
-                                return;
-                              }
-                              window.alert("Senha redefinida com sucesso.");
-                            }}
-                          >
-                            Redefinir senha
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="rounded-xl"
-                            onClick={async () => {
-                              if (!window.confirm(`Excluir a conta ${u.username || ""}? A key volta a ficar livre.`)) return;
-                              const { data, error } = await supabase.functions.invoke("admin-reset-password", {
-                                body: { admin_password: password, user_id: u.user_id, action: "delete" },
-                              });
-                              if (error || !data?.ok) { window.alert("Não foi possível excluir a conta."); return; }
-                              setUsers((prev) => prev.filter((x) => x.user_id !== u.user_id));
-                            }}
-                          >
-                            Excluir usuário
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            </div>
-          )}
+          {selectedFunction === "users" && <AccountsCard />}
+          {selectedFunction === "clients" && <AccountsCard clients />}
+          {selectedFunction === "functions" && <PanelFunctionsCard />}
 
           {selectedFunction === "finance" && (
             <div className="space-y-4">

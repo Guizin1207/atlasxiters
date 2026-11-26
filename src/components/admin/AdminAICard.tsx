@@ -33,9 +33,9 @@ import atlasAiLogo from "@/assets/atlas-ai-logo.png";
 const FUNCTION_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/admin-ai`;
 
 const SUGGESTIONS = [
-  "Crie uma função de Turbo FPS no plano pro",
-  "Mude o Radar para o plano basic",
-  "Coloque o Aim Assist como primeira função",
+  "Crie um perfil de treino de mira no plano pro",
+  "Organize as funções por plano",
+  "Coloque Sensi Turbo como primeira função",
 ];
 
 export function AdminAICard() {

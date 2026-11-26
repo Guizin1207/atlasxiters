@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isReceiptBody } from "@/lib/receipts";
 import { enableUserPush, notifyRewardReady, notifyCoinsAdded, syncPushServiceWorker } from "@/lib/push";
 import { getPlanPermissions, featureRequiredPlan, type AtlasFeature } from "@/lib/plan-permissions";
+import { MessageResponse } from "@/components/ai-elements/message";
 
 type SupportMessage = {
   id: string;
@@ -73,6 +74,11 @@ export default function PainelPage() {
   const [sensiInput, setSensiInput] = useState("");
   const [sensiTyping, setSensiTyping] = useState(false);
   const [sensiSeed, setSensiSeed] = useState(0);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const container = chatScrollRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [sensiMessages, sensiTyping, tab]);
 
   const getDeviceProfile = (deviceOverride?: string) => {
   const raw = (deviceOverride ?? sensiDevice).toLowerCase().trim();
@@ -176,8 +182,8 @@ const sendSensiMessage = async () => {
       return;
     }
 
-    const match = text.match(/(?:iphone|ip ?(?:\\d+|xr|xs)|galaxy|samsung|s ?\\d+|a ?\\d+|redmi|rn ?\\d+|note ?\\d+|poco|motorola|moto ?[a-z]?\\d+|g ?\\d+|edge ?\\d+|realme|infinix|tecno)[^,.!?]*/i);
-    const nextDevice = sensiDevice || (match?.[0] ?? keyData?.device ?? "");
+    const match = text.match(/\b(?:iphone\s*(?:\d{1,2}(?:\s*(?:pro\s*max|pro|plus|mini))?|xr|xs)|ipad(?:\s*(?:pro|air|mini))?|(?:samsung\s*)?galaxy\s*[a-z]\d{1,3}|redmi(?:\s*note)?\s*\d{1,2}|poco\s*[a-z]\d{1,2}|(?:motorola\s*)?moto\s*[a-z]\d{1,3}|realme\s*\d{1,2})\b/i);
+    const nextDevice = match?.[0] || sensiDevice || keyData?.device || "";
     if (nextDevice) setSensiDevice(nextDevice);
     const previous = sensiMessages.slice(-12).map((message) => ({
       role: message.role === "ai" ? "assistant" : "user",
@@ -204,6 +210,7 @@ const sendSensiMessage = async () => {
           plan: currentPlanLabel,
           style: sensiStyle,
           dpi: sensiDpi,
+          screen: `${window.screen.width}x${window.screen.height}`,
         },
       });
       if (error) {
@@ -553,7 +560,7 @@ const sendSensiMessage = async () => {
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10"><Sparkles className="h-5 w-5" /></div>
                       <div><p className="vip-eyebrow">Atlas AI</p><h2 className="text-lg font-black">Assistente Free Fire</h2></div>
                     </div>
-                    <button type="button" onClick={resetSensiChat} className="rounded-xl p-2 text-muted-foreground hover:bg-white/10" aria-label="Novo chat"><RotateCcw className="h-4 w-4" /></button>
+                    <Button type="button" variant="ghost" size="icon" onClick={resetSensiChat} disabled={sensiTyping} aria-label="Novo chat"><RotateCcw className="h-4 w-4" /></Button>
                   </div>
                   <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
                     <div className="flex min-w-0 items-center gap-2">
@@ -563,11 +570,11 @@ const sendSensiMessage = async () => {
                     <span className="shrink-0 rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase">{currentPlanLabel}</span>
                   </div>
                 </div>
-                <div className="min-h-[430px] space-y-3 p-3">
+                <div ref={chatScrollRef} role="log" aria-label="Conversa com Atlas IA" aria-live="polite" className="h-[min(430px,50dvh)] min-h-60 overflow-y-auto space-y-3 p-3">
                   {sensiMessages.map((message, index) => (
                     <div key={index} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
                       <div className={message.role === "user" ? "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm leading-6 text-primary-foreground" : "max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-white/5 px-4 py-3 text-sm leading-6"}>
-                        {message.text}
+                        {message.role === "ai" ? <MessageResponse>{message.text}</MessageResponse> : message.text}
                         {message.action === "upgrade" && (
                           <button type="button" onClick={openUpgrade} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-bold text-black">
                             <LockKeyhole className="h-3.5 w-3.5" /> Fazer upgrade
@@ -602,8 +609,8 @@ const sendSensiMessage = async () => {
                     })}
                   </div>
                   <div className="flex items-end gap-2">
-                    <textarea value={sensiInput} onChange={(e) => setSensiInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendSensiMessage(); } }} placeholder="Digite sua mensagem..." rows={1} className="min-h-11 flex-1 resize-none rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 text-[16px] text-foreground outline-none focus:border-white/30" />
-                    <Button onClick={sendSensiMessage} disabled={!sensiInput.trim() || sensiTyping} className="h-11 w-11 shrink-0 rounded-2xl p-0"><MessageCircle className="h-4 w-4" /></Button>
+                    <textarea aria-label="Mensagem para Atlas IA" maxLength={1000} value={sensiInput} onChange={(e) => setSensiInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); sendSensiMessage(); } }} placeholder="Digite sua mensagem..." rows={1} className="min-h-11 min-w-0 flex-1 resize-none rounded-2xl border border-border bg-muted px-3.5 py-3 text-[16px] text-foreground outline-none focus:border-ring" />
+                    <Button aria-label="Enviar mensagem para Atlas IA" onClick={sendSensiMessage} disabled={!sensiInput.trim() || sensiTyping} className="h-11 w-11 shrink-0 rounded-2xl p-0">{sensiTyping ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}</Button>
                   </div>
                   <p className="mt-2 text-center text-[10px] text-muted-foreground">{permissions.unlimitedChat ? "Chat sem limite • todos os recursos liberados." : "Chat: " + Math.max(0, (permissions.chatLimit ?? 20) - sensiChatCount) + " mensagens restantes hoje."}</p>
                 </div>

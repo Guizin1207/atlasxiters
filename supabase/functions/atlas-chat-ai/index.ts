@@ -2,6 +2,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
+import { buildAtlasPrompt } from "./prompt.ts";
 
 const json = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -49,15 +50,7 @@ Deno.serve(async (req) => {
     const style = typeof body?.style === "string" ? body.style.trim().slice(0, 30) : "não informado";
     const dpi = typeof body?.dpi === "string" || typeof body?.dpi === "number" ? String(body.dpi).slice(0, 15) : "não informado";
 
-    const system = [
-      "Você é a Atlas IA, assistente de Free Fire. Responda sempre em português brasileiro, de forma amigável, direta e útil.",
-      "Ajude com sensibilidade, DPI, botão de tiro, HUD, capa, mira, movimentação, treino, gráficos e desempenho.",
-      "Ao sugerir sensibilidade, dê números como ponto de partida para teste; não prometa capa nem invente especificações do aparelho.",
-      "Não recomende alterar DPI no iPhone. Para desempenho, indique ajustes seguros e reversíveis.",
-      "Nunca recomende cheats, macros, APKs modificados, injetores ou bypass. Não diga que pode alterar o celular, jogo ou conta.",
-      "Se faltar informação, faça uma pergunta objetiva. Não repita saudações.",
-      "Contexto: aparelho=" + (device || "não informado") + "; estilo=" + style + "; DPI=" + dpi + ".",
-    ].join("\n");
+    const system = buildAtlasPrompt(device, style, dpi, body?.screen);
 
     const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

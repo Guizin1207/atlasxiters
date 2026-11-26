@@ -197,6 +197,13 @@
       "when": 1795647191856,
       "tag": "0027_admin_update_key_access_free_universal",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1795696273791,
+      "tag": "0028_admin_accounts_function_history",
+      "breakpoints": true
     }
   ]
 }

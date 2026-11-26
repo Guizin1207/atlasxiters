@@ -65,6 +65,27 @@ export type Database = {
         }
         Relationships: []
       }
+      account_blocks: {
+        Row: {
+          blocked: boolean
+          restore_key_ids: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocked?: boolean
+          restore_key_ids?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocked?: boolean
+          restore_key_ids?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_ai_audit: {
         Row: {
           after_state: Json | null
@@ -159,6 +180,44 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      function_history: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          function_id: string
+          function_name: string
+          id: string
+          key_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled: boolean
+          function_id: string
+          function_name: string
+          id?: string
+          key_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          function_id?: string
+          function_name?: string
+          id?: string
+          key_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "function_history_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       key_expiry_notices: {
         Row: {
@@ -599,6 +658,10 @@ export type Database = {
         Args: { _current_device_id: string; _password: string }
         Returns: number
       }
+      admin_client_history: {
+        Args: { _password: string; _user_id: string }
+        Returns: Json
+      }
       admin_create_keys: {
         Args: {
           _count: number
@@ -870,6 +933,10 @@ export type Database = {
           _title: string
         }
         Returns: Json
+      }
+      admin_set_account_block: {
+        Args: { _blocked: boolean; _password: string; _user_id: string }
+        Returns: boolean
       }
       admin_set_app_version: {
         Args: { _password: string; _version: string }
