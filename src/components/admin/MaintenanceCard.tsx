@@ -195,6 +195,28 @@ export function MaintenanceCard() {
         </Button>
       </div>
 
+      <div className={`rounded-2xl border p-4 text-sm ${enabled ? "border-status-warning/40 bg-status-warning/10" : "border-white/10 bg-white/5"}`}>
+        <p className="font-semibold">{enabled ? "🛠️ Usuários estão vendo a tela de manutenção" : "✅ Painel liberado para os usuários"}</p>
+        {message && <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{message}</p>}
+      </div>
+
+      <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <p className="vip-eyebrow">Manutenção com previsão de retorno</p>
+        <div className="grid grid-cols-4 gap-2">
+          {[5, 15, 30, 60].map((min) => (
+            <Button key={min} type="button" variant="outline" disabled={loading || saving}
+              onClick={() => {
+                const back = new Date(Date.now() + min * 60000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+                void quickToggleMaintenance(true, `Atlas VIP em manutenção. Previsão de retorno: ${back} (cerca de ${min} min).`);
+              }}
+              className="h-10 rounded-xl border-white/10 bg-white/5 text-xs font-semibold">
+              {min} min
+            </Button>
+          ))}
+        </div>
+        <p className="text-[10px] text-muted-foreground">Ativa na hora, mostra o horário de volta e avisa os usuários.</p>
+      </div>
+
       <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
         <div>
           <p className="vip-eyebrow mb-1">Versão do aplicativo</p>
@@ -222,6 +244,8 @@ export function MaintenanceCard() {
         {[
           ["Atualização rápida", "Estamos atualizando o Atlas VIP com melhorias. Voltamos em alguns minutos."],
           ["Correção de servidor", "Estamos estabilizando o servidor para melhorar o desempenho. Aguarde um instante."],
+          ["Nova versão", "Estamos instalando uma nova versão do Atlas VIP. Feche e abra o app quando voltar."],
+          ["Funções em ajuste", "Estamos ajustando as funções do painel para a nova atualização do Free Fire. Voltamos logo."],
           ["Manutenção programada", "Manutenção programada em andamento. O acesso será liberado em breve."],
         ].map(([label, text]) => (
           <button

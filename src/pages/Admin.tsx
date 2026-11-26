@@ -50,7 +50,6 @@ type AdminFunction = {
 
 const adminFunctions: AdminFunction[] = [
   { id: "overview", title: "Visão geral", icon: LayoutGrid },
-  { id: "users", title: "Contas", icon: Users },
   { id: "clients", title: "Clientes", icon: Users },
   { id: "functions", title: "Funções e IA", icon: SlidersHorizontal },
   { id: "finance", title: "Financeiro", icon: BarChart3 },
@@ -153,7 +152,7 @@ export default function AdminPage() {
 
   const selected = adminFunctions.find((item) => item.id === selectedFunction);
   const adminGroups = [
-    { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "users", "clients", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
+    { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "clients", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
     { title: "Atendimento", functions: adminFunctions.filter((item) => ["notifications", "messages", "support"].includes(item.id)) },
     { title: "Sistema", functions: adminFunctions.filter((item) => ["maintenance", "functions"].includes(item.id)) },
   ];
@@ -383,7 +382,7 @@ export default function AdminPage() {
                     { id: "maintenance", label: "Manutenção", icon: Wrench },
                     { id: "devices", label: "Dispositivos", icon: Smartphone },
                     { id: "notifications", label: "Notificações", icon: Bell },
-                    { id: "users", label: "Contas", icon: Users },
+                    { id: "clients", label: "Clientes", icon: Users },
                   ].map((shortcut) => {
                     const Icon = shortcut.icon;
                     return (
@@ -406,8 +405,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {selectedFunction === "users" && <AccountsCard />}
-          {selectedFunction === "clients" && <AccountsCard clients />}
+                    {selectedFunction === "clients" && <AccountsCard clients />}
           {selectedFunction === "functions" && <PanelFunctionsCard />}
 
           {selectedFunction === "finance" && (
