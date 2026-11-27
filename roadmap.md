@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Reutilizar a logo do ADM no ícone de instalação e do navegador, mantendo o ícone padrão quando não houver logo.
+
 - [x] Adicionar no ADM troca de logo e temas de feriados, sincronizados com o aplicativo, e validar sem chamadas de IA.
 
 - [x] Permitir que o ADM envie e substitua o arquivo TXT do botão de download, sempre usando a versão mais recente.

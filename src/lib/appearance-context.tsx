@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { ShieldCheck } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { DEFAULT_APPEARANCE, normalizeAppearance, type AppAppearance } from "./app-appearance";
 
 const AppearanceContext = createContext({ appearance: DEFAULT_APPEARANCE, loading: false, error: "", refresh: async () => {}, apply: (_value: AppAppearance) => {} });
@@ -28,6 +28,23 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
     return () => { clearInterval(timer); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVisible); };
   }, [refresh]);
   useEffect(() => { document.documentElement.dataset.holiday = appearance.theme; }, [appearance.theme]);
+  useEffect(() => {
+    const manifest = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    const apple = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!manifest || !apple || !favicon) return;
+    if (!appearance.logo) {
+      manifest.href = "/manifest.webmanifest"; apple.href = "/pwa-192.png"; favicon.href = "/favicon.png";
+      return;
+    }
+    const icon = new URL(`${SUPABASE_URL}/functions/v1/app-icon`);
+    icon.searchParams.set("v", String(Date.now()));
+    apple.href = icon.href;
+    favicon.href = appearance.logo;
+    icon.searchParams.set("manifest", "1");
+    icon.searchParams.set("origin", window.location.origin);
+    manifest.href = icon.href;
+  }, [appearance.logo]);
   return <AppearanceContext.Provider value={{ appearance, loading, error, refresh, apply: setAppearance }}>{children}</AppearanceContext.Provider>;
 }
 export const useAppearance = () => useContext(AppearanceContext);

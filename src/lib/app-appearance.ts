@@ -28,12 +28,14 @@ export async function prepareAppLogo(file: File): Promise<string> {
     image.src = url;
     await image.decode();
     const canvas = document.createElement("canvas");
-    const ratio = Math.min(1, 256 / Math.max(image.naturalWidth, image.naturalHeight));
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+    const ratio = 512 / Math.max(image.naturalWidth, image.naturalHeight);
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Não foi possível preparar a logo.");
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const width = image.naturalWidth * ratio;
+    const height = image.naturalHeight * ratio;
+    ctx.drawImage(image, (512 - width) / 2, (512 - height) / 2, width, height);
     const logo = canvas.toDataURL("image/png");
     if (logo.length > 400000) throw new Error("Imagem muito detalhada. Escolha uma logo mais simples.");
     return logo;
