@@ -75,14 +75,28 @@
 
   .dark { color-scheme: dark; }
 
-  [data-holiday="halloween"] { --primary: 28 96% 62%; --accent: 280 72% 72%; --atlas-accent-bright: 38 98% 75%; --atlas-cyan: 280 72% 72%; }
-  [data-holiday="christmas"] { --primary: 150 70% 62%; --accent: 0 80% 72%; --atlas-accent-bright: 150 65% 80%; --atlas-cyan: 0 80% 72%; }
-  [data-holiday="independence"] { --primary: 145 75% 60%; --accent: 48 95% 65%; --atlas-accent-bright: 48 95% 75%; --atlas-cyan: 208 88% 70%; }
-  [data-holiday="new-year"] { --primary: 45 92% 68%; --accent: 190 80% 75%; --atlas-accent-bright: 45 95% 85%; --atlas-cyan: 190 80% 75%; }
-  [data-holiday="children"] { --primary: 330 85% 74%; --accent: 185 85% 66%; --atlas-accent-bright: 45 95% 78%; --atlas-cyan: 185 85% 66%; }
-  [data-holiday="easter"] { --primary: 295 60% 76%; --accent: 150 65% 72%; --atlas-accent-bright: 320 75% 86%; --atlas-cyan: 150 65% 72%; }
-  [data-holiday="carnival"] { --primary: 175 85% 65%; --accent: 325 88% 73%; --atlas-accent-bright: 48 95% 76%; --atlas-cyan: 325 88% 73%; }
+  [data-holiday="halloween"] { --holiday-hue: 285; --primary: 28 96% 62%; --accent: 280 72% 72%; --atlas-accent-bright: 38 98% 75%; --atlas-cyan: 280 72% 72%; }
+  [data-holiday="christmas"] { --holiday-hue: 155; --primary: 150 70% 62%; --accent: 0 80% 72%; --atlas-accent-bright: 150 65% 80%; --atlas-cyan: 0 80% 72%; }
+  [data-holiday="independence"] { --holiday-hue: 150; --primary: 145 75% 60%; --accent: 48 95% 65%; --atlas-accent-bright: 48 95% 75%; --atlas-cyan: 208 88% 70%; }
+  [data-holiday="new-year"] { --holiday-hue: 195; --primary: 45 92% 68%; --accent: 190 80% 75%; --atlas-accent-bright: 45 95% 85%; --atlas-cyan: 190 80% 75%; }
+  [data-holiday="children"] { --holiday-hue: 320; --primary: 330 85% 74%; --accent: 185 85% 66%; --atlas-accent-bright: 45 95% 78%; --atlas-cyan: 185 85% 66%; }
+  [data-holiday="easter"] { --holiday-hue: 285; --primary: 295 60% 76%; --accent: 150 65% 72%; --atlas-accent-bright: 320 75% 86%; --atlas-cyan: 150 65% 72%; }
+  [data-holiday="carnival"] { --holiday-hue: 185; --primary: 175 85% 65%; --accent: 325 88% 73%; --atlas-accent-bright: 48 95% 76%; --atlas-cyan: 325 88% 73%; }
   :root[data-holiday]:not([data-holiday="default"]) {
+    --background: var(--holiday-hue) 28% 5%;
+    --card: var(--holiday-hue) 24% 10%;
+    --popover: var(--holiday-hue) 24% 10%;
+    --secondary: var(--holiday-hue) 22% 15%;
+    --muted: var(--holiday-hue) 20% 13%;
+    --muted-foreground: var(--holiday-hue) 12% 73%;
+    --input: var(--holiday-hue) 22% 19%;
+    --border: var(--accent);
+    --glass-bg: var(--holiday-hue) 26% 14%;
+    --atlas-surface: var(--card);
+    --sidebar-background: var(--background);
+    --sidebar-accent: var(--secondary);
+    --sidebar-border: var(--accent);
+    --gradient-surface: linear-gradient(145deg, hsl(var(--card) / 0.97), hsl(var(--background) / 0.95));
     --atlas-accent: var(--primary);
     --ring: var(--primary);
     --glass-border: var(--accent);
@@ -122,12 +136,24 @@
 }
 
 @layer components {
+  .appearance-shell { min-height: 100vh; position: relative; isolation: isolate; background-image: var(--gradient-radial); }
+  .holiday-decorations { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+  .holiday-decorations span { position: absolute; font-size: 64px; opacity: 0.12; filter: saturate(0.85); }
+  .holiday-decorations span:nth-child(1) { top: 3%; left: 3%; transform: rotate(-14deg); }
+  .holiday-decorations span:nth-child(2) { top: 22%; right: 3%; transform: rotate(12deg); }
+  .holiday-decorations span:nth-child(3) { bottom: 8%; left: 4%; transform: rotate(-10deg); }
+  .holiday-decorations span:nth-child(4) { bottom: 3%; right: 4%; transform: rotate(15deg); }
+  .holiday-signature { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; font-size: 11px; font-weight: 600; color: hsl(var(--primary)); letter-spacing: 0; }
+  header:not(.text-center) .holiday-signature { justify-content: flex-start; }
+  .holiday-logo-badge { position: absolute; right: -7px; bottom: -5px; display: grid; place-items: center; height: 22px; width: 22px; font-size: 14px; border-radius: 50%; background: hsl(var(--card)); border: 1px solid hsl(var(--accent) / 0.4); }
+  @media (max-width: 640px) { .holiday-decorations span { font-size: 42px; opacity: 0.1; } }
   .holiday-choice { --atlas-accent: var(--primary); }
+  :root[data-holiday]:not([data-holiday="default"]) button.bg-white { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: var(--shadow-atlas-active); }
   .holiday-swatch { background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent))); }
 
   .glass {
     @apply backdrop-blur-xl;
-    background: linear-gradient(145deg, hsl(var(--glass-bg) / 0.68), hsl(222 28% 7% / 0.72));
+    background: linear-gradient(145deg, hsl(var(--glass-bg) / 0.68), hsl(var(--background) / 0.72));
     border: 1px solid hsl(var(--glass-border) / 0.13);
     box-shadow: inset 0 1px 0 hsl(180 30% 96% / 0.035);
   }

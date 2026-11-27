@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Completar as cores dos temas de feriados em superfícies, campos e menus e adicionar emojis decorativos; sete temas e padrão conferidos no login, painel validado pelo acesso ADM no celular e computador, cinco testes aprovados, sem alterar funções.
+
 - [x] Reutilizar a logo do ADM no ícone de instalação e do navegador, mantendo o ícone padrão quando não houver logo; função publicada respondeu 200, cinco testes passaram e o ícone padrão foi conferido no navegador móvel.
 - [ ] Confirmar a troca do ícone na tela inicial de um celular real — depende de reinstalar o app no aparelho após cadastrar uma logo no ADM.
 

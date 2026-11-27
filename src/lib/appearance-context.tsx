@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
-import { DEFAULT_APPEARANCE, normalizeAppearance, type AppAppearance } from "./app-appearance";
+import { APP_THEMES, DEFAULT_APPEARANCE, normalizeAppearance, type AppAppearance } from "./app-appearance";
 
 const AppearanceContext = createContext({ appearance: DEFAULT_APPEARANCE, loading: false, error: "", refresh: async () => {}, apply: (_value: AppAppearance) => {} });
 export function AppearanceProvider({ children }: { children: React.ReactNode }) {
@@ -45,14 +45,30 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
     icon.searchParams.set("origin", window.location.origin);
     manifest.href = icon.href;
   }, [appearance.logo]);
-  return <AppearanceContext.Provider value={{ appearance, loading, error, refresh, apply: setAppearance }}>{children}</AppearanceContext.Provider>;
+  const theme = APP_THEMES.find((item) => item.id === appearance.theme) ?? APP_THEMES[0];
+  return <AppearanceContext.Provider value={{ appearance, loading, error, refresh, apply: setAppearance }}>
+    <div className="appearance-shell">
+      {theme.id !== "default" && <div className="holiday-decorations" aria-hidden="true">{theme.decorations.map((emoji, index) => <span key={index}>{emoji}</span>)}</div>}
+      {children}
+    </div>
+  </AppearanceContext.Provider>;
 }
 export const useAppearance = () => useContext(AppearanceContext);
+export function HolidaySignature() {
+  const { appearance } = useAppearance();
+  const theme = APP_THEMES.find((item) => item.id === appearance.theme);
+  if (!theme || theme.id === "default") return null;
+  return <p className="holiday-signature"><span aria-hidden="true">{theme.symbol}</span> {theme.name} <span aria-hidden="true">{theme.decorations[2]}</span></p>;
+}
 export function AppLogo({ className = "h-8 w-8" }: { className?: string }) {
   const { appearance } = useAppearance();
   const [failed, setFailed] = useState(false);
   useEffect(() => { setFailed(false); }, [appearance.logo]);
-  return appearance.logo && !failed
-    ? <img src={appearance.logo} alt="Logo Atlas VIP" className={`${className} object-contain`} onError={() => setFailed(true)} />
-    : <ShieldCheck className={className} />;
+  const theme = APP_THEMES.find((item) => item.id === appearance.theme);
+  return <span className={`relative inline-flex shrink-0 items-center justify-center ${className}`}>
+    {appearance.logo && !failed
+      ? <img src={appearance.logo} alt="Logo Atlas VIP" className="h-full w-full object-contain" onError={() => setFailed(true)} />
+      : <ShieldCheck className="h-full w-full" />}
+    {theme && theme.id !== "default" && <span className="holiday-logo-badge" aria-hidden="true">{theme.symbol}</span>}
+  </span>;
 }

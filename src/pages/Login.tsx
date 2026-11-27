@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { NotificationBell } from "@/components/atlas/NotificationBell";
-import { AppLogo } from "@/lib/appearance-context";
+import { AppLogo, HolidaySignature } from "@/lib/appearance-context";
 import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "@/integrations/supabase/client";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -294,6 +294,7 @@ export default function LoginPage() {
           </div>
           <p className="vip-eyebrow mb-2">Acesso Atlas</p>
           <h1 className="vip-title text-4xl">Atlas VIP</h1>
+          <HolidaySignature />
           <p className="text-sm text-muted-foreground mt-3 max-w-xs mx-auto">
             {session ? "Sua conta está pronta. Ative uma key para liberar o painel." : "Crie sua conta ou entre para continuar."}
           </p>

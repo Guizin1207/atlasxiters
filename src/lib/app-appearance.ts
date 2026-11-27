@@ -1,12 +1,12 @@
 export const APP_THEMES = [
-  { id: "default", name: "Atlas padrão", symbol: "✦" },
-  { id: "halloween", name: "Halloween", symbol: "🎃" },
-  { id: "christmas", name: "Natal", symbol: "🎄" },
-  { id: "independence", name: "Independência", symbol: "🇧🇷" },
-  { id: "new-year", name: "Ano Novo", symbol: "🎆" },
-  { id: "children", name: "Dia das Crianças", symbol: "🪁" },
-  { id: "easter", name: "Páscoa", symbol: "🐰" },
-  { id: "carnival", name: "Carnaval", symbol: "🎭" },
+  { id: "default", name: "Atlas padrão", symbol: "✦", decorations: [] },
+  { id: "halloween", name: "Halloween", symbol: "🎃", decorations: ["🎃", "👻", "🦇", "🕸️"] },
+  { id: "christmas", name: "Natal", symbol: "🎄", decorations: ["🎄", "🎁", "❄️", "⭐"] },
+  { id: "independence", name: "Independência", symbol: "🇧🇷", decorations: ["🇧🇷", "⭐", "💚", "💛"] },
+  { id: "new-year", name: "Ano Novo", symbol: "🎆", decorations: ["🎆", "🥂", "✨", "🎉"] },
+  { id: "children", name: "Dia das Crianças", symbol: "🪁", decorations: ["🪁", "🎈", "🧸", "🎨"] },
+  { id: "easter", name: "Páscoa", symbol: "🐰", decorations: ["🐰", "🥚", "🌷", "🍫"] },
+  { id: "carnival", name: "Carnaval", symbol: "🎭", decorations: ["🎭", "🎊", "🥁", "🎉"] },
 ] as const;
 export type AppTheme = (typeof APP_THEMES)[number]["id"];
 export type AppAppearance = { theme: AppTheme; logo: string };

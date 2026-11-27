@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useKey } from "@/lib/key-context";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { AppLogo } from "@/lib/appearance-context";
+import { AppLogo, HolidaySignature } from "@/lib/appearance-context";
 
 export function PanelHeader() {
   const navigate = useNavigate();
@@ -37,6 +37,7 @@ export function PanelHeader() {
           <p className="vip-eyebrow text-atlas-accent/75">Painel tático</p>
           <h1 className="vip-title text-lg leading-none">Atlas <span className="text-atlas-accent">VIP</span></h1>
           <p className="text-[10px] text-muted-foreground mt-1">Versão {version}</p>
+          <HolidaySignature />
           {!adminPreview && displayName && (
             <p className="text-[10px] font-semibold text-foreground/80 mt-0.5 truncate max-w-[190px]">
               {displayName}
