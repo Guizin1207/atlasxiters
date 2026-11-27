@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Adicionar no ADM troca de logo e temas de feriados, sincronizados com o aplicativo, e validar sem chamadas de IA.
+
 - [x] Permitir que o ADM envie e substitua o arquivo TXT do botão de download, sempre usando a versão mais recente.
 - [x] Entregar o arquivo por Blob ou folha de arquivos no iOS, sem abrir uma visualização que retire o usuário do painel.
 - [x] Validar duas substituições, o download móvel do arquivo mais recente e o retorno ao painel; dados temporários removidos.

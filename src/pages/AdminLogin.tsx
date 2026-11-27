@@ -4,6 +4,7 @@ import { Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdmin } from "@/lib/admin-context";
+import { AppLogo } from "@/lib/appearance-context";
 
 export default function AdminLoginPage() {
   const { password, loading, signIn } = useAdmin();
@@ -39,7 +40,7 @@ export default function AdminLoginPage() {
     <main className="min-h-screen flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md space-y-8">
         <header className="text-center space-y-3">
-          <ShieldCheck className="w-12 h-12 mx-auto" />
+          <AppLogo className="w-12 h-12 mx-auto" />
           <p className="vip-eyebrow">Administrador</p>
           <h1 className="vip-title text-3xl">Acesso ADM</h1>
           <p className="text-sm text-muted-foreground">Use a mesma chave ou senha de ADM que você já usava para gerenciar o painel.</p>

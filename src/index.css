@@ -74,6 +74,23 @@
   }
 
   .dark { color-scheme: dark; }
+
+  [data-holiday="halloween"] { --primary: 28 96% 62%; --accent: 280 72% 72%; --atlas-accent-bright: 38 98% 75%; --atlas-cyan: 280 72% 72%; }
+  [data-holiday="christmas"] { --primary: 150 70% 62%; --accent: 0 80% 72%; --atlas-accent-bright: 150 65% 80%; --atlas-cyan: 0 80% 72%; }
+  [data-holiday="independence"] { --primary: 145 75% 60%; --accent: 48 95% 65%; --atlas-accent-bright: 48 95% 75%; --atlas-cyan: 208 88% 70%; }
+  [data-holiday="new-year"] { --primary: 45 92% 68%; --accent: 190 80% 75%; --atlas-accent-bright: 45 95% 85%; --atlas-cyan: 190 80% 75%; }
+  [data-holiday="children"] { --primary: 330 85% 74%; --accent: 185 85% 66%; --atlas-accent-bright: 45 95% 78%; --atlas-cyan: 185 85% 66%; }
+  [data-holiday="easter"] { --primary: 295 60% 76%; --accent: 150 65% 72%; --atlas-accent-bright: 320 75% 86%; --atlas-cyan: 150 65% 72%; }
+  [data-holiday="carnival"] { --primary: 175 85% 65%; --accent: 325 88% 73%; --atlas-accent-bright: 48 95% 76%; --atlas-cyan: 325 88% 73%; }
+  :root[data-holiday]:not([data-holiday="default"]) {
+    --atlas-accent: var(--primary);
+    --ring: var(--primary);
+    --glass-border: var(--accent);
+    --atlas-line: var(--accent);
+    --sidebar-primary: var(--primary);
+    --sidebar-ring: var(--primary);
+    --gradient-radial: linear-gradient(155deg, hsl(var(--primary) / 0.07), transparent 45%, hsl(var(--accent) / 0.04));
+  }
 }
 
 @layer base {
@@ -105,6 +122,9 @@
 }
 
 @layer components {
+  .holiday-choice { --atlas-accent: var(--primary); }
+  .holiday-swatch { background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent))); }
+
   .glass {
     @apply backdrop-blur-xl;
     background: linear-gradient(145deg, hsl(var(--glass-bg) / 0.68), hsl(222 28% 7% / 0.72));

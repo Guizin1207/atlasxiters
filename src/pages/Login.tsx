@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useAdmin } from "@/lib/admin-context";
 import { SupportChat } from "@/components/atlas/SupportChat";
 import { NotificationBell } from "@/components/atlas/NotificationBell";
+import { AppLogo } from "@/lib/appearance-context";
 import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "@/integrations/supabase/client";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -289,7 +290,7 @@ export default function LoginPage() {
 
         <header className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl glass-strong mb-6">
-            <ShieldCheck className="w-7 h-7" />
+            <AppLogo className="w-12 h-12" />
           </div>
           <p className="vip-eyebrow mb-2">Acesso Atlas</p>
           <h1 className="vip-title text-4xl">Atlas VIP</h1>

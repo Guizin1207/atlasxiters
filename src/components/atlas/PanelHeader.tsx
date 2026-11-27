@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useKey } from "@/lib/key-context";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { AppLogo } from "@/lib/appearance-context";
 
 export function PanelHeader() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export function PanelHeader() {
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative w-11 h-11 rounded-2xl glass-strong flex items-center justify-center shrink-0 border-atlas-accent/25 shadow-glow">
           <span className="absolute right-1.5 top-1.5 h-1 w-1 rounded-full bg-atlas-accent shadow-glow" aria-hidden />
-          <ShieldCheck className="w-4 h-4 text-atlas-accent" />
+          <AppLogo className="w-8 h-8 text-atlas-accent" />
         </div>
         <div className="min-w-0">
           <p className="vip-eyebrow text-atlas-accent/75">Painel tático</p>

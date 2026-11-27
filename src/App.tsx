@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { KeyProvider } from "@/lib/key-context";
 import { AdminProvider } from "@/lib/admin-context";
 import { AuthProvider } from "@/lib/auth-context";
+import { AppearanceProvider } from "@/lib/appearance-context";
 import LoginPage from "./pages/Login";
 import PainelPage from "./pages/Painel";
 import AdminPage from "./pages/Admin";
@@ -17,6 +18,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <AppearanceProvider>
       <Toaster />
       <Sonner position="bottom-center" theme="dark" richColors closeButton />
       <BrowserRouter>
@@ -35,6 +37,7 @@ const App = () => (
           </KeyProvider>
         </AuthProvider>
       </BrowserRouter>
+      </AppearanceProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -970,6 +970,10 @@ export type Database = {
         Args: { _messages: Json; _password: string }
         Returns: boolean
       }
+      admin_save_app_appearance: {
+        Args: { _logo: string; _password: string; _theme: string }
+        Returns: Json
+      }
       admin_save_download_file: {
         Args: {
           _content_type?: string
@@ -1272,6 +1276,7 @@ export type Database = {
       claim_daily_reward: { Args: { _key: string }; Returns: Json }
       count_unread_messages: { Args: { _key: string }; Returns: number }
       get_about_panel: { Args: never; Returns: Json }
+      get_app_appearance: { Args: never; Returns: Json }
       get_app_version: { Args: never; Returns: string }
       get_daily_reward: { Args: { _key: string }; Returns: Json }
       get_download_file: { Args: never; Returns: Json }

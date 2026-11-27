@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   Info,
   Download,
+  Palette,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,8 @@ import { AccountsCard } from "@/components/admin/AccountsCard";
 import { PanelFunctionsCard } from "@/components/admin/PanelFunctionsCard";
 import { AboutPanelAdminCard } from "@/components/admin/AboutPanelAdminCard";
 import { DownloadFileAdminCard } from "@/components/admin/DownloadFileAdminCard";
+import { AppearanceAdminCard } from "@/components/admin/AppearanceAdminCard";
+import { AppLogo } from "@/lib/appearance-context";
 
 type AdminFunction = {
   id: string;
@@ -66,6 +69,7 @@ const adminFunctions: AdminFunction[] = [
   { id: "maintenance", title: "Manutenção", icon: Wrench },
   { id: "download", title: "Arquivo de download", icon: Download },
   { id: "about", title: "Sobre o painel", icon: Info },
+  { id: "appearance", title: "Logo e temas", icon: Palette },
   { id: "security", title: "Segurança", icon: ShieldCheck },
 ];
 
@@ -160,7 +164,7 @@ export default function AdminPage() {
   const adminGroups = [
     { title: "Controle", functions: adminFunctions.filter((item) => ["overview", "clients", "keys", "devices", "rewards", "finance", "security"].includes(item.id)) },
     { title: "Atendimento", functions: adminFunctions.filter((item) => ["notifications", "messages", "support"].includes(item.id)) },
-    { title: "Sistema", functions: adminFunctions.filter((item) => ["maintenance", "functions", "download", "about"].includes(item.id)) },
+    { title: "Sistema", functions: adminFunctions.filter((item) => ["maintenance", "functions", "download", "about", "appearance"].includes(item.id)) },
   ];
 
 
@@ -196,7 +200,7 @@ export default function AdminPage() {
               <span className="text-lg leading-none">☰</span>
             </Button>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl glass-strong">
-              <ShieldAlert className="h-4 w-4" />
+              <AppLogo className="h-7 w-7" />
             </div>
             <div className="min-w-0">
               <p className="vip-eyebrow">Admin</p>
@@ -520,6 +524,7 @@ export default function AdminPage() {
             </div>
           )}
 
+          {selectedFunction === "appearance" && <AppearanceAdminCard />}
           {selectedFunction === "security" && <SecurityCard />}
         </section>
       </div>
