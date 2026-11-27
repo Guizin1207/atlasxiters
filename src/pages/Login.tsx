@@ -45,6 +45,33 @@ export default function LoginPage() {
   const [accountStatus, setAccountStatus] = useState<"validating" | "validated" | null>(null);
 
   useEffect(() => {
+    let start: { x: number; y: number } | null = null;
+    const begin = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      start = touch && (touch.clientX <= 32 || touch.clientX >= window.innerWidth - 32)
+        ? { x: touch.clientX, y: touch.clientY } : null;
+    };
+    const move = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!start || !touch) return;
+      if (Math.abs(touch.clientX - start.x) > Math.abs(touch.clientY - start.y) && event.cancelable) {
+        event.preventDefault();
+      }
+    };
+    const end = () => { start = null; };
+    document.addEventListener("touchstart", begin, { passive: true, capture: true });
+    document.addEventListener("touchmove", move, { passive: false, capture: true });
+    document.addEventListener("touchend", end, { capture: true });
+    document.addEventListener("touchcancel", end, { capture: true });
+    return () => {
+      document.removeEventListener("touchstart", begin, { capture: true });
+      document.removeEventListener("touchmove", move, { capture: true });
+      document.removeEventListener("touchend", end, { capture: true });
+      document.removeEventListener("touchcancel", end, { capture: true });
+    };
+  }, []);
+
+  useEffect(() => {
     if (!authLoading && !keyLoading && keyData && (session || keyData.is_universal || keyData.plan === "free") && !switchingUser) {
       navigate("/painel", { replace: true });
     }
