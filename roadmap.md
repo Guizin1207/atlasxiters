@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Reutilizar a logo do ADM no ícone de instalação e do navegador, mantendo o ícone padrão quando não houver logo.
+- [x] Reutilizar a logo do ADM no ícone de instalação e do navegador, mantendo o ícone padrão quando não houver logo; função publicada respondeu 200, cinco testes passaram e o ícone padrão foi conferido no navegador móvel.
+- [ ] Confirmar a troca do ícone na tela inicial de um celular real — depende de reinstalar o app no aparelho após cadastrar uma logo no ADM.
 
 - [x] Adicionar no ADM troca de logo e temas de feriados, sincronizados com o aplicativo, e validar sem chamadas de IA.
 
