@@ -260,6 +260,19 @@ const sendSensiMessage = async () => {
   const drawerProgressRef = useRef(0);
   const drawerDeltaRef = useRef(0);
   const sidebarWidthRef = useRef(1);
+  useEffect(() => {
+    // The drawer owns horizontal gestures, not the browser's back navigation.
+    const preventHistorySwipe = (event: globalThis.TouchEvent) => {
+      const start = touchStartRef.current;
+      const touch = event.touches[0];
+      if (!start || !touch) return;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (Math.abs(dx) > Math.abs(dy) && event.cancelable) event.preventDefault();
+    };
+    document.addEventListener("touchmove", preventHistorySwipe, { passive: false, capture: true });
+    return () => document.removeEventListener("touchmove", preventHistorySwipe, { capture: true });
+  }, []);
   const [supportOpen, setSupportOpen] = useState(
     () => new URLSearchParams(window.location.search).get("suporte") === "1"
   );
@@ -643,7 +656,7 @@ const sendSensiMessage = async () => {
           onClick={closeDrawer}
         >
           <aside
-            className={`h-full w-[82%] max-w-sm border-r border-white/10 bg-background/95 p-4 shadow-2xl backdrop-blur-xl ${draggingDrawer ? "" : "transition-transform duration-300 ease-out"}`}
+            className={`h-full w-[82%] max-w-sm touch-pan-y overscroll-x-none border-r border-white/10 bg-background/95 p-4 shadow-2xl backdrop-blur-xl ${draggingDrawer ? "" : "transition-transform duration-300 ease-out"}`}
             style={{ transform: `translateX(${(drawerProgress - 1) * 100}%)` }}
             onClick={(e) => e.stopPropagation()}
             onTouchStart={beginCloseGesture}

@@ -220,7 +220,7 @@ export default function AdminPage() {
                 setOpeningPanel(true);
                 const opened = await openAdminPanel(password);
                 setOpeningPanel(false);
-                if (opened) navigate("/painel");
+                if (opened) navigate("/painel", { replace: true });
               }}
               disabled={openingPanel}
             >
