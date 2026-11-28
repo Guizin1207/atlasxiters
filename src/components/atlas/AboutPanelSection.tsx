@@ -172,7 +172,7 @@ export function AboutPanelSection() {
           </div>
           {feedbacks.total > 0 && (
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <Star className="w-3.5 h-3.5 fill-current text-foreground" />
               <span>{feedbacks.average.toFixed(1)}</span>
               <span className="text-muted-foreground">({feedbacks.total})</span>
             </div>
@@ -196,7 +196,7 @@ export function AboutPanelSection() {
                   className="p-1 transition-transform active:scale-95"
                 >
                   <Star
-                    className={`w-5 h-5 ${star <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`}
+                    className={`w-5 h-5 ${star <= rating ? "fill-current text-foreground" : "text-muted-foreground/40"}`}
                   />
                 </button>
               ))}
@@ -241,7 +241,7 @@ export function AboutPanelSection() {
               <li key={fb.id} className="rounded-xl bg-white/[0.03] border border-white/10 p-3 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold truncate">{fb.author_name}</span>
-                  <span className="inline-flex items-center gap-0.5 text-amber-400 shrink-0">
+                  <span className="inline-flex items-center gap-0.5 text-foreground shrink-0">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star key={i} className={`w-3 h-3 ${i < fb.rating ? "fill-current" : "opacity-25"}`} />
                     ))}

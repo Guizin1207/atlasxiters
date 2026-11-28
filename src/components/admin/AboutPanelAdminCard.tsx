@@ -345,7 +345,7 @@ export function AboutPanelAdminCard() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold">{fb.author_name}</span>
-                      <span className="inline-flex items-center gap-0.5 text-amber-400">
+                      <span className="inline-flex items-center gap-0.5 text-foreground">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star key={i} className={`w-3.5 h-3.5 ${i < fb.rating ? "fill-current" : "opacity-25"}`} />
                         ))}

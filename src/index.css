@@ -4,73 +4,73 @@
 
 /* =========================================================
    ATLAS VIP — DESIGN SYSTEM
-   Grafite tático, menta elétrica e ciano. Tokens HSL apenas.
+   Preto e branco (monocromático). Tokens HSL apenas.
    ========================================================= */
 
 @layer base {
   :root {
-    --background: 222 30% 4%;
-    --foreground: 180 20% 96%;
+    --background: 0 0% 3%;
+    --foreground: 0 0% 97%;
 
-    --card: 220 20% 8%;
-    --card-foreground: 180 20% 96%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 97%;
 
-    --popover: 220 22% 8%;
-    --popover-foreground: 180 20% 96%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 97%;
 
-    --primary: 163 82% 55%;
-    --primary-foreground: 222 42% 7%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 5%;
 
-    --secondary: 218 18% 13%;
-    --secondary-foreground: 180 20% 96%;
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 219 17% 12%;
-    --muted-foreground: 213 12% 65%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 62%;
 
-    --accent: 188 92% 60%;
-    --accent-foreground: 222 42% 7%;
+    --accent: 0 0% 72%;
+    --accent-foreground: 0 0% 5%;
 
     --destructive: 0 76% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 176 35% 76%;
-    --input: 217 18% 18%;
-    --ring: 163 82% 55%;
+    --border: 0 0% 82%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 100%;
 
     --radius: 1rem;
 
-    --status-active: 163 82% 55%;
-    --status-warning: 38 95% 58%;
+    --status-active: 0 0% 100%;
+    --status-warning: 0 0% 74%;
     --status-danger: 0 78% 62%;
-    --status-info: 190 95% 62%;
+    --status-info: 0 0% 78%;
 
-    --atlas-accent: 163 82% 55%;
-    --atlas-accent-bright: 160 90% 72%;
-    --atlas-cyan: 190 95% 62%;
-    --atlas-surface: 220 22% 9%;
-    --atlas-line: 174 44% 68%;
+    --atlas-accent: 0 0% 100%;
+    --atlas-accent-bright: 0 0% 100%;
+    --atlas-cyan: 0 0% 82%;
+    --atlas-surface: 0 0% 8%;
+    --atlas-line: 0 0% 70%;
 
-    --glass-bg: 220 20% 12%;
-    --glass-border: 174 44% 68%;
+    --glass-bg: 0 0% 9%;
+    --glass-border: 0 0% 78%;
 
-    --gradient-surface: linear-gradient(145deg, hsl(220 22% 12% / 0.96), hsl(222 30% 6% / 0.94));
+    --gradient-surface: linear-gradient(145deg, hsl(0 0% 11% / 0.96), hsl(0 0% 4% / 0.94));
     --gradient-radial:
-      radial-gradient(760px circle at 92% -80px, hsl(190 95% 62% / 0.11), transparent 64%),
-      radial-gradient(680px circle at -12% 32%, hsl(163 82% 55% / 0.075), transparent 62%),
-      radial-gradient(900px circle at 50% 110%, hsl(220 60% 30% / 0.12), transparent 70%);
-    --gradient-atlas: linear-gradient(120deg, hsl(var(--atlas-accent-bright)), hsl(var(--atlas-accent)) 52%, hsl(var(--atlas-cyan)));
-    --shadow-glow: 0 10px 30px -12px hsl(var(--atlas-accent) / 0.48), inset 0 1px 0 hsl(0 0% 100% / 0.28);
-    --shadow-elevated: 0 24px 70px -24px hsl(222 60% 2% / 0.95), inset 0 1px 0 hsl(180 30% 96% / 0.055);
-    --shadow-atlas-active: 0 14px 34px -20px hsl(var(--atlas-accent) / 0.7), inset 0 1px 0 hsl(var(--atlas-accent-bright) / 0.1);
+      radial-gradient(760px circle at 92% -80px, hsl(0 0% 100% / 0.07), transparent 64%),
+      radial-gradient(680px circle at -12% 32%, hsl(0 0% 100% / 0.045), transparent 62%),
+      radial-gradient(900px circle at 50% 110%, hsl(0 0% 100% / 0.05), transparent 70%);
+    --gradient-atlas: linear-gradient(120deg, hsl(0 0% 100%), hsl(0 0% 88%) 52%, hsl(0 0% 70%));
+    --shadow-glow: 0 10px 30px -12px hsl(0 0% 100% / 0.32), inset 0 1px 0 hsl(0 0% 100% / 0.28);
+    --shadow-elevated: 0 24px 70px -24px hsl(0 0% 0% / 0.95), inset 0 1px 0 hsl(0 0% 100% / 0.055);
+    --shadow-atlas-active: 0 14px 34px -20px hsl(0 0% 100% / 0.45), inset 0 1px 0 hsl(0 0% 100% / 0.1);
 
-    --sidebar-background: 222 30% 5%;
-    --sidebar-foreground: 180 15% 90%;
-    --sidebar-primary: 163 82% 55%;
-    --sidebar-primary-foreground: 222 42% 7%;
-    --sidebar-accent: 218 18% 13%;
-    --sidebar-accent-foreground: 180 20% 96%;
-    --sidebar-border: 174 44% 68%;
-    --sidebar-ring: 163 82% 55%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 11%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 70%;
+    --sidebar-ring: 0 0% 100%;
   }
 
   .dark { color-scheme: dark; }
@@ -157,7 +157,7 @@
     @apply backdrop-blur-xl;
     background: linear-gradient(145deg, hsl(var(--glass-bg) / 0.68), hsl(var(--background) / 0.72));
     border: 1px solid hsl(var(--glass-border) / 0.13);
-    box-shadow: inset 0 1px 0 hsl(180 30% 96% / 0.035);
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.035);
   }
 
   .glass-strong {

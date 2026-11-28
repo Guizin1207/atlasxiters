@@ -163,7 +163,7 @@ export function PerfilTab() {
             href="https://discord.gg/yfmPGyaDAK"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl border border-violet-400/30 bg-violet-500/10 text-sm font-semibold text-violet-200 hover:bg-violet-500/20 transition-colors"
+            className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl border border-white/20 bg-white/[0.06] text-sm font-semibold text-foreground hover:bg-white/[0.12] transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
             Entrar no Discord

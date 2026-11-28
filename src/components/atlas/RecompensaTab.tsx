@@ -225,7 +225,7 @@ export function RecompensaTab() {
                   }
                   className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold border ${
                     isClaimed
-                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40"
+                      ? "bg-white/15 text-foreground border-white/40"
                       : isPastOrToday
                         ? "bg-red-500/10 text-red-400 border-red-500/30"
                         : "bg-white/5 text-muted-foreground border-white/10 opacity-50"

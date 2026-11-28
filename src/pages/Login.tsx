@@ -421,7 +421,7 @@ export default function LoginPage() {
             href="https://discord.gg/yfmPGyaDAK"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl border border-[#5865F2]/40 bg-[#5865F2]/10 text-white text-sm font-semibold transition-colors hover:bg-[#5865F2]/20"
+            className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-2xl border border-white/20 bg-white/[0.06] text-foreground text-sm font-semibold transition-colors hover:bg-white/[0.12]"
           >
             <MessageCircle className="w-4 h-4" /> Entrar no Discord
           </a>
